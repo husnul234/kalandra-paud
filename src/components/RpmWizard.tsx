@@ -201,14 +201,14 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
                     isCompleted
                       ? 'bg-emerald-600 text-white'
                       : isCurrent
-                      ? 'bg-blue-900 text-white ring-4 ring-blue-100'
-                      : 'bg-slate-100 text-slate-500'
+                      ? 'bg-[#522D60] text-white ring-4 ring-[#FAF3FB]'
+                      : 'bg-slate-100 text-[#74607B]'
                   }`}
                 >
                   {isCompleted ? <Check className="w-4 h-4" /> : s.step}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className={`text-xs font-bold ${isCurrent ? 'text-blue-950' : 'text-slate-600'}`}>
+                  <div className={`text-xs font-bold ${isCurrent ? 'text-[#2A1532]' : 'text-slate-600'}`}>
                     {s.title}
                   </div>
                   <div className="text-[10px] text-slate-400">{s.desc}</div>
@@ -345,7 +345,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
-              className="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+              className="px-6 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
               Lanjut ke Target 8 DPL <ChevronRight className="w-4 h-4" />
             </button>
@@ -428,7 +428,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
             <button
               type="button"
               onClick={() => setCurrentStep(3)}
-              className="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+              className="px-6 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
               Lanjut ke Capaian & Loose Parts <ChevronRight className="w-4 h-4" />
             </button>
@@ -480,7 +480,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
                             className="w-4 h-4 rounded text-blue-600 mt-0.5 shrink-0"
                           />
                           <div>
-                            <span className="font-bold text-blue-900">[{sub.kode}]</span> {sub.subelemen}
+                            <span className="font-bold text-[#522D60]">[{sub.kode}]</span> {sub.subelemen}
                             <div className="text-[11px] text-slate-500 mt-1">
                               <strong>Indikator:</strong> {sub.indikator_ketercapaian.join('; ')}
                             </div>
@@ -546,7 +546,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
             <button
               type="button"
               onClick={() => setCurrentStep(4)}
-              className="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+              className="px-6 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
               Lanjut ke Ringkasan & Eksekusi <ChevronRight className="w-4 h-4" />
             </button>
@@ -654,7 +654,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
                   type="button"
                   onClick={handleGenerate}
                   disabled={isGenerating || activeKeys.length === 0}
-                  className="px-8 py-3 bg-linear-to-r from-blue-900 to-indigo-900 hover:from-blue-800 hover:to-indigo-800 text-white rounded-xl text-sm font-bold flex items-center gap-2.5 shadow-md hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-50"
+                  className="px-8 py-3 bg-gradient-to-r from-[#522D60] to-[#80426E] hover:from-[#693774] hover:to-[#9C5586] text-white rounded-xl text-sm font-bold flex items-center gap-2.5 shadow-md shadow-[#522D60]/20 hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                   <Sparkles className="w-4 h-4 text-amber-400" />
                   <span>Susun Dokumen Pembelajaran Mendalam Sekarang</span>

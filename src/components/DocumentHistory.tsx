@@ -72,23 +72,23 @@ export const DocumentHistory: React.FC<Props> = ({
 
         <button
           onClick={onNewDocClick}
-          className="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+          className="px-4 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
         >
-          <Sparkles className="w-4 h-4 text-amber-400" />
+          <Sparkles className="w-4 h-4 text-[#FFD38B]" />
           <span>+ Buat RPM Baru</span>
         </button>
       </div>
 
       {docs.length === 0 ? (
-        <div className="bg-white p-12 text-center rounded-2xl border border-dashed border-slate-300 text-slate-400 space-y-3">
-          <FileText className="w-12 h-12 mx-auto text-slate-300" />
-          <h3 className="text-base font-bold text-slate-700">Belum Ada Riwayat Dokumen Tersimpan</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+        <div className="bg-white p-12 text-center rounded-2xl border border-dashed border-[#D8C3DD] text-[#74607B] space-y-3">
+          <FileText className="w-12 h-12 mx-auto text-[#D8C3DD]" />
+          <h3 className="text-base font-bold text-[#2A1532]">Belum Ada Riwayat Dokumen Tersimpan</h3>
+          <p className="text-xs text-[#74607B] max-w-sm mx-auto">
             Gunakan tab <strong>Penyusun RPM</strong> untuk membuat draf perencanaan pembelajaran 1 minggu pertama Anda.
           </p>
           <button
             onClick={onNewDocClick}
-            className="mt-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
+            className="mt-2 px-5 py-2 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
           >
             Mulai Sekarang
           </button>
@@ -98,11 +98,11 @@ export const DocumentHistory: React.FC<Props> = ({
           {docs.map((doc) => (
             <div
               key={doc.id}
-              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:border-blue-300 transition-all flex flex-col justify-between"
+              className="bg-white p-5 rounded-2xl border border-[#EFE6F2] shadow-xs hover:border-[#D8C3DD] transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-900">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF3FB] text-[#522D60] border border-[#E8D6EB]">
                     Minggu ke-{doc.mingguKe} • {doc.jenjang}
                   </span>
                   <button
@@ -113,10 +113,10 @@ export const DocumentHistory: React.FC<Props> = ({
                   </button>
                 </div>
 
-                <h3 className="text-sm font-bold text-slate-900 mt-2.5 leading-snug line-clamp-2">
+                <h3 className="text-sm font-bold text-[#2A1532] mt-2.5 leading-snug line-clamp-2">
                   {doc.title || doc.topik}
                 </h3>
-                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <p className="text-xs text-[#74607B] mt-1 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" /> {doc.createdAt}
                 </p>
               </div>
@@ -133,14 +133,14 @@ export const DocumentHistory: React.FC<Props> = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onOpenExportModalWithData(doc.data)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1"
+                    className="px-3 py-1.5 rounded-lg border border-[#D8C3DD] hover:bg-[#FAF3FB] text-[#2A1532] text-xs font-semibold flex items-center gap-1"
                   >
                     <Printer className="w-3.5 h-3.5 text-emerald-600" />
                     <span>DOCX</span>
                   </button>
                   <button
                     onClick={() => onSelectDoc(doc.data)}
-                    className="px-3.5 py-1.5 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-all"
+                    className="px-3.5 py-1.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-all"
                   >
                     <span>Buka Editor</span>
                     <ExternalLink className="w-3.5 h-3.5" />

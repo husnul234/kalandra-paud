@@ -45,8 +45,8 @@ export const LiveTablePreview: React.FC<Props> = ({
       {/* Top Action Toolbar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-900 flex items-center justify-center font-bold">
-            <Sparkles className="w-5 h-5 text-blue-700" />
+          <div className="w-9 h-9 rounded-xl bg-[#FAF3FB] text-[#522D60] flex items-center justify-center font-bold border border-[#E8D6EB]">
+            <Sparkles className="w-5 h-5 text-[#80426E]" />
           </div>
           <div>
             <h2 className="text-base font-bold text-slate-900 leading-tight">
@@ -65,7 +65,7 @@ export const LiveTablePreview: React.FC<Props> = ({
               type="button"
               onClick={() => setMobileMode('table')}
               className={`px-2.5 py-1 rounded-md transition-all ${
-                mobileMode === 'table' ? 'bg-white text-blue-900 shadow-xs font-bold' : 'text-slate-600'
+                mobileMode === 'table' ? 'bg-white text-[#522D60] shadow-xs font-bold' : 'text-slate-600'
               }`}
             >
               Tabel
@@ -74,7 +74,7 @@ export const LiveTablePreview: React.FC<Props> = ({
               type="button"
               onClick={() => setMobileMode('accordion')}
               className={`px-2.5 py-1 rounded-md transition-all ${
-                mobileMode === 'accordion' ? 'bg-white text-blue-900 shadow-xs font-bold' : 'text-slate-600'
+                mobileMode === 'accordion' ? 'bg-white text-[#522D60] shadow-xs font-bold' : 'text-slate-600'
               }`}
             >
               Kartu Harian
@@ -107,11 +107,11 @@ export const LiveTablePreview: React.FC<Props> = ({
       {/* Main Document Content Container */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-4 sm:p-8 space-y-8">
         {/* Document Header Banner */}
-        <div className="text-center border-b-2 border-blue-900/20 pb-6 space-y-1">
-          <h1 className="text-xl sm:text-2xl font-black text-blue-950 tracking-tight uppercase">
+        <div className="text-center border-b-2 border-[#522D60]/20 pb-6 space-y-1">
+          <h1 className="text-xl sm:text-2xl font-black text-[#522D60] tracking-tight uppercase">
             PERENCANAAN PEMBELAJARAN MENDALAM (RPM)
           </h1>
-          <h2 className="text-base sm:text-lg font-bold text-blue-800 uppercase">
+          <h2 className="text-base sm:text-lg font-bold text-[#80426E] uppercase">
             {info.asal_sekolah || 'SATUAN PENDIDIKAN ANAK USIA DINI'} — FASE FONDASI
           </h2>
           <p className="text-xs text-slate-500 font-medium">
@@ -127,7 +127,7 @@ export const LiveTablePreview: React.FC<Props> = ({
           <div><strong className="text-slate-900">Minggu Ke-:</strong> Minggu ke-{info.minggu_ke || '1'}</div>
           <div><strong className="text-slate-900">Alokasi Waktu:</strong> {info.alokasi_waktu || '6 x 3 JP'}</div>
           <div><strong className="text-slate-900">Model Pembelajaran:</strong> {info.model_pembelajaran || 'Sentra / Bermain'} ({info.jumlah_anak || '15'} Anak)</div>
-          <div className="sm:col-span-2 pt-1 border-t border-slate-200 text-blue-900 font-bold">
+          <div className="sm:col-span-2 pt-1 border-t border-slate-200 text-[#522D60] font-bold">
             <strong>Topik / Subtopik:</strong> {info.topik_subtopik || '-'}
           </div>
         </div>
@@ -136,9 +136,9 @@ export const LiveTablePreview: React.FC<Props> = ({
             TABEL 1: IDENTIFIKASI
         ========================================================================= */}
         <div className="space-y-2">
-          <div className="bg-blue-900 text-white px-4 py-2 rounded-t-xl font-bold text-sm flex items-center justify-between">
+          <div className="bg-[#522D60] text-white px-4 py-2.5 rounded-t-xl font-bold text-sm flex items-center justify-between shadow-xs">
             <span>1. IDENTIFIKASI</span>
-            <span className="text-[11px] font-normal text-blue-200">Permendikdasmen No. 10/2025 & No. 12/2025</span>
+            <span className="text-[11px] font-bold text-[#FFD38B]">Permendikdasmen No. 10/2025 & No. 12/2025</span>
           </div>
           <div className="border border-slate-200 rounded-b-xl overflow-hidden divide-y divide-slate-200 text-xs">
             {/* Peserta Didik */}
@@ -195,9 +195,9 @@ export const LiveTablePreview: React.FC<Props> = ({
             TABEL 2: DESAIN PEMBELAJARAN
         ========================================================================= */}
         <div className="space-y-2">
-          <div className="bg-blue-900 text-white px-4 py-2 rounded-t-xl font-bold text-sm flex items-center justify-between">
+          <div className="bg-[#522D60] text-white px-4 py-2.5 rounded-t-xl font-bold text-sm flex items-center justify-between shadow-xs">
             <span>2. DESAIN PEMBELAJARAN</span>
-            <span className="text-[11px] font-normal text-blue-200">Keputusan BSKAP No. 046/H/KR/2025</span>
+            <span className="text-[11px] font-bold text-[#FFD38B]">Keputusan BSKAP No. 046/H/KR/2025</span>
           </div>
           <div className="border border-slate-200 rounded-b-xl overflow-hidden divide-y divide-slate-200 text-xs">
             {/* Capaian Pembelajaran */}
@@ -299,9 +299,9 @@ export const LiveTablePreview: React.FC<Props> = ({
             TABEL 3: PENGALAMAN BELAJAR MENDALAM (6 HARI / 18 KEGIATAN)
         ========================================================================= */}
         <div className="space-y-2">
-          <div className="bg-blue-900 text-white px-4 py-2 rounded-t-xl font-bold text-sm flex items-center justify-between">
+          <div className="bg-[#522D60] text-white px-4 py-2.5 rounded-t-xl font-bold text-sm flex items-center justify-between shadow-xs">
             <span>3. PENGALAMAN BELAJAR MENDALAM (6 HARI / 18 KEGIATAN)</span>
-            <span className="text-[11px] font-normal text-blue-200">Permendikdasmen No. 1/2026 Standar Proses</span>
+            <span className="text-[11px] font-bold text-[#FFD38B]">Permendikdasmen No. 1/2026 Standar Proses</span>
           </div>
 
           {/* Tahap Awal */}
@@ -341,7 +341,7 @@ export const LiveTablePreview: React.FC<Props> = ({
                       className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-left transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-blue-900 text-white font-bold text-xs flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-lg bg-[#522D60] text-white font-bold text-xs flex items-center justify-center">
                           {h.hari_ke}
                         </div>
                         <div>
@@ -394,7 +394,7 @@ export const LiveTablePreview: React.FC<Props> = ({
             <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-200 text-xs">
               {(data.pengalaman_belajar?.inti?.blok_tahap || []).map((blok, bIdx) => (
                 <React.Fragment key={bIdx}>
-                  <div className="bg-blue-50/80 px-4 py-2 font-bold text-blue-900 border-t border-b border-blue-200">
+                  <div className="bg-[#FAF3FB] px-4 py-2 font-bold text-[#522D60] border-t border-b border-[#E8D6EB]">
                     TAHAP INTI: {blok.header_tahap}
                   </div>
 
@@ -460,9 +460,9 @@ export const LiveTablePreview: React.FC<Props> = ({
             TABEL 4: ASESMEN PEMBELAJARAN
         ========================================================================= */}
         <div className="space-y-2">
-          <div className="bg-blue-900 text-white px-4 py-2 rounded-t-xl font-bold text-sm flex items-center justify-between">
+          <div className="bg-[#522D60] text-white px-4 py-2.5 rounded-t-xl font-bold text-sm flex items-center justify-between shadow-xs">
             <span>4. ASESMEN PEMBELAJARAN</span>
-            <span className="text-[11px] font-normal text-blue-200">Asesmen Autentik PAUD</span>
+            <span className="text-[11px] font-bold text-[#FFD38B]">Asesmen Autentik PAUD</span>
           </div>
           <div className="border border-slate-200 rounded-b-xl overflow-hidden text-xs">
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200">

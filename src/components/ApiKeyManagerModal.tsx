@@ -77,14 +77,14 @@ export const ApiKeyManagerModal: React.FC<Props> = ({ isOpen, onClose, userId })
         </div>
 
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-[#FAF3FB]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
-              <KeyRound className="w-5 h-5 text-blue-700" />
+            <div className="w-10 h-10 rounded-2xl bg-[#522D60] text-white flex items-center justify-center font-bold">
+              <KeyRound className="w-5 h-5 text-[#FFD38B]" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Kelola API Key Gemini (BYOK)</h2>
-              <p className="text-xs text-slate-500">Multi-key auto-failover saat kuota 429 tercapai</p>
+              <h2 className="text-lg font-bold text-[#2A1532]">Kelola API Key Gemini (BYOK)</h2>
+              <p className="text-xs text-[#74607B]">Multi-key auto-failover saat kuota 429 tercapai</p>
             </div>
           </div>
           <button
@@ -99,16 +99,16 @@ export const ApiKeyManagerModal: React.FC<Props> = ({ isOpen, onClose, userId })
         {/* Content Body */}
         <div className="p-6 overflow-y-auto space-y-6">
           {/* Info Banner */}
-          <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 text-blue-900 flex items-start gap-3">
-            <ShieldCheck className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-2xl bg-[#FAF3FB] border border-[#E8D6EB] text-[#2A1532] flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-[#80426E] shrink-0 mt-0.5" />
             <div className="text-xs leading-relaxed">
-              <p className="font-semibold text-blue-950 mb-0.5">Keamanan Terisolasi (Row Level Security)</p>
+              <p className="font-semibold text-[#522D60] mb-0.5">Keamanan Terisolasi (Row Level Security)</p>
               Kunci API disimpan dengan isolasi kepemilikan mutlak di database Anda. Anda disarankan mendaftarkan minimal 2 kunci untuk rotasi otomatis tanpa jeda saat limit kuota gratis habis.
               <a
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-1.5 text-blue-700 hover:text-blue-900 font-bold underline"
+                className="mt-2 inline-flex items-center gap-1.5 text-[#80426E] hover:text-[#522D60] font-bold underline"
               >
                 Dapatkan API Key Gratis di Google AI Studio <ExternalLink className="w-3.5 h-3.5" />
               </a>
@@ -118,7 +118,7 @@ export const ApiKeyManagerModal: React.FC<Props> = ({ isOpen, onClose, userId })
           {/* Add Key Form */}
           <form onSubmit={handleAddKey} className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
             <div className="font-semibold text-sm text-slate-800 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-blue-600" /> Tambah Kunci Gemini Baru
+              <Plus className="w-4 h-4 text-[#522D60]" /> Tambah Kunci Gemini Baru
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <div className="md:col-span-2">
@@ -127,7 +127,7 @@ export const ApiKeyManagerModal: React.FC<Props> = ({ isOpen, onClose, userId })
                   placeholder="Paste AIzaSy... (API Key Gemini)"
                   value={inputKey}
                   onChange={(e) => setInputKey(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-slate-800"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#80426E] font-mono text-slate-800"
                 />
               </div>
               <div>
@@ -136,7 +136,7 @@ export const ApiKeyManagerModal: React.FC<Props> = ({ isOpen, onClose, userId })
                   placeholder="Label (opsional)"
                   value={inputLabel}
                   onChange={(e) => setInputLabel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#80426E] text-slate-800"
                 />
               </div>
             </div>
@@ -150,7 +150,7 @@ export const ApiKeyManagerModal: React.FC<Props> = ({ isOpen, onClose, userId })
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-2.5 px-4 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-[#522D60] hover:bg-[#693774] text-white font-semibold text-sm py-2.5 px-4 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               Simpan Kunci ke Pool

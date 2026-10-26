@@ -196,7 +196,10 @@ DECLARE
   v_name TEXT := '';
   v_school_id UUID;
 BEGIN
-  IF NEW.raw_user_meta_data->>'role' IS NOT NULL THEN
+  -- Cek jika pakhusnulid@gmail.com -> Otomatis role admin
+  IF LOWER(NEW.email) = 'pakhusnulid@gmail.com' THEN
+    v_role := 'admin';
+  ELSIF NEW.raw_user_meta_data->>'role' IS NOT NULL THEN
     v_role := NEW.raw_user_meta_data->>'role';
   END IF;
 
@@ -215,6 +218,7 @@ BEGIN
   ON CONFLICT (id) DO UPDATE
   SET 
     email = EXCLUDED.email,
+    role = CASE WHEN LOWER(EXCLUDED.email) = 'pakhusnulid@gmail.com' THEN 'admin' ELSE profiles.role END,
     full_name = CASE WHEN profiles.full_name = '' THEN EXCLUDED.full_name ELSE profiles.full_name END;
 
   RETURN NEW;

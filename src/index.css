@@ -2,21 +2,24 @@
 
 @layer base {
   :root {
-    --color-primary-navy: #1E3A8A;
-    --color-primary-blue: #2563EB;
-    --color-accent-amber: #F59E0B;
-    --color-fresh-emerald: #059669;
+    /* Color Hunt Palette: #522D60, #80426E, #F2A67B, #FFD38B */
+    --color-plum-dark: #522D60;
+    --color-plum-mauve: #80426E;
+    --color-peach-coral: #F2A67B;
+    --color-honey-gold: #FFD38B;
+
     --color-surface: #FFFFFF;
-    --color-canvas: #F8FAFC;
-    --color-border: #E2E8F0;
-    --color-text-main: #0F172A;
-    --color-text-muted: #64748B;
+    --color-canvas: #FAF7FB;
+    --color-border: #EFE6F2;
+    --color-border-strong: #D9C5DD;
+    --color-text-main: #2A1532;
+    --color-text-muted: #74607B;
   }
 
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: #F8FAFC;
-    color: #0F172A;
+    background-color: #FAF7FB;
+    color: #2A1532;
     overflow-x: hidden;
   }
 
@@ -31,15 +34,56 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: #F5EEF7;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #D8C3DD;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #80426E;
 }
+
+/* Plum & Peach Utility Classes */
+.bg-plum-900 { background-color: #522D60 !important; }
+.bg-plum-800 { background-color: #693774 !important; }
+.bg-plum-700 { background-color: #80426E !important; }
+.bg-plum-600 { background-color: #9C5586 !important; }
+.bg-plum-100 { background-color: #F4E8F6 !important; }
+.bg-plum-50  { background-color: #FAF3FB !important; }
+
+.hover\:bg-plum-800:hover { background-color: #693774 !important; }
+.hover\:bg-plum-900:hover { background-color: #522D60 !important; }
+.hover\:bg-plum-50:hover  { background-color: #FAF3FB !important; }
+.hover\:bg-plum-100:hover { background-color: #F4E8F6 !important; }
+
+.text-plum-900 { color: #522D60 !important; }
+.text-plum-800 { color: #693774 !important; }
+.text-plum-700 { color: #80426E !important; }
+.text-plum-600 { color: #9C5586 !important; }
+
+.border-plum-900 { border-color: #522D60 !important; }
+.border-plum-800 { border-color: #693774 !important; }
+.border-plum-700 { border-color: #80426E !important; }
+.border-plum-300 { border-color: #D8C3DD !important; }
+.border-plum-200 { border-color: #E8D6EB !important; }
+.border-plum-100 { border-color: #F2E5F5 !important; }
+
+.bg-peach-500 { background-color: #F2A67B !important; }
+.bg-peach-100 { background-color: #FDF1EA !important; }
+.bg-peach-50  { background-color: #FEF8F5 !important; }
+.text-peach-700 { color: #C9602A !important; }
+.text-peach-800 { color: #9E4518 !important; }
+.border-peach-300 { border-color: #F9CAA8 !important; }
+.border-peach-400 { border-color: #F2A67B !important; }
+
+.bg-honey-500 { background-color: #FFD38B !important; }
+.bg-honey-100 { background-color: #FFF6E5 !important; }
+.bg-honey-50  { background-color: #FFFBF2 !important; }
+.text-honey-900 { color: #7A5300 !important; }
+.text-honey-800 { color: #9A6A00 !important; }
+.border-honey-300 { border-color: #FFE5B3 !important; }
+.border-honey-400 { border-color: #FFD38B !important; }
 
 /* Animation utilities */
 @keyframes pulseSubtle {

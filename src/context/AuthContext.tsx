@@ -15,6 +15,14 @@ export interface UserProfile {
   is_active: boolean;
 }
 
+export interface AllowedCustomerInfo {
+  allowed: boolean;
+  fullName?: string;
+  schoolName?: string;
+  accountType?: string;
+  isActive?: boolean;
+}
+
 interface AuthContextType {
   session: Session | null;
   user: User | null;
@@ -22,9 +30,18 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, fullName: string, role: 'admin' | 'guru', schoolName?: string, assignedClass?: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    role?: 'admin' | 'guru',
+    schoolName?: string,
+    assignedClass?: string
+  ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   switchToDemoRole: (role: 'admin' | 'guru') => void;
+  checkAllowedCustomer: (email: string) => Promise<AllowedCustomerInfo>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,52 +65,102 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const defaultAdminProfile: UserProfile = {
-    id: 'demo-admin-456',
-    email: 'kepala.tk@paudceria.sch.id',
-    full_name: 'Hj. Siti Rahayu, M.Pd.',
+    id: 'admin-husnul-root',
+    email: 'pakhusnulid@gmail.com',
+    full_name: 'Pak Husnul (Administrator)',
     role: 'admin',
     nip: '197508122002122001',
-    school_name: 'TK NEGERI PEMBINA 01',
+    school_name: 'Kalandra PAUD Official',
     is_active: true,
+  };
+
+  // Helper to detect if email is superadmin
+  const isSuperadminEmail = (emailToCheck?: string | null): boolean => {
+    return emailToCheck?.trim().toLowerCase() === 'pakhusnulid@gmail.com';
   };
 
   // Fetch or setup profile
   const fetchProfile = async (currentUser: User) => {
+    const isSuperAdmin = isSuperadminEmail(currentUser.email);
+
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*, schools(name)')
         .eq('id', currentUser.id)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         setProfile({
           id: data.id,
           email: data.email,
           full_name: data.full_name || currentUser.email?.split('@')[0] || 'Guru PAUD',
-          role: data.role || 'guru',
+          // pakhusnulid@gmail.com selalu menjadi admin
+          role: isSuperAdmin ? 'admin' : (data.role || 'guru'),
           nip: data.nip,
           assigned_class: data.assigned_class || 'A (4-5 Tahun)',
           school_id: data.school_id,
           school_name: (data.schools as any)?.name || 'TK NEGERI PEMBINA 01',
-          is_active: data.is_active,
+          is_active: data.is_active ?? true,
         });
         return;
       }
     } catch (e) {
-      console.warn('Profile fetch fallback:', e);
+      console.warn('Profile fetch warning:', e);
     }
 
-    // Fallback profile if database table not yet seeded
+    // Fallback profile if database row not yet created
     setProfile({
       id: currentUser.id,
       email: currentUser.email || '',
-      full_name: (currentUser.user_metadata as any)?.full_name || 'Dewi Rahmawati, S.Pd.',
-      role: (currentUser.user_metadata as any)?.role || 'guru',
+      full_name: (currentUser.user_metadata as any)?.full_name || (isSuperAdmin ? 'Pak Husnul (Administrator)' : 'Dewi Rahmawati, S.Pd.'),
+      role: isSuperAdmin ? 'admin' : ((currentUser.user_metadata as any)?.role || 'guru'),
       assigned_class: 'A (4-5 Tahun)',
-      school_name: 'TK NEGERI PEMBINA 01',
+      school_name: isSuperAdmin ? 'Kalandra PAUD Official' : 'TK NEGERI PEMBINA 01',
       is_active: true,
     });
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user);
+    }
+  };
+
+  // Check whitelist in allowed_customers
+  const checkAllowedCustomer = async (emailToCheck: string): Promise<AllowedCustomerInfo> => {
+    if (isSuperadminEmail(emailToCheck)) {
+      return {
+        allowed: true,
+        fullName: 'Pak Husnul (Administrator)',
+        schoolName: 'Kalandra PAUD Official',
+        accountType: 'lifetime',
+        isActive: true,
+      };
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('allowed_customers')
+        .select('*')
+        .ilike('email', emailToCheck.trim())
+        .maybeSingle();
+
+      if (error || !data) {
+        return { allowed: false };
+      }
+
+      return {
+        allowed: true,
+        fullName: data.full_name,
+        schoolName: data.school_name,
+        accountType: data.account_type,
+        isActive: data.is_active,
+      };
+    } catch (err) {
+      console.error('Error checking allowed customer:', err);
+      return { allowed: false };
+    }
   };
 
   useEffect(() => {
@@ -104,7 +171,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         fetchProfile(session.user).finally(() => setLoading(false));
       } else {
-        // Default to Demo Guru profile so app is immediately usable without barrier
         const savedDemoRole = localStorage.getItem('kalandra_demo_role');
         setProfile(savedDemoRole === 'admin' ? defaultAdminProfile : defaultGuruProfile);
         setLoading(false);
@@ -139,12 +205,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setSession(data.session);
       setUser(data.user);
-      if (data.user) await fetchProfile(data.user);
+      if (data.user) {
+        await fetchProfile(data.user);
+      }
       setLoading(false);
       return { success: true };
     } catch (err: any) {
       setLoading(false);
-      return { success: false, error: err.message };
+      return { success: false, error: err.message || 'Gagal masuk akun' };
     }
   };
 
@@ -152,11 +220,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string,
     password: string,
     fullName: string,
-    role: 'admin' | 'guru',
+    role: 'admin' | 'guru' = 'guru',
     schoolName: string = 'TK NEGERI PEMBINA 01',
     assignedClass: string = 'A (4-5 Tahun)'
   ) => {
     setLoading(true);
+    const assignedRole = isSuperadminEmail(email) ? 'admin' : role;
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -164,7 +234,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           data: {
             full_name: fullName,
-            role,
+            role: assignedRole,
             school_name: schoolName,
             assigned_class: assignedClass,
           },
@@ -179,13 +249,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(data.session);
       setUser(data.user);
       if (data.user) {
-        // Try profile insert
         try {
           await supabase.from('profiles').upsert({
             id: data.user.id,
             email,
             full_name: fullName,
-            role,
+            role: assignedRole,
             assigned_class: assignedClass,
           });
         } catch (dbErr) {
@@ -197,7 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true };
     } catch (err: any) {
       setLoading(false);
-      return { success: false, error: err.message };
+      return { success: false, error: err.message || 'Gagal mendaftar akun' };
     }
   };
 
@@ -214,7 +283,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(role === 'admin' ? defaultAdminProfile : defaultGuruProfile);
   };
 
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = profile?.role === 'admin' || isSuperadminEmail(user?.email) || isSuperadminEmail(profile?.email);
 
   return (
     <AuthContext.Provider
@@ -228,6 +297,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signOut,
         switchToDemoRole,
+        checkAllowedCustomer,
+        refreshProfile,
       }}
     >
       {children}

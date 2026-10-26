@@ -4,7 +4,8 @@ import { Topbar } from './components/Topbar';
 import { RpmWizard } from './components/RpmWizard';
 import { LiveTablePreview } from './components/LiveTablePreview';
 import { DocumentHistory } from './components/DocumentHistory';
-import { AdminConsole } from './components/AdminConsole';
+import { AdminLayout } from './components/admin/AdminLayout';
+import { AuthPage } from './components/auth/AuthPage';
 import { ApiKeyManagerModal } from './components/ApiKeyManagerModal';
 import { ExportDocxModal } from './components/ExportDocxModal';
 import { SAMPLE_RPM_PAUD } from './data/default_sample_rpm';
@@ -12,8 +13,9 @@ import { RpmPaudDocData } from './lib/docx-engine/docx-paud-builder';
 import { Sparkles, FileText, CheckCircle2 } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<'wizard' | 'preview' | 'history' | 'admin'>('wizard');
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [currentDoc, setCurrentDoc] = useState<RpmPaudDocData>(SAMPLE_RPM_PAUD);
@@ -24,6 +26,23 @@ const MainLayout: React.FC = () => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // If user opens the standalone Auth page
+  if (isAuthOpen) {
+    return (
+      <AuthPage
+        onSuccess={() => setIsAuthOpen(false)}
+        onBackToApp={() => setIsAuthOpen(false)}
+      />
+    );
+  }
+
+  // If activeTab is 'admin' and user is admin, render the full-featured Admin Panel with Left Sidebar!
+  if (activeTab === 'admin' && isAdmin) {
+    return (
+      <AdminLayout onBackToApp={() => setActiveTab('wizard')} />
+    );
+  }
 
   // When wizard completes AI generation
   const handleDocumentGenerated = (newDoc: RpmPaudDocData) => {
@@ -62,17 +81,18 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#FAF7FB] text-[#2A1532] selection:bg-[#522D60] selection:text-white">
       {/* Topbar */}
       <Topbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenKeyModal={() => setIsKeyModalOpen(true)}
+        onOpenAuth={() => setIsAuthOpen(true)}
       />
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-4 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl border border-slate-800 flex items-center gap-2 animate-bounce">
+        <div className="fixed top-20 right-4 z-50 bg-[#2A1532] text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl border border-[#522D60] flex items-center gap-2 animate-bounce">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
@@ -110,14 +130,12 @@ const MainLayout: React.FC = () => {
             onNewDocClick={() => setActiveTab('wizard')}
           />
         )}
-
-        {activeTab === 'admin' && <AdminConsole />}
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 text-center">
+      <footer className="bg-white border-t border-[#EFE6F2] py-6 text-xs text-[#74607B] text-center">
         <div className="max-w-7xl mx-auto px-4 space-y-1">
-          <p className="font-semibold text-slate-700">
+          <p className="font-semibold text-[#2A1532]">
             Kalandra PAUD — Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi
           </p>
           <p>

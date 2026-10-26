@@ -13,17 +13,19 @@ import {
   X, 
   Building2,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  LogIn
 } from 'lucide-react';
 
 interface Props {
   activeTab: 'wizard' | 'preview' | 'history' | 'admin';
   setActiveTab: (tab: 'wizard' | 'preview' | 'history' | 'admin') => void;
   onOpenKeyModal: () => void;
+  onOpenAuth: () => void;
 }
 
-export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModal }) => {
-  const { profile, signOut, isAdmin, switchToDemoRole } = useAuth();
+export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModal, onOpenAuth }) => {
+  const { user, profile, signOut, isAdmin, switchToDemoRole } = useAuth();
   const { activeKeys } = useGeminiKeys(profile?.id);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -31,7 +33,7 @@ export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModa
   const keyCount = activeKeys.length;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#EFE6F2]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & School Badge */}
@@ -40,54 +42,54 @@ export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModa
               onClick={() => setActiveTab('wizard')}
               className="flex items-center gap-2.5 cursor-pointer group select-none"
             >
-              <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center font-black shadow-xs group-hover:bg-blue-800 transition-colors">
-                <Sparkles className="w-5 h-5 text-amber-400" />
+              <div className="w-10 h-10 rounded-2xl bg-[#522D60] text-white flex items-center justify-center font-black shadow-md shadow-[#522D60]/20 group-hover:bg-[#693774] transition-colors">
+                <Sparkles className="w-5 h-5 text-[#FFD38B]" />
               </div>
               <div>
-                <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 group-hover:text-blue-900 transition-colors flex items-center gap-1.5">
+                <span className="font-extrabold text-base sm:text-lg tracking-tight text-[#2A1532] group-hover:text-[#522D60] transition-colors flex items-center gap-1.5">
                   KALANDRA PAUD
                 </span>
-                <span className="hidden sm:block text-[11px] font-medium text-slate-500 -mt-1">
+                <span className="hidden sm:block text-[11px] font-medium text-[#74607B] -mt-1">
                   RPM TK Fase Fondasi 2025/2026
                 </span>
               </div>
             </div>
 
             {/* School Tag */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200">
-              <Building2 className="w-3.5 h-3.5 text-blue-700" />
+            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF3FB] text-[#2A1532] text-xs font-semibold border border-[#E8D6EB]">
+              <Building2 className="w-3.5 h-3.5 text-[#80426E]" />
               <span>{profile?.school_name || 'TK NEGERI PEMBINA 01'}</span>
             </div>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <nav className="hidden md:flex items-center gap-1 bg-[#FAF3FB] p-1 rounded-2xl border border-[#E8D6EB]">
             <button
               onClick={() => setActiveTab('wizard')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'wizard'
-                  ? 'bg-white text-blue-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  ? 'bg-white text-[#522D60] shadow-xs'
+                  : 'text-[#74607B] hover:text-[#522D60] hover:bg-white/60'
               }`}
             >
               Penyusun RPM
             </button>
             <button
               onClick={() => setActiveTab('preview')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'preview'
-                  ? 'bg-white text-blue-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  ? 'bg-white text-[#522D60] shadow-xs'
+                  : 'text-[#74607B] hover:text-[#522D60] hover:bg-white/60'
               }`}
             >
               Pratinjau Dokumen
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'history'
-                  ? 'bg-white text-blue-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  ? 'bg-white text-[#522D60] shadow-xs'
+                  : 'text-[#74607B] hover:text-[#522D60] hover:bg-white/60'
               }`}
             >
               Riwayat
@@ -95,14 +97,14 @@ export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModa
             {isAdmin && (
               <button
                 onClick={() => setActiveTab('admin')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                   activeTab === 'admin'
-                    ? 'bg-blue-900 text-white shadow-xs'
-                    : 'text-blue-900 hover:bg-blue-50'
+                    ? 'bg-[#522D60] text-white shadow-xs'
+                    : 'text-[#522D60] hover:bg-[#F4E8F6]'
                 }`}
               >
                 <Shield className="w-3.5 h-3.5" />
-                Admin
+                Panel Admin
               </button>
             )}
           </nav>
@@ -115,7 +117,7 @@ export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModa
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
                 keyCount > 0
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                  : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 animate-pulse'
+                  : 'bg-[#FFFBF2] text-[#9A6A00] border-[#FFE5B3] hover:bg-[#FFF6E5]'
               }`}
               title="Klik untuk membuka Pengelola Kunci BYOK"
             >
@@ -126,90 +128,124 @@ export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModa
                   {keyCount} Aktif <CheckCircle className="w-3 h-3 text-emerald-600" />
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-amber-700 font-extrabold">
-                  Belum Ada <AlertTriangle className="w-3 h-3 text-amber-600" />
+                <span className="flex items-center gap-1 text-[#9A6A00] font-extrabold">
+                  Pool Sistem <Sparkles className="w-3 h-3 text-[#FFD38B]" />
                 </span>
               )}
             </button>
 
             {/* User Profile Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors"
-                aria-expanded={showProfileMenu}
-              >
-                <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-900 flex items-center justify-center font-bold text-xs">
-                  {profile?.full_name?.charAt(0) || 'U'}
-                </div>
-                <div className="hidden sm:block text-left">
-                  <div className="text-xs font-bold text-slate-800 leading-tight">
-                    {profile?.full_name?.split(' ')[0] || 'Guru'}
-                  </div>
-                  <div className="text-[10px] text-slate-500 capitalize">
-                    {profile?.role === 'admin' ? 'Kepala TK / Admin' : 'Guru Kelas'}
-                  </div>
-                </div>
-              </button>
-
-              {/* Dropdown Menu */}
-              {showProfileMenu && (
-                <div 
-                  className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-scale-in"
-                  onClick={() => setShowProfileMenu(false)}
+            {user || profile ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl border border-[#E8D6EB] hover:bg-[#FAF3FB] transition-colors"
+                  aria-expanded={showProfileMenu}
                 >
-                  <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                    <p className="text-xs font-bold text-slate-900">{profile?.full_name}</p>
-                    <p className="text-[11px] text-slate-500 truncate">{profile?.email}</p>
-                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 uppercase">
-                      {profile?.role}
-                    </span>
+                  <div className="w-7 h-7 rounded-xl bg-[#522D60] text-white flex items-center justify-center font-bold text-xs">
+                    {profile?.full_name?.charAt(0) || 'U'}
                   </div>
-
-                  <div className="py-1">
-                    <div className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      Ganti Peran Demonstrasi
+                  <div className="hidden sm:block text-left">
+                    <div className="text-xs font-bold text-[#2A1532] leading-tight">
+                      {profile?.full_name?.split(' ')[0] || 'Guru'}
                     </div>
-                    <button
-                      onClick={() => switchToDemoRole('guru')}
-                      className={`w-full px-4 py-2 text-left text-xs flex items-center gap-2 hover:bg-slate-50 ${
-                        profile?.role === 'guru' ? 'font-bold text-blue-700 bg-blue-50/50' : 'text-slate-700'
-                      }`}
-                    >
-                      <User className="w-4 h-4 text-blue-600" /> Guru Kelas (Penyusun RPM)
-                    </button>
-                    <button
-                      onClick={() => switchToDemoRole('admin')}
-                      className={`w-full px-4 py-2 text-left text-xs flex items-center gap-2 hover:bg-slate-50 ${
-                        profile?.role === 'admin' ? 'font-bold text-blue-700 bg-blue-50/50' : 'text-slate-700'
-                      }`}
-                    >
-                      <Shield className="w-4 h-4 text-amber-600" /> Admin Satuan PAUD
-                    </button>
+                    <div className="text-[10px] text-[#74607B] capitalize">
+                      {isAdmin ? 'Administrator' : 'Guru Kelas'}
+                    </div>
                   </div>
+                </button>
 
-                  <div className="border-t border-slate-100 pt-1">
-                    <button
-                      onClick={onOpenKeyModal}
-                      className="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                    >
-                      <KeyRound className="w-4 h-4 text-slate-500" /> Kelola API Key BYOK
-                    </button>
-                    <button
-                      onClick={() => signOut()}
-                      className="w-full px-4 py-2 text-left text-xs text-red-600 hover:bg-red-50 flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" /> Keluar
-                    </button>
+                {/* Dropdown Menu */}
+                {showProfileMenu && (
+                  <div 
+                    className="absolute right-0 mt-2 w-64 bg-white rounded-3xl shadow-xl border border-[#EFE6F2] py-2 z-50 animate-scale-in"
+                    onClick={() => setShowProfileMenu(false)}
+                  >
+                    <div className="px-4 py-3 border-b border-slate-100 bg-[#FAF3FB]">
+                      <p className="text-xs font-bold text-[#2A1532]">{profile?.full_name}</p>
+                      <p className="text-[11px] text-[#74607B] truncate">{profile?.email}</p>
+                      <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white uppercase ${
+                        isAdmin ? 'bg-[#522D60]' : 'bg-[#80426E]'
+                      }`}>
+                        {isAdmin ? 'ADMINISTRATOR' : 'GURU KELAS'}
+                      </span>
+                    </div>
+
+                    <div className="py-1">
+                      {isAdmin && (
+                        <button
+                          onClick={() => setActiveTab('admin')}
+                          className="w-full px-4 py-2 text-left text-xs text-[#522D60] hover:bg-[#FAF3FB] flex items-center gap-2 font-bold"
+                        >
+                          <Shield className="w-4 h-4 text-[#80426E]" /> Buka Panel Admin
+                        </button>
+                      )}
+
+                      <button
+                        onClick={onOpenKeyModal}
+                        className="w-full px-4 py-2 text-left text-xs text-[#2A1532] hover:bg-[#FAF3FB] flex items-center gap-2"
+                      >
+                        <KeyRound className="w-4 h-4 text-[#74607B]" /> Kelola API Key BYOK
+                      </button>
+
+                      {/* Demo role switchers if in demo mode */}
+                      {!user && (
+                        <div className="pt-1 border-t border-slate-100">
+                          <div className="px-4 py-1 text-[10px] font-bold text-[#74607B] uppercase">
+                            Ganti Peran Demonstrasi:
+                          </div>
+                          <button
+                            onClick={() => switchToDemoRole('guru')}
+                            className="w-full px-4 py-1.5 text-left text-xs text-[#2A1532] hover:bg-[#FAF3FB] flex items-center gap-2"
+                          >
+                            <User className="w-3.5 h-3.5 text-[#80426E]" /> Mode Guru Demo
+                          </button>
+                          <button
+                            onClick={() => switchToDemoRole('admin')}
+                            className="w-full px-4 py-1.5 text-left text-xs text-[#522D60] hover:bg-[#FAF3FB] flex items-center gap-2 font-bold"
+                          >
+                            <Shield className="w-3.5 h-3.5 text-[#522D60]" /> Mode Admin (Pak Husnul)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-1">
+                      {!user ? (
+                        <button
+                          onClick={onOpenAuth}
+                          className="w-full px-4 py-2 text-left text-xs text-[#522D60] hover:bg-[#FAF3FB] flex items-center gap-2 font-bold"
+                        >
+                          <LogIn className="w-4 h-4" /> Masuk / Daftar Akun Resmi
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => signOut()}
+                          className="w-full px-4 py-2 text-left text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 font-semibold"
+                        >
+                          <LogOut className="w-4 h-4" /> Keluar Akun
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onOpenAuth}
+                  className="py-1.5 px-3.5 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-xs flex items-center gap-1.5 transition-colors"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Masuk</span>
+                </button>
+              </div>
+            )}
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100"
+              className="md:hidden p-2 rounded-xl text-[#2A1532] hover:bg-[#FAF3FB]"
               aria-label="Menu navigasi"
             >
               {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -220,39 +256,47 @@ export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModa
 
       {/* Mobile Drawer Navigation */}
       {showMobileMenu && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1">
+        <div className="md:hidden border-t border-[#EFE6F2] bg-white px-4 pt-2 pb-4 space-y-1">
           <button
             onClick={() => { setActiveTab('wizard'); setShowMobileMenu(false); }}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${
-              activeTab === 'wizard' ? 'bg-blue-50 text-blue-900 font-bold' : 'text-slate-700'
+            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 ${
+              activeTab === 'wizard' ? 'bg-[#FAF3FB] text-[#522D60] font-bold' : 'text-[#2A1532]'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-blue-600" /> Penyusun RPM (Wizard)
+            <Sparkles className="w-4 h-4 text-[#80426E]" /> Penyusun RPM (Wizard)
           </button>
           <button
             onClick={() => { setActiveTab('preview'); setShowMobileMenu(false); }}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${
-              activeTab === 'preview' ? 'bg-blue-50 text-blue-900 font-bold' : 'text-slate-700'
+            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 ${
+              activeTab === 'preview' ? 'bg-[#FAF3FB] text-[#522D60] font-bold' : 'text-[#2A1532]'
             }`}
           >
-            <FileText className="w-4 h-4 text-emerald-600" /> Pratinjau Dokumen & Edit
+            <FileText className="w-4 h-4 text-[#80426E]" /> Pratinjau Dokumen & Edit
           </button>
           <button
             onClick={() => { setActiveTab('history'); setShowMobileMenu(false); }}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${
-              activeTab === 'history' ? 'bg-blue-50 text-blue-900 font-bold' : 'text-slate-700'
+            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 ${
+              activeTab === 'history' ? 'bg-[#FAF3FB] text-[#522D60] font-bold' : 'text-[#2A1532]'
             }`}
           >
-            <LayoutDashboard className="w-4 h-4 text-slate-600" /> Riwayat Dokumen
+            <LayoutDashboard className="w-4 h-4 text-[#74607B]" /> Riwayat Dokumen
           </button>
           {isAdmin && (
             <button
               onClick={() => { setActiveTab('admin'); setShowMobileMenu(false); }}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${
-                activeTab === 'admin' ? 'bg-blue-900 text-white' : 'text-blue-900'
+              className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 ${
+                activeTab === 'admin' ? 'bg-[#522D60] text-white' : 'text-[#522D60]'
               }`}
             >
-              <Shield className="w-4 h-4" /> Konsol Admin Platform
+              <Shield className="w-4 h-4" /> Panel Admin Platform
+            </button>
+          )}
+          {!user && (
+            <button
+              onClick={() => { onOpenAuth(); setShowMobileMenu(false); }}
+              className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-[#522D60] flex items-center gap-2"
+            >
+              <LogIn className="w-4 h-4" /> Masuk / Daftar Akun
             </button>
           )}
         </div>
