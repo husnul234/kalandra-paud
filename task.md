@@ -81,6 +81,8 @@
 - [x] **TASK-6.6**: Buat Modal & Bottom-Sheet BYOK API Key Manager dengan panduan tautan ke Google AI Studio ([ApiKeyManagerModal.tsx](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/15.%20US%20DEWI/RPP%20TK%20CODE%20BASE/src/components/ApiKeyManagerModal.tsx)).
 - [x] **TASK-6.7**: Buat Dialog Ekspor DOCX dengan pilihan ukuran kertas (A4 vs F4) dan opsi tanda tangan ([ExportDocxModal.tsx](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/15.%20US%20DEWI/RPP%20TK%20CODE%20BASE/src/components/ExportDocxModal.tsx)).
 - [x] **TASK-6.8**: Buat Konsol Creator / Superadmin Platform (Manajemen Pengguna Guru dari berbagai sekolah, Aktivasi/Nonaktivasi Akun, Metrik Generasi Dokumen, dan Konfigurasi Master Prompt) ([AdminConsole.tsx](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/15.%20US%20DEWI/RPP%20TK%20CODE%20BASE/src/components/AdminConsole.tsx)).
+- [x] **TASK-6.9**: Buat Landing Page Utama Kalandra PAUD ([LandingPage.tsx](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/15.%20US%20DEWI/RPP%20TK%20CODE%20BASE/src/components/landing/LandingPage.tsx)) sebagai beranda awal dengan copywriting edukatif, pembandingan masalah manual vs solusi, lencana kepatuhan regulasi, showcase fitur, dan tombol masuk auth.
+- [x] **TASK-6.10**: Overhaul True-WYSIWYG Microsoft Word Document Simulator ([LiveTablePreview.tsx](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/15.%20US%20DEWI/RPP%20TK%20CODE%20BASE/src/components/LiveTablePreview.tsx)) dengan kanvas meja kerja slate, lembar kertas A4 putih berbayang, tipografi Calibri, header tabel Navy `#1E3A8A`, dan blok tanda tangan resmi 2-kolom identik dengan hasil ekspor .docx.
 
 ---
 
@@ -90,3 +92,4 @@
 - [x] **TASK-7.3**: Simulasi penanganan limit kuota (HTTP 429) untuk memverifikasi peralihan otomatis ke kunci cadangan tanpa interupsi guru.
 - [x] **TASK-7.4**: Verifikasi hasil file biner `.docx` yang diekspor di Microsoft Word dan WPS Office untuk memastikan margin, tabel, dan halaman rapi tanpa canggung.
 - [x] **TASK-7.5**: Audit kepatuhan regulasi akhir (memastikan 0% kemunculan kata "P5" dan seluruh 8 DPL sinkron 100%).
+

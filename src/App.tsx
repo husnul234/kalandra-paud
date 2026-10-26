@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LandingPage } from './components/landing/LandingPage';
 import { Topbar } from './components/Topbar';
 import { RpmWizard } from './components/RpmWizard';
 import { LiveTablePreview } from './components/LiveTablePreview';
@@ -12,10 +13,14 @@ import { SAMPLE_RPM_PAUD } from './data/default_sample_rpm';
 import { RpmPaudDocData } from './lib/docx-engine/docx-paud-builder';
 import { Sparkles, FileText, CheckCircle2 } from 'lucide-react';
 
+export type PageView = 'landing' | 'app' | 'auth' | 'admin';
+
 const MainLayout: React.FC = () => {
   const { profile, isAdmin } = useAuth();
+  
+  // Default first page is the Landing Page
+  const [pageView, setPageView] = useState<PageView>('landing');
   const [activeTab, setActiveTab] = useState<'wizard' | 'preview' | 'history' | 'admin'>('wizard');
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [currentDoc, setCurrentDoc] = useState<RpmPaudDocData>(SAMPLE_RPM_PAUD);
@@ -27,22 +32,42 @@ const MainLayout: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // If user opens the standalone Auth page
-  if (isAuthOpen) {
+  // 1. LANDING PAGE VIEW (Default on site visit)
+  if (pageView === 'landing') {
     return (
-      <AuthPage
-        onSuccess={() => setIsAuthOpen(false)}
-        onBackToApp={() => setIsAuthOpen(false)}
+      <LandingPage
+        onGoToApp={() => setPageView('app')}
+        onGoToAuth={() => setPageView('auth')}
+        onGoToAdmin={() => setPageView('admin')}
       />
     );
   }
 
-  // If activeTab is 'admin' and user is admin, render the full-featured Admin Panel with Left Sidebar!
-  if (activeTab === 'admin' && isAdmin) {
+  // 2. AUTHENTICATION PAGE (Login / Register / Whitelist Access)
+  if (pageView === 'auth') {
     return (
-      <AdminLayout onBackToApp={() => setActiveTab('wizard')} />
+      <AuthPage
+        onSuccess={() => setPageView('app')}
+        onBackToApp={() => setPageView('landing')}
+      />
     );
   }
+
+  // 3. ADMIN PANEL (Multi-menu with collapsible sidebar)
+  if (pageView === 'admin' && isAdmin) {
+    return (
+      <AdminLayout onBackToApp={() => setPageView('app')} />
+    );
+  }
+
+  // Handle tab switching in app
+  const handleTabChange = (tab: 'wizard' | 'preview' | 'history' | 'admin') => {
+    if (tab === 'admin') {
+      setPageView('admin');
+    } else {
+      setActiveTab(tab);
+    }
+  };
 
   // When wizard completes AI generation
   const handleDocumentGenerated = (newDoc: RpmPaudDocData) => {
@@ -80,14 +105,16 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  // 4. MAIN GENERATOR APPLICATION
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF7FB] text-[#2A1532] selection:bg-[#522D60] selection:text-white">
       {/* Topbar */}
       <Topbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         onOpenKeyModal={() => setIsKeyModalOpen(true)}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={() => setPageView('auth')}
+        onGoToLanding={() => setPageView('landing')}
       />
 
       {/* Toast Notification */}

@@ -14,7 +14,8 @@ import {
   Building2,
   CheckCircle,
   AlertTriangle,
-  LogIn
+  LogIn,
+  Home
 } from 'lucide-react';
 
 interface Props {
@@ -22,9 +23,16 @@ interface Props {
   setActiveTab: (tab: 'wizard' | 'preview' | 'history' | 'admin') => void;
   onOpenKeyModal: () => void;
   onOpenAuth: () => void;
+  onGoToLanding?: () => void;
 }
 
-export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModal, onOpenAuth }) => {
+export const Topbar: React.FC<Props> = ({ 
+  activeTab, 
+  setActiveTab, 
+  onOpenKeyModal, 
+  onOpenAuth,
+  onGoToLanding 
+}) => {
   const { user, profile, signOut, isAdmin, switchToDemoRole } = useAuth();
   const { activeKeys } = useGeminiKeys(profile?.id);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -39,7 +47,10 @@ export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModa
           {/* Logo & School Badge */}
           <div className="flex items-center gap-3">
             <div 
-              onClick={() => setActiveTab('wizard')}
+              onClick={() => {
+                if (onGoToLanding) onGoToLanding();
+                else setActiveTab('wizard');
+              }}
               className="flex items-center gap-2.5 cursor-pointer group select-none"
             >
               <div className="w-10 h-10 rounded-2xl bg-[#522D60] text-white flex items-center justify-center font-black shadow-md shadow-[#522D60]/20 group-hover:bg-[#693774] transition-colors">
@@ -64,6 +75,16 @@ export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModa
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1 bg-[#FAF3FB] p-1 rounded-2xl border border-[#E8D6EB]">
+            {onGoToLanding && (
+              <button
+                onClick={onGoToLanding}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold text-[#74607B] hover:text-[#522D60] hover:bg-white/60 transition-all flex items-center gap-1"
+                title="Kembali ke Halaman Beranda"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>Beranda</span>
+              </button>
+            )}
             <button
               onClick={() => setActiveTab('wizard')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
@@ -257,6 +278,14 @@ export const Topbar: React.FC<Props> = ({ activeTab, setActiveTab, onOpenKeyModa
       {/* Mobile Drawer Navigation */}
       {showMobileMenu && (
         <div className="md:hidden border-t border-[#EFE6F2] bg-white px-4 pt-2 pb-4 space-y-1">
+          {onGoToLanding && (
+            <button
+              onClick={() => { onGoToLanding(); setShowMobileMenu(false); }}
+              className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 text-[#2A1532] hover:bg-[#FAF3FB]"
+            >
+              <Home className="w-4 h-4 text-[#80426E]" /> Beranda
+            </button>
+          )}
           <button
             onClick={() => { setActiveTab('wizard'); setShowMobileMenu(false); }}
             className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 ${
