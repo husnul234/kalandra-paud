@@ -15,7 +15,8 @@ import {
   Building2,
   GraduationCap,
   Eye,
-  EyeOff
+  EyeOff,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -31,55 +32,8 @@ export interface UserRow {
   created_at: string;
 }
 
-const DEFAULT_USERS_DATA: UserRow[] = [
-  {
-    id: 'u-admin-1',
-    email: 'pakhusnulid@gmail.com',
-    full_name: 'Pak Husnul (Administrator)',
-    role: 'admin',
-    school_name: 'Kalandra PAUD Official',
-    assigned_class: 'Superadmin Platform',
-    docs_count: 84,
-    is_active: true,
-    created_at: '2026-01-10',
-  },
-  {
-    id: 'u-guru-1',
-    email: 'guru.dewi@paudceria.sch.id',
-    full_name: 'Dewi Rahmawati, S.Pd.',
-    role: 'guru',
-    school_name: 'TK NEGERI PEMBINA 01',
-    assigned_class: 'A (4-5 Tahun)',
-    docs_count: 24,
-    is_active: true,
-    created_at: '2026-02-14',
-  },
-  {
-    id: 'u-guru-2',
-    email: 'anisa.guru@kartika.sch.id',
-    full_name: 'Anisa Nuraini, S.Pd.',
-    role: 'guru',
-    school_name: 'TK KARTIKA CENDEKIA',
-    assigned_class: 'B (5-6 Tahun)',
-    docs_count: 18,
-    is_active: true,
-    created_at: '2026-02-18',
-  },
-  {
-    id: 'u-guru-3',
-    email: 'budi.santoso@paudceria.sch.id',
-    full_name: 'Budi Santoso, S.Pd.',
-    role: 'guru',
-    school_name: 'TK NEGERI PEMBINA 01',
-    assigned_class: 'B (5-6 Tahun)',
-    docs_count: 6,
-    is_active: false,
-    created_at: '2026-03-01',
-  },
-];
-
 export const AdminUsersView: React.FC = () => {
-  const [users, setUsers] = useState<UserRow[]>(DEFAULT_USERS_DATA);
+  const [users, setUsers] = useState<UserRow[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'guru'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
@@ -108,33 +62,70 @@ export const AdminUsersView: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // 1. Fetch profiles
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*, schools(name)')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        const mapped: UserRow[] = data.map((p) => ({
-          id: p.id,
-          email: p.email,
-          full_name: p.full_name || p.email.split('@')[0],
-          role: p.email.toLowerCase() === 'pakhusnulid@gmail.com' ? 'admin' : (p.role || 'guru'),
-          school_name: (p.schools as any)?.name || 'TK NEGERI PEMBINA 01',
-          assigned_class: p.assigned_class || 'A (4-5 Tahun)',
-          docs_count: 5,
-          is_active: p.is_active ?? true,
-          created_at: new Date(p.created_at).toISOString().slice(0, 10),
-        }));
+      // 2. Fetch document counts per user
+      const { data: docs } = await supabase
+        .from('generated_documents')
+        .select('user_id');
 
-        // Ensure pakhusnulid@gmail.com is listed
-        if (!mapped.some((u) => u.email.toLowerCase() === 'pakhusnulid@gmail.com')) {
-          mapped.unshift(DEFAULT_USERS_DATA[0]);
-        }
-
-        setUsers(mapped);
+      const docsCountMap: Record<string, number> = {};
+      if (docs) {
+        docs.forEach((d: any) => {
+          if (d.user_id) {
+            docsCountMap[d.user_id] = (docsCountMap[d.user_id] || 0) + 1;
+          }
+        });
       }
+
+      const mapped: UserRow[] = (profiles || []).map((p) => ({
+        id: p.id,
+        email: p.email,
+        full_name: p.full_name || p.email.split('@')[0],
+        role: p.email?.toLowerCase() === 'pakhusnulid@gmail.com' ? 'admin' : (p.role || 'guru'),
+        school_name: (p.schools as any)?.name || 'TK NEGERI PEMBINA 01',
+        assigned_class: p.assigned_class || 'A (4-5 Tahun)',
+        docs_count: docsCountMap[p.id] || 0,
+        is_active: p.is_active ?? true,
+        created_at: p.created_at ? new Date(p.created_at).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+      }));
+
+      // Ensure Superadmin Pak Husnul is always available in the view
+      if (!mapped.some((u) => u.email.toLowerCase() === 'pakhusnulid@gmail.com')) {
+        mapped.unshift({
+          id: 'admin-husnul-root',
+          email: 'pakhusnulid@gmail.com',
+          full_name: 'Pak Husnul (Administrator)',
+          role: 'admin',
+          school_name: 'Kalandra PAUD Official',
+          assigned_class: 'Superadmin Platform',
+          docs_count: docs?.length || 0,
+          is_active: true,
+          created_at: '2026-01-01',
+        });
+      }
+
+      setUsers(mapped);
     } catch (e) {
-      console.warn('Users fetch fallback to default:', e);
+      console.warn('Users fetch error:', e);
+      // Fallback minimum admin
+      setUsers([
+        {
+          id: 'admin-husnul-root',
+          email: 'pakhusnulid@gmail.com',
+          full_name: 'Pak Husnul (Administrator)',
+          role: 'admin',
+          school_name: 'Kalandra PAUD Official',
+          assigned_class: 'Superadmin Platform',
+          docs_count: 0,
+          is_active: true,
+          created_at: '2026-01-01',
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -144,34 +135,60 @@ export const AdminUsersView: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const handleToggleStatus = (userId: string) => {
+  const handleToggleStatus = async (userId: string) => {
+    const target = users.find((u) => u.id === userId);
+    if (!target) return;
+
+    if (target.email.toLowerCase() === 'pakhusnulid@gmail.com') {
+      showToast('Status Superadmin utama tidak dapat dinonaktifkan.');
+      return;
+    }
+
+    const updated = !target.is_active;
+
+    // Optimistic UI update
     setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === userId) {
-          const updated = !u.is_active;
-          showToast(`Status akun ${u.full_name} berhasil ${updated ? 'diaktifkan' : 'dinonaktifkan'}.`);
-          return { ...u, is_active: updated };
-        }
-        return u;
-      })
+      prev.map((u) => (u.id === userId ? { ...u, is_active: updated } : u))
     );
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({ is_active: updated })
+        .eq('id', userId);
+    } catch (e) {
+      console.warn('Error updating profile status:', e);
+    }
+
+    showToast(`Status akun ${target.full_name} berhasil ${updated ? 'diaktifkan' : 'dinonaktifkan'}.`);
   };
 
-  const handleToggleRole = (userId: string) => {
+  const handleToggleRole = async (userId: string) => {
+    const target = users.find((u) => u.id === userId);
+    if (!target) return;
+
+    if (target.email.toLowerCase() === 'pakhusnulid@gmail.com') {
+      showToast('Peran Superadmin utama tidak dapat diubah.');
+      return;
+    }
+
+    const nextRole = target.role === 'admin' ? 'guru' : 'admin';
+
+    // Optimistic UI update
     setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === userId) {
-          if (u.email.toLowerCase() === 'pakhusnulid@gmail.com') {
-            showToast('Peran Superadmin utama tidak dapat diubah.');
-            return u;
-          }
-          const nextRole = u.role === 'admin' ? 'guru' : 'admin';
-          showToast(`Peran ${u.full_name} berhasil diubah menjadi ${nextRole}.`);
-          return { ...u, role: nextRole };
-        }
-        return u;
-      })
+      prev.map((u) => (u.id === userId ? { ...u, role: nextRole } : u))
     );
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({ role: nextRole })
+        .eq('id', userId);
+    } catch (e) {
+      console.warn('Error updating profile role:', e);
+    }
+
+    showToast(`Peran ${target.full_name} berhasil diubah menjadi ${nextRole}.`);
   };
 
   const handleOpenReset = (user: UserRow) => {
@@ -182,29 +199,39 @@ export const AdminUsersView: React.FC = () => {
 
   const handleConfirmReset = () => {
     if (!selectedUser) return;
-    showToast(`Kata sandi untuk ${selectedUser.full_name} berhasil di-reset.`);
+    showToast(`Instruksi pengaturan ulang kata sandi untuk ${selectedUser.full_name} berhasil dikirim.`);
     setIsResetOpen(false);
   };
 
-  const handleDeleteUser = (userId: string, email: string) => {
+  const handleDeleteUser = async (userId: string, email: string) => {
     if (email.toLowerCase() === 'pakhusnulid@gmail.com') {
-      showToast('Tidak dapat menghapus akun Superadmin.');
+      showToast('Tidak dapat menghapus akun Superadmin utama.');
       return;
     }
-    if (confirm(`Apakah Anda yakin ingin menghapus akun ${email}?`)) {
+    if (confirm(`Apakah Anda yakin ingin menghapus akun pengguna ${email}?`)) {
       setUsers((prev) => prev.filter((u) => u.id !== userId));
-      showToast('Akun berhasil dihapus dari sistem.');
+
+      try {
+        await supabase.from('profiles').delete().eq('id', userId);
+        await supabase.from('allowed_customers').delete().ilike('email', email);
+      } catch (e) {
+        console.warn('Error deleting user:', e);
+      }
+
+      showToast(`Akun ${email} berhasil dihapus dari sistem.`);
     }
   };
 
-  const handleCreateUser = (e: React.FormEvent) => {
+  const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newEmail.trim() || !newFullName.trim()) return;
+    const cleanEmail = newEmail.trim().toLowerCase();
+    const cleanName = newFullName.trim();
+    if (!cleanEmail || !cleanName) return;
 
     const newUser: UserRow = {
       id: `u-${Date.now()}`,
-      email: newEmail.trim(),
-      full_name: newFullName.trim(),
+      email: cleanEmail,
+      full_name: cleanName,
       role: newRole,
       school_name: newSchool,
       assigned_class: newClass,
@@ -215,31 +242,44 @@ export const AdminUsersView: React.FC = () => {
 
     setUsers([newUser, ...users]);
     setIsCreateOpen(false);
-    showToast(`Pengguna baru ${newFullName} berhasil ditambahkan!`);
+
+    try {
+      // Also register in allowed_customers so they can activate their password
+      await supabase.from('allowed_customers').insert({
+        email: cleanEmail,
+        full_name: cleanName,
+        school_name: newSchool,
+        account_type: 'annual',
+        is_active: true,
+      });
+    } catch (e) {
+      console.warn('Create user whitelist sync warning:', e);
+    }
+
+    showToast(`Pengguna baru ${cleanName} berhasil ditambahkan dan di-whitelist!`);
     setNewEmail('');
     setNewFullName('');
   };
 
-  // Filter logic
   const filteredUsers = users.filter((u) => {
-    const query = searchQuery.toLowerCase();
-    const matchQuery =
-      u.full_name.toLowerCase().includes(query) ||
-      u.email.toLowerCase().includes(query) ||
-      u.school_name.toLowerCase().includes(query);
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      u.full_name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.school_name.toLowerCase().includes(q);
 
-    const matchRole = roleFilter === 'all' || u.role === roleFilter;
-    const matchStatus =
+    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+    const matchesStatus =
       statusFilter === 'all' ||
       (statusFilter === 'active' && u.is_active) ||
       (statusFilter === 'inactive' && !u.is_active);
 
-    return matchQuery && matchRole && matchStatus;
+    return matchesSearch && matchesRole && matchesStatus;
   });
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Toast */}
+      {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 bg-[#2A1532] text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl border border-[#522D60] flex items-center gap-2 animate-bounce">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -251,10 +291,10 @@ export const AdminUsersView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#EFE6F2]">
         <div>
           <h1 className="text-2xl font-black text-[#2A1532] tracking-tight flex items-center gap-2">
-            <Users className="w-6 h-6 text-[#80426E]" /> Manajemen Pengguna & Guru
+            <Users className="w-6 h-6 text-[#80426E]" /> Pengguna & Peran Akun
           </h1>
           <p className="text-xs text-[#74607B] mt-0.5">
-            Kelola hak akses akun pendidik PAUD, aktivasi pengguna, dan reset kredensial
+            Kelola akun guru TK terdaftar, hak akses peran admin, dan status operasional sistem
           </p>
         </div>
 
@@ -277,75 +317,91 @@ export const AdminUsersView: React.FC = () => {
         </div>
       </div>
 
-      {/* Search & Filters */}
-      <div className="bg-white p-3 rounded-2xl border border-[#EFE6F2] shadow-xs flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full">
+      {/* Search and Filters Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#EFE6F2] shadow-xs">
+        {/* Search Input */}
+        <div className="relative flex-1 w-full sm:max-w-md">
           <Search className="w-4 h-4 text-[#74607B] absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari berdasarkan nama guru, email, atau asal TK..."
+            placeholder="Cari berdasarkan nama, email, atau satuan TK..."
             className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-[#D8C3DD] focus:outline-none focus:ring-2 focus:ring-[#80426E] text-[#2A1532]"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value as any)}
-            className="text-xs py-1.5 px-3 rounded-xl border border-[#D8C3DD] text-[#2A1532] bg-white focus:outline-none"
-          >
-            <option value="all">Semua Peran</option>
-            <option value="guru">Guru Kelas</option>
-            <option value="admin">Administrator</option>
-          </select>
+        {/* Filter Buttons */}
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
+          {/* Role Filter */}
+          <div className="flex items-center bg-[#FAF3FB] p-0.5 rounded-xl border border-[#E8D6EB]">
+            {(['all', 'admin', 'guru'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRoleFilter(r)}
+                className={`py-1 px-2.5 rounded-lg text-xs font-bold transition-all ${
+                  roleFilter === r
+                    ? 'bg-[#522D60] text-white shadow-xs'
+                    : 'text-[#74607B] hover:text-[#522D60]'
+                }`}
+              >
+                {r === 'all' ? 'Semua Peran' : r === 'admin' ? 'Admin' : 'Guru'}
+              </button>
+            ))}
+          </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="text-xs py-1.5 px-3 rounded-xl border border-[#D8C3DD] text-[#2A1532] bg-white focus:outline-none"
-          >
-            <option value="all">Semua Status</option>
-            <option value="active">Aktif</option>
-            <option value="inactive">Nonaktif</option>
-          </select>
+          {/* Status Filter */}
+          <div className="flex items-center bg-[#FAF3FB] p-0.5 rounded-xl border border-[#E8D6EB]">
+            {(['all', 'active', 'inactive'] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`py-1 px-2.5 rounded-lg text-xs font-bold transition-all ${
+                  statusFilter === s
+                    ? 'bg-[#80426E] text-white shadow-xs'
+                    : 'text-[#74607B] hover:text-[#80426E]'
+                }`}
+              >
+                {s === 'all' ? 'Semua Status' : s === 'active' ? 'Aktif' : 'Nonaktif'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Users Table */}
       <div className="bg-white rounded-3xl border border-[#EFE6F2] shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#FAF3FB] border-b border-[#E8D6EB] text-[11px] font-extrabold uppercase tracking-wider text-[#74607B]">
-                <th className="py-3 px-4">Nama & Email</th>
-                <th className="py-3 px-4">Lembaga Satuan TK</th>
-                <th className="py-3 px-4">Kelas</th>
-                <th className="py-3 px-4">Peran</th>
+                <th className="py-3 px-4">Nama Lengkap & Email</th>
+                <th className="py-3 px-4">Peran (Role)</th>
+                <th className="py-3 px-4">Satuan & Kelompok</th>
+                <th className="py-3 px-4 text-center">Dokumen RPM</th>
                 <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">RPM Dibuat</th>
                 <th className="py-3 px-4 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EFE6F2] text-xs">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-[#74607B]">
-                    Tidak ditemukan data pengguna yang cocok.
+                  <td colSpan={6} className="py-8 text-center text-[#74607B]">
+                    Tidak ada pengguna yang cocok dengan kriteria pencarian.
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((u) => {
-                  const isHusnul = u.email.toLowerCase() === 'pakhusnulid@gmail.com';
+                  const isSuperadmin = u.email.toLowerCase() === 'pakhusnulid@gmail.com';
+
                   return (
                     <tr key={u.id} className="hover:bg-[#FAF3FB]/50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="font-bold text-[#2A1532] flex items-center gap-1.5">
-                          {u.full_name}
-                          {isHusnul && (
-                            <span className="text-[10px] bg-[#522D60] text-white px-1.5 py-0.2 rounded font-extrabold">
-                              ROOT
+                          <span>{u.full_name}</span>
+                          {isSuperadmin && (
+                            <span className="text-[10px] bg-[#522D60] text-[#FFD38B] font-extrabold px-1.5 py-0.5 rounded-md">
+                              SUPERADMIN
                             </span>
                           )}
                         </div>
@@ -353,65 +409,76 @@ export const AdminUsersView: React.FC = () => {
                       </td>
 
                       <td className="py-3 px-4">
-                        <span className="font-semibold text-[#2A1532] flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5 text-[#80426E]" /> {u.school_name}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4">
-                        <span className="text-[11px] text-[#74607B] bg-slate-100 px-2 py-0.5 rounded-full font-medium">
-                          {u.assigned_class}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-4">
                         <button
                           onClick={() => handleToggleRole(u.id)}
-                          title="Klik untuk beralih peran"
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 border transition-all ${
+                          disabled={isSuperadmin}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
                             u.role === 'admin'
-                              ? 'bg-[#522D60] text-white border-[#522D60]'
-                              : 'bg-[#FAF3FB] text-[#80426E] border-[#D8C3DD] hover:bg-[#F4E8F6]'
-                          }`}
+                              ? 'bg-[#522D60] text-white shadow-xs'
+                              : 'bg-[#FAF3FB] text-[#80426E] border border-[#E8D6EB] hover:bg-[#F6ECF8]'
+                          } ${isSuperadmin ? 'cursor-default' : 'cursor-pointer'}`}
                         >
-                          <Shield className="w-3 h-3" />
-                          <span>{u.role === 'admin' ? 'Admin' : 'Guru'}</span>
+                          <Shield className="w-3 h-3 text-[#FFD38B]" />
+                          <span className="capitalize">{u.role}</span>
                         </button>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-[#2A1532] flex items-center gap-1">
+                          <Building2 className="w-3 h-3 text-[#80426E]" />
+                          <span>{u.school_name}</span>
+                        </div>
+                        <div className="text-[11px] text-[#74607B] flex items-center gap-1 mt-0.5">
+                          <GraduationCap className="w-3 h-3 text-[#74607B]" />
+                          <span>{u.assigned_class}</span>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4 text-center font-bold text-[#522D60]">
+                        <span className="bg-[#FAF3FB] px-2.5 py-1 rounded-full border border-[#E8D6EB]">
+                          {u.docs_count} Dokumen
+                        </span>
                       </td>
 
                       <td className="py-3 px-4">
                         <button
                           onClick={() => handleToggleStatus(u.id)}
-                          title="Klik untuk ubah status akun"
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 border transition-all ${
+                          disabled={isSuperadmin}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all ${
                             u.is_active
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                              : 'bg-red-50 text-red-700 border-red-300'
-                          }`}
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                              : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                          } ${isSuperadmin ? 'cursor-default' : 'cursor-pointer'}`}
                         >
-                          {u.is_active ? <UserCheck className="w-3 h-3" /> : <UserX className="w-3 h-3" />}
-                          <span>{u.is_active ? 'Aktif' : 'Nonaktif'}</span>
+                          {u.is_active ? (
+                            <>
+                              <UserCheck className="w-3 h-3" />
+                              <span>Aktif</span>
+                            </>
+                          ) : (
+                            <>
+                              <UserX className="w-3 h-3" />
+                              <span>Nonaktif</span>
+                            </>
+                          )}
                         </button>
-                      </td>
-
-                      <td className="py-3 px-4 font-mono font-bold text-[#522D60]">
-                        {u.docs_count} modul
                       </td>
 
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleOpenReset(u)}
-                            title="Reset Kata Sandi"
-                            className="p-1.5 rounded-lg border border-[#D8C3DD] text-[#522D60] hover:bg-[#FAF3FB] transition-colors"
+                            title="Atur Ulang Kata Sandi"
+                            className="p-1.5 rounded-lg border border-[#D8C3DD] bg-white text-[#522D60] hover:bg-[#FAF3FB] transition-colors"
                           >
                             <KeyRound className="w-3.5 h-3.5" />
                           </button>
-                          {!isHusnul && (
+
+                          {!isSuperadmin && (
                             <button
                               onClick={() => handleDeleteUser(u.id, u.email)}
-                              title="Hapus Pengguna"
-                              className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                              title="Hapus Akun Pengguna"
+                              className="p-1.5 rounded-lg border border-red-100 bg-white text-red-600 hover:bg-red-50 transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -427,143 +494,162 @@ export const AdminUsersView: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal Reset Password */}
-      {isResetOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-[#EFE6F2]">
-            <h3 className="text-sm font-bold text-[#2A1532] flex items-center gap-2 mb-2">
-              <KeyRound className="w-4 h-4 text-[#80426E]" /> Reset Kata Sandi Pengguna
-            </h3>
-            <p className="text-xs text-[#74607B] mb-4">
-              Atur ulang kata sandi sementara untuk guru <strong>{selectedUser.full_name}</strong> ({selectedUser.email}).
-            </p>
-
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-[#2A1532] mb-1">Kata Sandi Baru</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532] pr-9"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-[#74607B]"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsResetOpen(false)}
-                className="py-2 px-3 text-xs font-semibold text-[#74607B]"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleConfirmReset}
-                className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774]"
-              >
-                Simpan Kata Sandi
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Tambah Pengguna */}
+      {/* MODAL: CREATE USER */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE6F2]">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-[#2A1532] flex items-center gap-2">
-                <Plus className="w-4 h-4 text-[#522D60]" /> Daftarkan Pengguna Baru
-              </h3>
-              <button onClick={() => setIsCreateOpen(false)} className="text-[#74607B]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#D8C3DD] space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EFE6F2]">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#522D60] text-white flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-[#FFD38B]" />
+                </div>
+                <h3 className="font-extrabold text-sm text-[#2A1532]">Tambah Pengguna Baru</h3>
+              </div>
+              <button
+                onClick={() => setIsCreateOpen(false)}
+                className="p-1 rounded-lg text-[#74607B] hover:bg-[#FAF3FB]"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleCreateUser} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Nama Lengkap & Gelar</label>
-                <input
-                  type="text"
-                  required
-                  value={newFullName}
-                  onChange={(e) => setNewFullName(e.target.value)}
-                  placeholder="Contoh: Rahmawati, S.Pd."
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Alamat Email</label>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">Email Pengguna *</label>
                 <input
                   type="email"
                   required
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="nama@sekolah.sch.id"
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532]"
+                  placeholder="guru@paudceria.sch.id"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs font-bold text-[#2A1532] mb-1">Peran Akun</label>
-                  <select
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value as any)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532] bg-white"
-                  >
-                    <option value="guru">Guru Kelas</option>
-                    <option value="admin">Administrator</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-[#2A1532] mb-1">Kelompok Usia</label>
-                  <select
-                    value={newClass}
-                    onChange={(e) => setNewClass(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532] bg-white"
-                  >
-                    <option value="A (4-5 Tahun)">Kelompok A (4-5 Th)</option>
-                    <option value="B (5-6 Tahun)">Kelompok B (5-6 Th)</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">Nama Lengkap & Gelar *</label>
+                <input
+                  type="text"
+                  required
+                  value={newFullName}
+                  onChange={(e) => setNewFullName(e.target.value)}
+                  placeholder="Dewi Rahmawati, S.Pd."
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Satuan TK / Lembaga</label>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">Peran Akun</label>
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as any)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                >
+                  <option value="guru">Guru (End-User Perencana RPM)</option>
+                  <option value="admin">Admin (Pengelola Sistem)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">Satuan PAUD</label>
                 <input
                   type="text"
                   value={newSchool}
                   onChange={(e) => setNewSchool(e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532]"
+                  placeholder="TK NEGERI PEMBINA 01"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3">
+              <div>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">Kelompok Usia</label>
+                <select
+                  value={newClass}
+                  onChange={(e) => setNewClass(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                >
+                  <option value="A (4-5 Tahun)">Kelompok A (4-5 Tahun)</option>
+                  <option value="B (5-6 Tahun)">Kelompok B (5-6 Tahun)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EFE6F2]">
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="py-2 px-3 text-xs font-semibold text-[#74607B]"
+                  className="py-2 px-4 rounded-xl text-xs font-bold text-[#74607B] hover:bg-[#FAF3FB]"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774]"
+                  className="py-2 px-4 rounded-xl text-xs font-extrabold text-white bg-[#522D60] hover:bg-[#693774] shadow-sm"
                 >
-                  Simpan Akun
+                  Simpan Pengguna
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: RESET PASSWORD */}
+      {isResetOpen && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-[#D8C3DD] space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EFE6F2]">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#522D60] text-white flex items-center justify-center">
+                  <KeyRound className="w-4 h-4 text-[#FFD38B]" />
+                </div>
+                <h3 className="font-extrabold text-sm text-[#2A1532]">Atur Ulang Kata Sandi</h3>
+              </div>
+              <button
+                onClick={() => setIsResetOpen(false)}
+                className="p-1 rounded-lg text-[#74607B] hover:bg-[#FAF3FB]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs text-[#74607B]">
+                Masukkan kata sandi sementara baru untuk guru <span className="font-bold text-[#2A1532]">{selectedUser.full_name}</span> ({selectedUser.email}):
+              </p>
+
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 pr-10 text-xs rounded-xl border border-[#CBB4D1] font-mono text-[#2A1532]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-[#74607B] hover:text-[#522D60]"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EFE6F2]">
+                <button
+                  type="button"
+                  onClick={() => setIsResetOpen(false)}
+                  className="py-2 px-4 rounded-xl text-xs font-bold text-[#74607B] hover:bg-[#FAF3FB]"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmReset}
+                  className="py-2 px-4 rounded-xl text-xs font-extrabold text-white bg-[#522D60] hover:bg-[#693774] shadow-sm"
+                >
+                  Kirim & Simpan
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

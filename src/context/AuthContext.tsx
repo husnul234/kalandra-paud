@@ -17,10 +17,13 @@ export interface UserProfile {
 
 export interface AllowedCustomerInfo {
   allowed: boolean;
+  isRegistered: boolean;
   fullName?: string;
   schoolName?: string;
   accountType?: string;
   isActive?: boolean;
+  claimedAt?: string | null;
+  notes?: string;
 }
 
 interface AuthContextType {
@@ -127,11 +130,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Check whitelist in allowed_customers
+  // Check whitelist in allowed_customers and registered status
   const checkAllowedCustomer = async (emailToCheck: string): Promise<AllowedCustomerInfo> => {
-    if (isSuperadminEmail(emailToCheck)) {
+    const cleanEmail = emailToCheck.trim().toLowerCase();
+    if (!cleanEmail) return { allowed: false, isRegistered: false };
+
+    // 1. Superadmin check
+    if (isSuperadminEmail(cleanEmail)) {
+      let isRegistered = false;
+      try {
+        const { data } = await supabase.from('profiles').select('id').ilike('email', cleanEmail).maybeSingle();
+        if (data) isRegistered = true;
+      } catch (e) {
+        // ignore
+      }
+
       return {
         allowed: true,
+        isRegistered,
         fullName: 'Pak Husnul (Administrator)',
         schoolName: 'Kalandra PAUD Official',
         accountType: 'lifetime',
@@ -140,26 +156,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      // 2. Query allowed_customers from Supabase
       const { data, error } = await supabase
         .from('allowed_customers')
         .select('*')
-        .ilike('email', emailToCheck.trim())
+        .ilike('email', cleanEmail)
         .maybeSingle();
 
-      if (error || !data) {
-        return { allowed: false };
+      let record = data;
+
+      // Local storage fallback if database table not yet synced
+      if (error || !record) {
+        const localListStr = localStorage.getItem('kalandra_allowed_customers');
+        if (localListStr) {
+          try {
+            const list = JSON.parse(localListStr);
+            const found = list.find((c: any) => c.email?.toLowerCase() === cleanEmail);
+            if (found) record = found;
+          } catch (e) {}
+        }
+      }
+
+      if (!record) {
+        return { allowed: false, isRegistered: false };
+      }
+
+      // Check if user has already registered / activated password
+      let isRegistered = Boolean(record.claimed_at);
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('email', cleanEmail)
+          .maybeSingle();
+        if (profileData) {
+          isRegistered = true;
+        }
+      } catch (e) {
+        // ignore
       }
 
       return {
         allowed: true,
-        fullName: data.full_name,
-        schoolName: data.school_name,
-        accountType: data.account_type,
-        isActive: data.is_active,
+        isRegistered,
+        fullName: record.full_name,
+        schoolName: record.school_name,
+        accountType: record.account_type,
+        isActive: record.is_active ?? true,
+        claimedAt: record.claimed_at,
+        notes: record.notes,
       };
     } catch (err) {
       console.error('Error checking allowed customer:', err);
-      return { allowed: false };
+      return { allowed: false, isRegistered: false };
     }
   };
 
@@ -257,8 +306,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role: assignedRole,
             assigned_class: assignedClass,
           });
+
+          // Mark claimed in allowed_customers
+          await supabase
+            .from('allowed_customers')
+            .update({ claimed_at: new Date().toISOString() })
+            .ilike('email', email);
+
+          // Update local cache if available
+          const localListStr = localStorage.getItem('kalandra_allowed_customers');
+          if (localListStr) {
+            try {
+              const list = JSON.parse(localListStr);
+              const updated = list.map((c: any) =>
+                c.email?.toLowerCase() === email.toLowerCase()
+                  ? { ...c, claimed_at: new Date().toISOString() }
+                  : c
+              );
+              localStorage.setItem('kalandra_allowed_customers', JSON.stringify(updated));
+            } catch (e) {}
+          }
         } catch (dbErr) {
-          console.warn('Upsert profile error:', dbErr);
+          console.warn('Upsert profile / update claimed error:', dbErr);
         }
         await fetchProfile(data.user);
       }

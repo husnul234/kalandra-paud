@@ -12,7 +12,9 @@ import {
   X,
   Building2,
   Calendar,
-  AlertTriangle
+  AlertTriangle,
+  Loader2,
+  Users
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { ActivationMessageModal, CustomerActivationInfo } from './ActivationMessageModal';
@@ -28,64 +30,17 @@ export interface AllowedCustomerRow {
   subscription_end?: string;
   is_active: boolean;
   notes?: string;
+  claimed_at?: string | null;
 }
 
-const DEFAULT_CUSTOMERS: AllowedCustomerRow[] = [
-  {
-    id: 'c-1',
-    email: 'pakhusnulid@gmail.com',
-    full_name: 'Pak Husnul (Admin)',
-    whatsapp: '081234567890',
-    school_name: 'Pusat Kurikulum PAUD',
-    account_type: 'lifetime',
-    subscription_start: '2026-01-01',
-    subscription_end: '2036-01-01',
-    is_active: true,
-    notes: 'Superadministrator Platform',
-  },
-  {
-    id: 'c-2',
-    email: 'guru.dewi@paudceria.sch.id',
-    full_name: 'Dewi Rahmawati, S.Pd.',
-    whatsapp: '085712345678',
-    school_name: 'TK NEGERI PEMBINA 01',
-    account_type: 'annual',
-    subscription_start: '2026-02-01',
-    subscription_end: '2027-02-01',
-    is_active: true,
-    notes: 'Guru Kelompok A',
-  },
-  {
-    id: 'c-3',
-    email: 'anisa.guru@kartika.sch.id',
-    full_name: 'Anisa Nuraini, S.Pd.',
-    whatsapp: '081398765432',
-    school_name: 'TK KARTIKA CENDEKIA',
-    account_type: 'annual',
-    subscription_start: '2026-02-15',
-    subscription_end: '2027-02-15',
-    is_active: true,
-    notes: 'Guru Kelompok B',
-  },
-  {
-    id: 'c-4',
-    email: 'ratih.paud@binaanak.sch.id',
-    full_name: 'Ratih Kumala, S.Pd.',
-    whatsapp: '081298877665',
-    school_name: 'PAUD BINA ANAK CERIA',
-    account_type: 'lite',
-    subscription_start: '2026-03-01',
-    subscription_end: '2026-09-01',
-    is_active: true,
-    notes: 'Paket Semester Gasal',
-  },
-];
+const LOCAL_STORAGE_KEY = 'kalandra_allowed_customers';
 
 export const AdminCustomersView: React.FC = () => {
-  const [customers, setCustomers] = useState<AllowedCustomerRow[]>(DEFAULT_CUSTOMERS);
+  const [customers, setCustomers] = useState<AllowedCustomerRow[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [packageFilter, setPackageFilter] = useState<'all' | 'annual' | 'lite' | 'lifetime' | 'trial'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Activation Message Modal
@@ -97,13 +52,21 @@ export const AdminCustomersView: React.FC = () => {
   const [formEmail, setFormEmail] = useState('');
   const [formName, setFormName] = useState('');
   const [formWhatsapp, setFormWhatsapp] = useState('');
-  const [formSchool, setFormSchool] = useState('');
+  const [formSchool, setFormSchool] = useState('TK NEGERI PEMBINA 01');
   const [formType, setFormType] = useState<'annual' | 'lite' | 'lifetime' | 'trial'>('annual');
   const [formNotes, setFormNotes] = useState('');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const syncToLocalStorage = (list: AllowedCustomerRow[]) => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {
+      console.warn('LocalStorage save error:', e);
+    }
   };
 
   const fetchCustomers = async () => {
@@ -114,26 +77,41 @@ export const AdminCustomersView: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        setCustomers(
-          data.map((c) => ({
-            id: c.id,
-            email: c.email,
-            full_name: c.full_name || c.email.split('@')[0],
-            whatsapp: c.whatsapp || '',
-            school_name: c.school_name || 'Satuan PAUD',
-            account_type: c.account_type || 'annual',
-            subscription_start: new Date(c.subscription_start).toISOString().slice(0, 10),
-            subscription_end: c.subscription_end
-              ? new Date(c.subscription_end).toISOString().slice(0, 10)
-              : undefined,
-            is_active: c.is_active ?? true,
-            notes: c.notes || '',
-          }))
-        );
+      if (!error && data) {
+        const mapped: AllowedCustomerRow[] = data.map((c) => ({
+          id: c.id,
+          email: c.email,
+          full_name: c.full_name || c.email.split('@')[0],
+          whatsapp: c.whatsapp || '',
+          school_name: c.school_name || 'Satuan PAUD',
+          account_type: c.account_type || 'annual',
+          subscription_start: c.subscription_start ? new Date(c.subscription_start).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+          subscription_end: c.subscription_end
+            ? new Date(c.subscription_end).toISOString().slice(0, 10)
+            : undefined,
+          is_active: c.is_active ?? true,
+          notes: c.notes || '',
+          claimed_at: c.claimed_at,
+        }));
+        setCustomers(mapped);
+        syncToLocalStorage(mapped);
+      } else {
+        // Fallback to localStorage if table is pending migration or offline
+        const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (localData) {
+          try {
+            setCustomers(JSON.parse(localData));
+          } catch (e) {}
+        }
       }
     } catch (e) {
-      console.warn('Customers fetch warning:', e);
+      console.warn('Customers fetch error, reading local fallback:', e);
+      const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (localData) {
+        try {
+          setCustomers(JSON.parse(localData));
+        } catch (err) {}
+      }
     } finally {
       setIsLoading(false);
     }
@@ -155,38 +133,83 @@ export const AdminCustomersView: React.FC = () => {
     setIsMessageOpen(true);
   };
 
-  const handleToggleActive = (id: string) => {
-    setCustomers((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, is_active: !c.is_active } : c))
-    );
-    showToast('Status lisensi member berhasil diperbarui.');
-  };
+  const handleToggleActive = async (id: string) => {
+    const target = customers.find((c) => c.id === id);
+    if (!target) return;
 
-  const handleExtendSubscription = (id: string, monthsToAdd: number) => {
-    setCustomers((prev) =>
-      prev.map((c) => {
-        if (c.id === id) {
-          const currentEnd = c.subscription_end ? new Date(c.subscription_end) : new Date();
-          currentEnd.setMonth(currentEnd.getMonth() + monthsToAdd);
-          const newEnd = currentEnd.toISOString().slice(0, 10);
-          showToast(`Masa aktif ${c.full_name} berhasil diperpanjang hingga ${newEnd}!`);
-          return { ...c, subscription_end: newEnd };
-        }
-        return c;
-      })
-    );
-  };
+    const nextActive = !target.is_active;
 
-  const handleDelete = (id: string, email: string) => {
-    if (confirm(`Hapus whitelist untuk ${email}?`)) {
-      setCustomers((prev) => prev.filter((c) => c.id !== id));
-      showToast('Data member berhasil dihapus dari whitelist.');
+    // Optimistic UI update
+    const updatedList = customers.map((c) =>
+      c.id === id ? { ...c, is_active: nextActive } : c
+    );
+    setCustomers(updatedList);
+    syncToLocalStorage(updatedList);
+
+    try {
+      await supabase
+        .from('allowed_customers')
+        .update({ is_active: nextActive })
+        .eq('id', id);
+    } catch (e) {
+      console.warn('Supabase update active warning:', e);
     }
+
+    showToast(`Status lisensi ${target.full_name} berhasil ${nextActive ? 'diaktifkan' : 'dinonaktifkan'}.`);
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleExtendSubscription = async (id: string, monthsToAdd: number) => {
+    const target = customers.find((c) => c.id === id);
+    if (!target) return;
+
+    const currentEnd = target.subscription_end ? new Date(target.subscription_end) : new Date();
+    currentEnd.setMonth(currentEnd.getMonth() + monthsToAdd);
+    const newEnd = currentEnd.toISOString().slice(0, 10);
+
+    // Optimistic UI update
+    const updatedList = customers.map((c) =>
+      c.id === id ? { ...c, subscription_end: newEnd } : c
+    );
+    setCustomers(updatedList);
+    syncToLocalStorage(updatedList);
+
+    try {
+      await supabase
+        .from('allowed_customers')
+        .update({ subscription_end: new Date(newEnd).toISOString() })
+        .eq('id', id);
+    } catch (e) {
+      console.warn('Supabase extend subscription warning:', e);
+    }
+
+    showToast(`Masa aktif ${target.full_name} berhasil diperpanjang hingga ${newEnd}!`);
+  };
+
+  const handleDelete = async (id: string, email: string) => {
+    if (!confirm(`Hapus whitelist lisensi untuk ${email}? Guru tidak akan dapat masuk kembali.`)) {
+      return;
+    }
+
+    const updatedList = customers.filter((c) => c.id !== id);
+    setCustomers(updatedList);
+    syncToLocalStorage(updatedList);
+
+    try {
+      await supabase.from('allowed_customers').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Supabase delete customer warning:', e);
+    }
+
+    showToast(`Data lisensi ${email} berhasil dihapus dari whitelist.`);
+  };
+
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formEmail.trim() || !formName.trim()) return;
+    const cleanEmail = formEmail.trim().toLowerCase();
+    const cleanName = formName.trim();
+    if (!cleanEmail || !cleanName) return;
+
+    setIsSubmitting(true);
 
     const startDate = new Date();
     const endDate = new Date(startDate);
@@ -195,12 +218,38 @@ export const AdminCustomersView: React.FC = () => {
     else if (formType === 'lifetime') endDate.setFullYear(endDate.getFullYear() + 10);
     else if (formType === 'trial') endDate.setDate(endDate.getDate() + 14);
 
+    let insertedId = `c-${Date.now()}`;
+
+    try {
+      const { data, error } = await supabase
+        .from('allowed_customers')
+        .insert({
+          email: cleanEmail,
+          full_name: cleanName,
+          whatsapp: formWhatsapp.trim(),
+          school_name: formSchool.trim() || 'TK NEGERI PEMBINA 01',
+          account_type: formType,
+          subscription_start: startDate.toISOString(),
+          subscription_end: endDate.toISOString(),
+          is_active: true,
+          notes: formNotes.trim(),
+        })
+        .select()
+        .maybeSingle();
+
+      if (!error && data) {
+        insertedId = data.id;
+      }
+    } catch (e) {
+      console.warn('Supabase insert customer warning, saving locally:', e);
+    }
+
     const newCustomer: AllowedCustomerRow = {
-      id: `c-${Date.now()}`,
-      email: formEmail.trim(),
-      full_name: formName.trim(),
+      id: insertedId,
+      email: cleanEmail,
+      full_name: cleanName,
       whatsapp: formWhatsapp.trim(),
-      school_name: formSchool.trim() || 'Satuan TK',
+      school_name: formSchool.trim() || 'TK NEGERI PEMBINA 01',
       account_type: formType,
       subscription_start: startDate.toISOString().slice(0, 10),
       subscription_end: endDate.toISOString().slice(0, 10),
@@ -208,16 +257,23 @@ export const AdminCustomersView: React.FC = () => {
       notes: formNotes.trim(),
     };
 
-    setCustomers([newCustomer, ...customers]);
+    const updated = [newCustomer, ...customers.filter((c) => c.email.toLowerCase() !== cleanEmail)];
+    setCustomers(updated);
+    syncToLocalStorage(updated);
+
+    setIsSubmitting(false);
     setIsAddOpen(false);
-    showToast(`Member baru ${formName} berhasil di-whitelist!`);
+    showToast(`Lisensi guru ${cleanName} berhasil didaftarkan ke whitelist!`);
 
     // Reset form
     setFormEmail('');
     setFormName('');
     setFormWhatsapp('');
-    setFormSchool('');
+    setFormSchool('TK NEGERI PEMBINA 01');
     setFormNotes('');
+
+    // Open WhatsApp activation modal directly for admin convenience
+    handleOpenMessage(newCustomer);
   };
 
   const filteredCustomers = customers.filter((c) => {
@@ -234,7 +290,7 @@ export const AdminCustomersView: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Toast */}
+      {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 bg-[#2A1532] text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl border border-[#522D60] flex items-center gap-2 animate-bounce">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -249,7 +305,7 @@ export const AdminCustomersView: React.FC = () => {
             <UserCheck className="w-6 h-6 text-[#80426E]" /> Pelanggan & Member Whitelist
           </h1>
           <p className="text-xs text-[#74607B] mt-0.5">
-            Kelola lisensi akses guru PAUD, batas waktu masa aktif, dan pengiriman notifikasi WhatsApp
+            Daftarkan email guru sebelum mereka login, atur masa aktif lisensi, dan kirimkan format aktivasi WhatsApp
           </p>
         </div>
 
@@ -267,7 +323,7 @@ export const AdminCustomersView: React.FC = () => {
             className="py-2 px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors"
           >
             <Plus className="w-4 h-4" />
-            <span>Tambah Member</span>
+            <span>Tambah Guru / Lisensi Baru</span>
           </button>
         </div>
       </div>
@@ -281,7 +337,7 @@ export const AdminCustomersView: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari berdasarkan nama, email, sekolah, nomor WhatsApp..."
+            placeholder="Cari berdasarkan nama guru, email, sekolah, atau WhatsApp..."
             className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-[#D8C3DD] focus:outline-none focus:ring-2 focus:ring-[#80426E] text-[#2A1532]"
           />
         </div>
@@ -310,7 +366,7 @@ export const AdminCustomersView: React.FC = () => {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table Section */}
       <div className="bg-white rounded-3xl border border-[#EFE6F2] shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -320,15 +376,29 @@ export const AdminCustomersView: React.FC = () => {
                 <th className="py-3 px-4">Lembaga Satuan TK</th>
                 <th className="py-3 px-4">Paket Lisensi</th>
                 <th className="py-3 px-4">Masa Berlaku</th>
-                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Status & Akun</th>
                 <th className="py-3 px-4 text-right">Aksi Cepat</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EFE6F2] text-xs">
               {filteredCustomers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-[#74607B]">
-                    Tidak ada member whitelist yang cocok dengan filter.
+                  <td colSpan={6} className="py-12 text-center text-[#74607B]">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <div className="w-12 h-12 rounded-2xl bg-[#FAF3FB] flex items-center justify-center text-[#80426E]">
+                        <Users className="w-6 h-6" />
+                      </div>
+                      <p className="font-extrabold text-sm text-[#2A1532]">Belum ada guru yang didaftarkan</p>
+                      <p className="text-xs text-[#74607B] max-w-sm">
+                        Daftarkan email guru melalui tombol di atas agar mereka dapat mengaktifkan kata sandi pada halaman login.
+                      </p>
+                      <button
+                        onClick={() => setIsAddOpen(true)}
+                        className="mt-2 py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] transition-all"
+                      >
+                        + Daftarkan Guru Pertama
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -359,54 +429,56 @@ export const AdminCustomersView: React.FC = () => {
                       </td>
 
                       <td className="py-3 px-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${badgeColor}`}>
-                          {c.account_type === 'lifetime'
-                            ? 'Lifetime'
-                            : c.account_type === 'annual'
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${badgeColor}`}>
+                          {c.account_type === 'annual'
                             ? '1 Tahun'
                             : c.account_type === 'lite'
-                            ? 'Semester'
-                            : 'Trial'}
+                            ? 'Semester (6 Bln)'
+                            : c.account_type}
                         </span>
                       </td>
 
-                      <td className="py-3 px-4 font-mono text-[11px]">
-                        <span className="flex items-center gap-1 text-[#2A1532]">
-                          <Calendar className="w-3.5 h-3.5 text-[#74607B]" />
-                          {c.subscription_end || 'Selamanya'}
-                        </span>
+                      <td className="py-3 px-4 text-[#74607B]">
+                        <div className="flex items-center gap-1 font-mono text-[11px]">
+                          <Calendar className="w-3.5 h-3.5 text-[#80426E]" />
+                          <span>Hingga {c.subscription_end || 'Selamanya'}</span>
+                        </div>
                       </td>
 
                       <td className="py-3 px-4">
-                        <button
-                          onClick={() => handleToggleActive(c.id)}
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
-                            c.is_active
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                              : 'bg-red-50 text-red-700 border-red-300'
-                          }`}
-                        >
-                          {c.is_active ? 'Aktif' : 'Nonaktif'}
-                        </button>
+                        <div className="flex flex-col gap-1 items-start">
+                          <button
+                            onClick={() => handleToggleActive(c.id)}
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                              c.is_active
+                                ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                                : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                            }`}
+                          >
+                            {c.is_active ? '● Aktif' : '○ Dinonaktifkan'}
+                          </button>
+                          <span className={`text-[10px] font-semibold ${c.claimed_at ? 'text-emerald-700' : 'text-amber-600'}`}>
+                            {c.claimed_at ? '✓ Akun Teraktivasi' : '⏳ Belum Aktivasi'}
+                          </span>
+                        </div>
                       </td>
 
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Send WhatsApp Message */}
+                          {/* Send WhatsApp Activation */}
                           <button
                             onClick={() => handleOpenMessage(c)}
-                            title="Kirim Pesan Aktivasi WA"
-                            className="p-1.5 rounded-lg border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center gap-1 text-[11px] font-bold"
+                            title="Buka Pesan Aktivasi WhatsApp"
+                            className="p-1.5 rounded-lg border border-[#D8C3DD] bg-white text-[#522D60] hover:bg-[#FAF3FB] transition-colors"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
-                            <span className="hidden md:inline">Kirim WA</span>
                           </button>
 
                           {/* Extend 1 Year */}
                           <button
                             onClick={() => handleExtendSubscription(c.id, 12)}
-                            title="Perpanjang +1 Tahun"
-                            className="p-1.5 rounded-lg border border-[#D8C3DD] text-[#522D60] hover:bg-[#FAF3FB] transition-colors"
+                            title="Perpanjang 1 Tahun"
+                            className="p-1.5 rounded-lg border border-[#D8C3DD] bg-white text-[#80426E] hover:bg-[#FAF3FB] transition-colors"
                           >
                             <CalendarPlus className="w-3.5 h-3.5" />
                           </button>
@@ -414,8 +486,8 @@ export const AdminCustomersView: React.FC = () => {
                           {/* Delete */}
                           <button
                             onClick={() => handleDelete(c.id, c.email)}
-                            title="Hapus Member"
-                            className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                            title="Hapus dari Whitelist"
+                            className="p-1.5 rounded-lg border border-red-100 bg-white text-red-600 hover:bg-red-50 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -430,105 +502,135 @@ export const AdminCustomersView: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal Tambah Pelanggan Baru */}
+      {/* MODAL: ADD CUSTOMER */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE6F2]">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-[#2A1532] flex items-center gap-2">
-                <Plus className="w-4 h-4 text-[#522D60]" /> Tambah Member ke Whitelist
-              </h3>
-              <button onClick={() => setIsAddOpen(false)} className="text-[#74607B]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#D8C3DD] space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EFE6F2]">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#522D60] text-white flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-[#FFD38B]" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-[#2A1532]">Daftarkan Guru / Lisensi Baru</h3>
+                  <p className="text-[11px] text-[#74607B]">Pintu masuk resmi agar guru dapat aktivasi akun</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAddOpen(false)}
+                className="p-1 rounded-lg text-[#74607B] hover:bg-[#FAF3FB]"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleAddSubmit} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Nama Lengkap Guru *</label>
-                <input
-                  type="text"
-                  required
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Contoh: Ratih Kumala, S.Pd."
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Email Guru (Untuk Login) *</label>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">
+                  Email Guru <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="email"
                   required
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  placeholder="ratih.guru@email.com"
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532]"
+                  placeholder="guru.dewi@paudceria.sch.id"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">
+                  Nama Lengkap Guru <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="Dewi Rahmawati, S.Pd."
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[#2A1532] mb-1">Nomor WhatsApp</label>
+                  <label className="block text-xs font-bold text-[#2A1532] mb-1">
+                    Nomor WhatsApp Guru
+                  </label>
                   <input
                     type="text"
                     value={formWhatsapp}
                     onChange={(e) => setFormWhatsapp(e.target.value)}
                     placeholder="081234567890"
-                    className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-[#2A1532] mb-1">Paket Lisensi</label>
-                  <select
-                    value={formType}
-                    onChange={(e) => setFormType(e.target.value as any)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532] bg-white"
-                  >
-                    <option value="annual">1 Tahun Ajaran</option>
-                    <option value="lite">1 Semester (6 Bulan)</option>
-                    <option value="lifetime">Akses Lifetime</option>
-                    <option value="trial">Trial 14 Hari</option>
-                  </select>
+                  <label className="block text-xs font-bold text-[#2A1532] mb-1">
+                    Satuan TK / PAUD
+                  </label>
+                  <input
+                    type="text"
+                    value={formSchool}
+                    onChange={(e) => setFormSchool(e.target.value)}
+                    placeholder="TK NEGERI PEMBINA 01"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                  />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Satuan TK / KB</label>
-                <input
-                  type="text"
-                  value={formSchool}
-                  onChange={(e) => setFormSchool(e.target.value)}
-                  placeholder="Contoh: TK KARTIKA CENDEKIA"
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532]"
-                />
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">
+                  Jenis Paket Lisensi
+                </label>
+                <select
+                  value={formType}
+                  onChange={(e) => setFormType(e.target.value as any)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                >
+                  <option value="annual">Paket 1 Tahun Ajaran Penuh (Rekomendasi)</option>
+                  <option value="lite">Paket 1 Semester (6 Bulan)</option>
+                  <option value="lifetime">Akses Lifetime Satuan TK</option>
+                  <option value="trial">Uji Coba Gratis (14 Hari)</option>
+                </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Catatan Tambahan</label>
-                <input
-                  type="text"
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">
+                  Catatan Lisensi / Administrasi
+                </label>
+                <textarea
+                  rows={2}
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
-                  placeholder="Contoh: Pembayaran transfer BCA via Bu Dewi"
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#D8C3DD] text-[#2A1532]"
+                  placeholder="Contoh: Guru Kelas A, Lisensi Dinas Pendidikan"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EFE6F2]">
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="py-2 px-3 text-xs font-semibold text-[#74607B]"
+                  className="py-2 px-4 rounded-xl text-xs font-bold text-[#74607B] hover:bg-[#FAF3FB]"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774]"
+                  disabled={isSubmitting}
+                  className="py-2 px-4 rounded-xl text-xs font-extrabold text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5"
                 >
-                  Simpan Member
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <span>Daftarkan & Kirim Pesan</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -536,7 +638,7 @@ export const AdminCustomersView: React.FC = () => {
         </div>
       )}
 
-      {/* Activation Message Modal */}
+      {/* ACTIVATION WHATSAPP MESSAGE MODAL */}
       <ActivationMessageModal
         isOpen={isMessageOpen}
         onClose={() => setIsMessageOpen(false)}
