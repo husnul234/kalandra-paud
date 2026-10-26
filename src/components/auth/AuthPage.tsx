@@ -88,8 +88,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBackToApp }) =>
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-[#522D60]/10 border border-[#D8C3DD] p-6 sm:p-8 relative z-10 my-auto">
         {/* Brand Header */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-[#522D60] text-white flex items-center justify-center font-black mx-auto mb-3 shadow-md shadow-[#522D60]/20">
-            <Sparkles className="w-6 h-6 text-[#FFD38B]" />
+          <div className="w-14 h-14 rounded-2xl overflow-hidden mx-auto mb-3 shadow-lg shadow-[#522D60]/20 border border-[#E8D6EB] bg-[#2A1532]">
+            <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
           </div>
           <h2 className="text-xl font-black text-[#2A1532] tracking-tight">
             KALANDRA PAUD

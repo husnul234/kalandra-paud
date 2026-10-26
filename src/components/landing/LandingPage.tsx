@@ -41,8 +41,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center gap-2.5 select-none cursor-pointer" onClick={onGoToApp}>
-            <div className="w-10 h-10 rounded-2xl bg-[#522D60] text-white flex items-center justify-center font-black shadow-md shadow-[#522D60]/20">
-              <Sparkles className="w-5 h-5 text-[#FFD38B]" />
+            <div className="w-10 h-10 rounded-2xl overflow-hidden shadow-md shadow-[#522D60]/20 shrink-0 border border-[#E8D6EB] hover:scale-105 transition-all bg-[#2A1532]">
+              <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
             </div>
             <div>
               <span className="font-black text-base sm:text-lg tracking-tight text-[#2A1532] flex items-center gap-1.5">
@@ -413,8 +413,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* 7. BOTTOM BANNER CTA */}
       <section className="py-16 bg-[#522D60] text-white">
         <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
-          <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mx-auto text-[#FFD38B]">
-            <Sparkles className="w-8 h-8" />
+          <div className="w-16 h-16 rounded-3xl overflow-hidden mx-auto shadow-2xl border border-white/20 bg-[#2A1532]">
+            <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
           </div>
           <h2 className="text-2xl sm:text-4xl font-black tracking-tight">
             Siap Menghemat Waktu Administrasi Pembelajaran Anda?

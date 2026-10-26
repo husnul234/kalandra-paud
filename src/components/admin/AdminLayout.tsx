@@ -91,8 +91,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBackToApp }) => {
           <div className="h-16 flex items-center justify-between px-4 border-b border-[#EFE6F2]">
             {sidebarOpen ? (
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 bg-[#522D60] rounded-xl flex items-center justify-center text-white shadow-xs">
-                  <Sparkles className="w-5 h-5 text-[#FFD38B]" />
+                <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shadow-xs border border-[#E8D6EB] bg-[#2A1532] shrink-0">
+                  <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-extrabold text-sm text-[#2A1532] leading-tight">Admin Panel</span>
@@ -100,8 +100,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBackToApp }) => {
                 </div>
               </div>
             ) : (
-              <div className="w-10 h-10 bg-[#522D60] rounded-xl flex items-center justify-center text-white mx-auto">
-                <Sparkles className="w-5 h-5 text-[#FFD38B]" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center mx-auto border border-[#E8D6EB] bg-[#2A1532]">
+                <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
               </div>
             )}
 
