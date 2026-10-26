@@ -1,0 +1,219 @@
+{
+  "kategori": "Pendidikan Anak Usia Dini (PAUD)",
+  "jenjang": "TK / TKLB / RA / KB / TPA / Bentuk Lain Sederajat",
+  "fase": "Fondasi",
+  "landasan_kurikulum": {
+    "regulasi": "Keputusan Kepala BSKAP Kemendikdasmen No. 046/H/KR/2025 (Lampiran I)",
+    "filosofi_utama": "Bermain adalah Belajar (Play-based Learning) dan Kesejahteraan Anak (Well-being)",
+    "prinsip_fase": "Capaian dirumuskan pada akhir partisipasi PAUD dan tidak disekat berdasarkan rentang usia",
+    "kemampuan_fondasi_transisi_sd": [
+      "Mengenal nilai agama dan budi pekerti",
+      "Kematangan emosi yang cukup untuk berkegiatan di lingkungan belajar",
+      "Keterampilan sosial dan bahasa yang memadai untuk berinteraksi sehat",
+      "Pemaknaan terhadap belajar yang positif",
+      "Pengembangan keterampilan motorik dan perawatan diri mandiri",
+      "Kematangan kognitif untuk melakukan kegiatan belajar (dasar literasi & numerasi)"
+    ]
+  },
+  "karakteristik_pembelajaran_dan_asesmen": [
+    "Interaksi mencerminkan rasa menghargai dan menghormati murid",
+    "Mendorong rasa ingin tahu murid dan memberikan pengalaman menyenangkan",
+    "Memperhatikan keragaman laju perkembangan, minat, dan kebutuhan individu",
+    "Penyusunan tujuan pembelajaran memunculkan tantangan bermakna",
+    "Pemberian bimbingan, dukungan (scaffolding), dan kemitraan dengan keluarga",
+    "Pemanfaatan lingkungan sekitar dan teknologi sebagai sumber belajar",
+    "Penerapan asesmen autentik (pengamatan alami/apa adanya) untuk perbaikan pembelajaran berkelanjutan"
+  ],
+  "elemen_capaian_pembelajaran": [
+    {
+      "nama_elemen": "Nilai Agama dan Budi Pekerti",
+      "deskripsi_utuh_cp": "Murid percaya kepada Tuhan Yang Maha Esa sebagai pencipta dirinya, makhluk lain dan alam, serta mulai mengenal dan mempraktikkan ajaran pokok sesuai dengan agama dan kepercayaannya; menghargai diri sendiri dan memiliki rasa syukur terhadap Tuhan YME sehingga dapat berpartisipasi aktif dalam menjaga kebersihan, kesehatan, dan keselamatan dirinya; menghargai sesama manusia dengan berbagai perbedaannya sehingga mempraktikkan perilaku baik dan berakhlak mulia; dan menghargai alam dan seluruh makhluk hidup ciptaan Tuhan Yang Maha Esa.",
+      "lingkup_capaian": [
+        {
+          "lingkup": "Nilai Agama",
+          "fokus": "Mengenal konsep hubungan dengan Tuhan YME serta kebiasaan praktik ibadah agama/kepercayaannya."
+        },
+        {
+          "lingkup": "Budi Pekerti",
+          "fokus": "Karakter dan perilaku akhlak mulia melalui sikap kasih sayang, toleransi, kejujuran, keadilan, dan tanggung jawab."
+        },
+        {
+          "lingkup": "Rasa Syukur dan Kesehatan",
+          "fokus": "Sikap menghargai diri saat murid mampu menjaga diri, kebersihan, dan kesehatan diri."
+        }
+      ],
+      "subelemen": [
+        {
+          "kode": "NABP-1",
+          "subelemen": "Murid percaya kepada Tuhan Yang Maha Esa sebagai pencipta dirinya, makhluk lain dan alam, serta mulai mengenal dan mempraktikkan ajaran pokok sesuai dengan agama dan kepercayaannya.",
+          "indikator_ketercapaian": [
+            "Mengenal nama Tuhan dan ciptaan-Nya",
+            "Mengenal dan menirukan doa atau ibadah pokok harian sesuai agamanya",
+            "Menunjukkan rasa syukur atas nikmat yang diterima"
+          ]
+        },
+        {
+          "kode": "NABP-2",
+          "subelemen": "Murid menghargai diri sendiri dan memiliki rasa syukur terhadap Tuhan YME sehingga dapat berpartisipasi aktif dalam menjaga kebersihan, kesehatan, dan keselamatan dirinya.",
+          "indikator_ketercapaian": [
+            "Mencuci tangan dan merawat kebersihan tubuh secara mandiri",
+            "Memilih makanan dan minuman yang bersih dan sehat",
+            "Mengenali situasi berbahaya dan menjaga keselamatan diri"
+          ]
+        },
+        {
+          "kode": "NABP-3",
+          "subelemen": "Murid menghargai sesama manusia dengan berbagai perbedaannya sehingga mempraktikkan perilaku baik dan berakhlak mulia.",
+          "indikator_ketercapaian": [
+            "Menghargai teman yang memiliki perbedaan fisik, agama, atau kebiasaan",
+            "Menggunakan kata tolong, maaf, dan terima kasih secara wajar",
+            "Berbagi, bergiliran, dan bekerja sama dalam kegiatan bermain"
+          ]
+        },
+        {
+          "kode": "NABP-4",
+          "subelemen": "Murid menghargai alam dan seluruh makhluk hidup ciptaan Tuhan Yang Maha Esa.",
+          "indikator_ketercapaian": [
+            "Menyayangi hewan dan merawat tanaman di sekitar",
+            "Membuang sampah pada tempatnya dan menjaga kelestarian lingkungan bermain"
+          ]
+        }
+      ]
+    },
+    {
+      "nama_elemen": "Jati Diri",
+      "deskripsi_utuh_cp": "Murid mengenali identitas dirinya yang terbentuk oleh karakteristik fisik dan gender, minat, kebutuhan, agama, dan sosial budaya; mengenali kebiasaan-kebiasaan di lingkungan keluarga, satuan pendidikan, dan masyarakat; mengenali, mengekspresikan, dan mengelola emosi diri, serta membangun hubungan sosial secara sehat; mengenali perannya sebagai bagian dari keluarga, satuan pendidikan, masyarakat dan warga negara Indonesia sehingga dapat menyesuaikan diri dengan lingkungan, aturan dan norma yang berlaku, dan mengetahui keberadaan negara lain di dunia; serta memiliki fungsi gerak (motorik kasar, halus, dan taktil) untuk merawat dirinya, membangun kemandirian dan berkegiatan.",
+      "lingkup_capaian": [
+        {
+          "lingkup": "Identitas Diri",
+          "fokus": "Mengenali diri (gender, agama, sosial budaya) dan bagian dari keluarga, negara, dan dunia."
+        },
+        {
+          "lingkup": "Sosial Emosional",
+          "fokus": "Kematangan emosi dan sosial untuk berkegiatan di lingkungan belajar."
+        },
+        {
+          "lingkup": "Fisik Motorik",
+          "fokus": "Kemampuan motorik kasar, halus, dan sensori/taktil untuk kemandirian berkegiatan."
+        }
+      ],
+      "subelemen": [
+        {
+          "kode": "JD-1",
+          "subelemen": "Murid mengenali identitas dirinya yang terbentuk oleh karakteristik fisik dan gender, minat, kebutuhan, agama, dan sosial budaya.",
+          "indikator_ketercapaian": [
+            "Mampu menyebutkan nama, jenis kelamin, ciri fisik, dan hal yang disukainya",
+            "Menunjukkan rasa percaya diri terhadap kemampuan dan keunikan dirinya"
+          ]
+        },
+        {
+          "kode": "JD-2",
+          "subelemen": "Murid mengenali kebiasaan-kebiasaan di lingkungan keluarga, satuan pendidikan, dan masyarakat.",
+          "indikator_ketercapaian": [
+            "Menceritakan kebiasaan atau tradisi sederhana di rumah dan sekolah",
+            "Mampu mengikuti rutinitas harian di kelas secara tertib"
+          ]
+        },
+        {
+          "kode": "JD-3",
+          "subelemen": "Murid mengenali, mengekspresikan, dan mengelola emosi diri, serta membangun hubungan sosial secara sehat.",
+          "indikator_ketercapaian": [
+            "Mengenali emosi senang, sedih, marah, dan takut",
+            "Menenangkan diri saat merasa kecewa atau marah dengan bantuan guru",
+            "Menunjukkan empati kepada teman yang bersedih atau kesulitan"
+          ]
+        },
+        {
+          "kode": "JD-4",
+          "subelemen": "Murid mengenali perannya sebagai bagian dari keluarga, satuan pendidikan, masyarakat dan warga negara Indonesia sehingga dapat menyesuaikan diri dengan lingkungan, aturan dan norma yang berlaku, dan mengetahui keberadaan negara lain di dunia.",
+          "indikator_ketercapaian": [
+            "Menjalankan kesepakatan kelas dan mematuhi aturan bermain",
+            "Mengenal simbol negara seperti bendera Merah Putih dan lagu kebangsaan"
+          ]
+        },
+        {
+          "kode": "JD-5",
+          "subelemen": "Murid memiliki fungsi gerak (motorik kasar, halus, dan taktil) untuk merawat dirinya, membangun kemandirian dan berkegiatan.",
+          "indikator_ketercapaian": [
+            "Melakukan gerakan motorik kasar terkoordinasi (berlari, melompat, melempar, menangkap)",
+            "Menggunakan motorik halus dan koordinasi mata-tangan (menggunting, meronce, memegang alat tulis)",
+            "Melakukan kegiatan bina diri dasar (memakai sepatu, membuka kancing, merapikan mainan)"
+          ]
+        }
+      ]
+    },
+    {
+      "nama_elemen": "Dasar-dasar Literasi, Matematika, Sains, Teknologi, Rekayasa, dan Seni",
+      "deskripsi_utuh_cp": "Murid mengenali dan memahami berbagai informasi, mengomunikasikan perasaan dan pikiran secara lisan, tulisan, atau menggunakan berbagai media serta membangun percakapan, menunjukkan minat, dan berpartisipasi dalam kegiatan pramembaca; memiliki kepekaan bilangan; mengidentifikasi pola; memiliki kesadaran tentang bentuk, posisi, dan ruang; menyadari adanya persamaan dan perbedaan karakteristik antar objek; mampu melakukan pengukuran dengan satuan tidak baku; dan memiliki kesadaran mengenai waktu; mampu mengamati, menyebutkan alasan, pilihan atau keputusannya, mampu memecahkan masalah sederhana, serta mengetahui hubungan sebab akibat dari suatu kondisi atau situasi yang dipengaruhi oleh hukum alam dan kondisi sosial; menunjukkan kemampuan awal menggunakan dan merekayasa teknologi serta untuk mencari informasi, gagasan, dan keterampilan secara aman dan bertanggung jawab; serta mengeksplorasi berbagai proses seni, mengekspresikannya, serta mengapresiasi karya seni.",
+      "lingkup_capaian": [
+        {
+          "lingkup": "Literasi",
+          "fokus": "Kemampuan dasar berkomunikasi, menyimak, bertutur, kosakata, kesadaran teks/fonemik, dan minat pramembaca."
+        },
+        {
+          "lingkup": "Matematika",
+          "fokus": "Kepekaan bilangan, pola, bentuk/posisi/ruang, perbandingan, pengukuran satuan tidak baku, dan waktu."
+        },
+        {
+          "lingkup": "Sains",
+          "fokus": "Rasa ingin tahu, eksplorasi alam, pemecahan masalah sederhana, dan hubungan sebab akibat."
+        },
+        {
+          "lingkup": "Teknologi & Rekayasa",
+          "fokus": "Mengenali fungsi benda buatan manusia, merancang karya sederhana, serta penggunaan teknologi secara aman."
+        },
+        {
+          "lingkup": "Seni",
+          "fokus": "Daya imajinasi dan kreativitas melalui eksplorasi, ekspresi, dan apresiasi karya seni visual/suara/gerak."
+        }
+      ],
+      "subelemen": [
+        {
+          "kode": "STEAM-1",
+          "subelemen": "Murid mengenali dan memahami berbagai informasi, mengomunikasikan perasaan dan pikiran secara lisan, tulisan, atau menggunakan berbagai media serta membangun percakapan, menunjukkan minat, dan berpartisipasi dalam kegiatan pramembaca.",
+          "indikator_ketercapaian": [
+            "Menyimak cerita dan menceritakan kembali ide pokok cerita",
+            "Mengekspresikan ide, keinginan, dan perasaan melalui kalimat terstruktur",
+            "Mengenali simbol, gambar, dan huruf awal kata pada buku cerita atau lingkungan sekitar"
+          ]
+        },
+        {
+          "kode": "STEAM-2",
+          "subelemen": "Murid memiliki kepekaan bilangan; mengidentifikasi pola; memiliki kesadaran tentang bentuk, posisi, dan ruang; menyadari adanya persamaan dan perbedaan karakteristik antar objek; mampu melakukan pengukuran dengan satuan tidak baku; dan memiliki kesadaran mengenai waktu.",
+          "indikator_ketercapaian": [
+            "Membilang benda secara nyata (1-10 atau lebih) dan memahami konsep lebih banyak/sedikit",
+            "Mengenali dan melanjutkan pola warna, bentuk, atau ukuran",
+            "Mengenal bentuk geometri dasar, posisi ruang (atas, bawah, dalam, luar), dan satuan ukuran non-baku (jengkal, langkah)",
+            "Mengenal konsep waktu sederhana (pagi, siang, malam, kemarin, sekarang, besok)"
+          ]
+        },
+        {
+          "kode": "STEAM-3",
+          "subelemen": "Murid mampu mengamati, menyebutkan alasan, pilihan atau keputusannya, mampu memecahkan masalah sederhana, serta mengetahui hubungan sebab akibat dari suatu kondisi atau situasi yang dipengaruhi oleh hukum alam dan kondisi sosial.",
+          "indikator_ketercapaian": [
+            "Mengamati perubahan benda atau lingkungan (misal: es mencair, warna bercampur)",
+            "Menyampaikan alasan sederhana di balik pilihannya",
+            "Mencoba mencari solusi ketika menemui kendala saat bermain"
+          ]
+        },
+        {
+          "kode": "STEAM-4",
+          "subelemen": "Murid menunjukkan kemampuan awal menggunakan dan merekayasa teknologi serta untuk mencari informasi, gagasan, dan keterampilan secara aman dan bertanggung jawab.",
+          "indikator_ketercapaian": [
+            "Menggunakan alat sederhana (gunting anak, penjepit, cetakan) secara tepat dan aman",
+            "Merakit benda menggunakan media lepas (loose parts/balok) untuk membentuk model rekayasa sederhana"
+          ]
+        },
+        {
+          "kode": "STEAM-5",
+          "subelemen": "Murid mengeksplorasi berbagai proses seni, mengekspresikannya, serta mengapresiasi karya seni.",
+          "indikator_ketercapaian": [
+            "Menggambar, melukis, mencap, atau membentuk dengan berbagai media",
+            "Bernyanyi, bertepuk tangan mengikuti irama, atau bergerak mengikuti musik",
+            "Menghargai dan memuji karya seni buatan teman"
+          ]
+        }
+      ]
+    }
+  ]
+}
