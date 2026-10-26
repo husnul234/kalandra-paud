@@ -2,6 +2,7 @@ import {
   AlignmentType,
   Document,
   HeadingLevel,
+  LevelFormat,
   Packer,
   Paragraph,
   Table,
@@ -179,6 +180,128 @@ function cellPara(
 }
 
 /**
+ * Clean prefix bullets or numbers so we never get duplicate bullets or numbers
+ */
+function cleanListText(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/^[\s•\-\*\u2022\u25E6\u25AA\u25CF\u2013\u2014]+/, '')
+    .replace(/^\d+[\.\)]\s*/, '')
+    .trim();
+}
+
+/**
+ * Native Word Automatic Bullet Paragraph with hanging indent
+ */
+function cellBulletPara(
+  text: string,
+  options: {
+    bold?: boolean;
+    italics?: boolean;
+    size?: number;
+    color?: string;
+    spaceAfter?: number;
+    indentLeft?: number;
+    hanging?: number;
+  } = {}
+): Paragraph {
+  const clean = cleanListText(text);
+  const indentLeft = options.indentLeft ?? 280;
+  const hanging = options.hanging ?? 280;
+
+  return new Paragraph({
+    bullet: { level: 0 },
+    indent: { left: indentLeft, hanging },
+    alignment: AlignmentType.LEFT,
+    spacing: { after: options.spaceAfter ?? 40, line: 260 },
+    children: [
+      new TextRun({
+        text: clean,
+        bold: options.bold,
+        italics: options.italics,
+        size: options.size ?? 21,
+        color: options.color ?? DOCX_COLORS.darkText,
+        font: DOCX_FONTS.primary,
+      }),
+    ],
+  });
+}
+
+/**
+ * Native Word Automatic Bullet Paragraph with a Bold Prefix/Label
+ * E.g. "• Lingkungan Sekolah: text..." or "• Alat & Bahan: text..."
+ */
+function cellBulletWithLabelPara(
+  label: string,
+  content: string,
+  options: {
+    size?: number;
+    spaceAfter?: number;
+    isLink?: boolean;
+  } = {}
+): Paragraph {
+  const cleanLabel = cleanListText(label).replace(/:+$/, '').trim();
+  const cleanContent = cleanListText(content || '-');
+
+  return new Paragraph({
+    bullet: { level: 0 },
+    indent: { left: 280, hanging: 280 },
+    alignment: AlignmentType.LEFT,
+    spacing: { after: options.spaceAfter ?? 40, line: 260 },
+    children: [
+      new TextRun({
+        text: `${cleanLabel}: `,
+        bold: true,
+        size: options.size ?? 21,
+        color: DOCX_COLORS.darkText,
+        font: DOCX_FONTS.primary,
+      }),
+      new TextRun({
+        text: cleanContent,
+        italics: options.isLink,
+        size: options.size ?? 21,
+        color: options.isLink ? DOCX_COLORS.primaryNavy : DOCX_COLORS.bodyText,
+        font: DOCX_FONTS.primary,
+      }),
+    ],
+  });
+}
+
+/**
+ * Native Word Automatic Numbered Paragraph
+ */
+function cellNumberedPara(
+  reference: string,
+  text: string,
+  options: {
+    bold?: boolean;
+    italics?: boolean;
+    size?: number;
+    color?: string;
+    spaceAfter?: number;
+  } = {}
+): Paragraph {
+  const clean = cleanListText(text);
+
+  return new Paragraph({
+    numbering: { reference, level: 0 },
+    indent: { left: 360, hanging: 360 },
+    alignment: AlignmentType.LEFT,
+    spacing: { after: options.spaceAfter ?? 40, line: 260 },
+    children: [
+      new TextRun({
+        text: clean,
+        bold: options.bold,
+        italics: options.italics,
+        size: options.size ?? 21,
+        color: options.color ?? DOCX_COLORS.darkText,
+        font: DOCX_FONTS.primary,
+      }),
+    ],
+  });
+}
+
+/**
  * Build Table 1: IDENTIFIKASI
  */
 function buildTable1Identifikasi(data: RpmPaudDocData): Table {
@@ -285,31 +408,31 @@ function buildTable1Identifikasi(data: RpmPaudDocData): Table {
 function buildTable2Desain(data: RpmPaudDocData): Table {
   const d = data.desain_pembelajaran;
 
-  const cpParas = (d?.capaian_pembelajaran || []).map((cp, idx) =>
-    cellPara(`${idx + 1}. ${cp}`, { spaceAfter: 50 })
+  const cpParas = (d?.capaian_pembelajaran || []).map((cp) =>
+    cellNumberedPara('cp-numbering', cp, { spaceAfter: 50 })
   );
 
-  const tpParas = (d?.tujuan_pembelajaran || []).map((tp, idx) =>
-    cellPara(`• ${tp}`, { spaceAfter: 40 })
+  const tpParas = (d?.tujuan_pembelajaran || []).map((tp) =>
+    cellBulletPara(tp, { spaceAfter: 40 })
   );
 
   const kemitraanParas = [
-    cellPara(`• Lingkungan Sekolah: ${d?.kemitraan_pembelajaran?.lingkungan_sekolah || '-'}`),
-    cellPara(`• Masyarakat/Keluarga: ${d?.kemitraan_pembelajaran?.masyarakat || '-'}`),
-    cellPara(`• Lingkungan Luar Sekolah: ${d?.kemitraan_pembelajaran?.lingkungan_luar_sekolah || '-'}`),
+    cellBulletWithLabelPara('Lingkungan Sekolah', d?.kemitraan_pembelajaran?.lingkungan_sekolah || '-'),
+    cellBulletWithLabelPara('Masyarakat/Keluarga', d?.kemitraan_pembelajaran?.masyarakat || '-'),
+    cellBulletWithLabelPara('Lingkungan Luar Sekolah', d?.kemitraan_pembelajaran?.lingkungan_luar_sekolah || '-'),
   ];
 
   const lingkunganParas = [
-    cellPara(`• Ruang Fisik: ${d?.lingkungan_pembelajaran?.ruang_fisik || '-'}`),
-    cellPara(`• Ruang Virtual: ${d?.lingkungan_pembelajaran?.ruang_virtual || '-'}`),
-    cellPara(`• Budaya Belajar: ${d?.lingkungan_pembelajaran?.budaya_belajar || '-'}`),
+    cellBulletWithLabelPara('Ruang Fisik', d?.lingkungan_pembelajaran?.ruang_fisik || '-'),
+    cellBulletWithLabelPara('Ruang Virtual', d?.lingkungan_pembelajaran?.ruang_virtual || '-'),
+    cellBulletWithLabelPara('Budaya Belajar', d?.lingkungan_pembelajaran?.budaya_belajar || '-'),
   ];
 
   const digitalParas = [
-    cellPara(`• Perencanaan: ${d?.pemanfaatan_digital?.perencanaan || '-'}`),
-    cellPara(`• Pelaksanaan: ${d?.pemanfaatan_digital?.pelaksanaan || '-'}`),
-    cellPara(`• Asesmen: ${d?.pemanfaatan_digital?.asesmen || '-'}`),
-    ...(d?.pemanfaatan_digital?.tautan_media ? [cellPara(`• Tautan Media: ${d.pemanfaatan_digital.tautan_media}`, { italics: true, color: DOCX_COLORS.primaryNavy })] : []),
+    cellBulletWithLabelPara('Perencanaan', d?.pemanfaatan_digital?.perencanaan || '-'),
+    cellBulletWithLabelPara('Pelaksanaan', d?.pemanfaatan_digital?.pelaksanaan || '-'),
+    cellBulletWithLabelPara('Asesmen', d?.pemanfaatan_digital?.asesmen || '-'),
+    ...(d?.pemanfaatan_digital?.tautan_media ? [cellBulletWithLabelPara('Tautan Media', d.pemanfaatan_digital.tautan_media, { isLink: true })] : []),
   ];
 
   return new Table({
@@ -420,8 +543,8 @@ function buildTable3PengalamanBelajar(data: RpmPaudDocData): Table {
   if (exp?.awal?.pengantar) {
     awalParas.push(cellPara(exp.awal.pengantar, { spaceAfter: 60 }));
   }
-  (exp?.awal?.poin_kegiatan || []).forEach((pt, i) => {
-    awalParas.push(cellPara(`${i + 1}. ${pt}`, { spaceAfter: 40 }));
+  (exp?.awal?.poin_kegiatan || []).forEach((pt) => {
+    awalParas.push(cellNumberedPara('tahap-awal-numbering', pt, { spaceAfter: 40 }));
   });
 
   rows.push(
@@ -488,13 +611,7 @@ function buildTable3PengalamanBelajar(data: RpmPaudDocData): Table {
 
         if (k.alat_dan_bahan) {
           kegParas.push(
-            new Paragraph({
-              spacing: { after: 30, line: 240 },
-              children: [
-                new TextRun({ text: '• Alat & Bahan: ', bold: true, size: 20, color: DOCX_COLORS.bodyText, font: DOCX_FONTS.primary }),
-                new TextRun({ text: k.alat_dan_bahan, size: 20, color: DOCX_COLORS.bodyText, font: DOCX_FONTS.primary }),
-              ],
-            })
+            cellBulletWithLabelPara('Alat & Bahan', k.alat_dan_bahan, { size: 20, spaceAfter: 30 })
           );
         }
 
@@ -503,7 +620,7 @@ function buildTable3PengalamanBelajar(data: RpmPaudDocData): Table {
             cellPara(`${k.judul_langkah || 'Cara Bermain / Membuat'}:`, { bold: true, size: 20, color: DOCX_COLORS.bodyText, spaceAfter: 20 })
           );
           k.langkah.forEach((l) => {
-            kegParas.push(cellPara(`  - ${l}`, { size: 19, color: DOCX_COLORS.bodyText, spaceAfter: 20 }));
+            kegParas.push(cellBulletPara(l, { size: 19, spaceAfter: 20, indentLeft: 360, hanging: 240 }));
           });
         }
       });
@@ -528,8 +645,8 @@ function buildTable3PengalamanBelajar(data: RpmPaudDocData): Table {
   if (exp?.penutup?.pengantar) {
     penutupParas.push(cellPara(exp.penutup.pengantar, { spaceAfter: 60 }));
   }
-  (exp?.penutup?.poin_kegiatan || []).forEach((pt, i) => {
-    penutupParas.push(cellPara(`${i + 1}. ${pt}`, { spaceAfter: 40 }));
+  (exp?.penutup?.poin_kegiatan || []).forEach((pt) => {
+    penutupParas.push(cellNumberedPara('tahap-penutup-numbering', pt, { spaceAfter: 40 }));
   });
 
   rows.push(
@@ -561,9 +678,9 @@ function buildTable3PengalamanBelajar(data: RpmPaudDocData): Table {
 function buildTable4Asesmen(data: RpmPaudDocData): Table {
   const as = data.asesmen_pembelajaran;
 
-  const awalParas = (as?.awal || []).map((p) => cellPara(`• ${p}`, { spaceAfter: 40 }));
-  const prosesParas = (as?.proses || []).map((p) => cellPara(`• ${p}`, { spaceAfter: 40 }));
-  const akhirParas = (as?.akhir || []).map((p) => cellPara(`• ${p}`, { spaceAfter: 40 }));
+  const awalParas = (as?.awal || []).map((p) => cellBulletPara(p, { spaceAfter: 40 }));
+  const prosesParas = (as?.proses || []).map((p) => cellBulletPara(p, { spaceAfter: 40 }));
+  const akhirParas = (as?.akhir || []).map((p) => cellBulletPara(p, { spaceAfter: 40 }));
 
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
@@ -696,6 +813,58 @@ export async function buildRpmPaudDocxBlob(
   const selectedSize = config.pageSize === 'F4_FOLIO' ? DOCX_PAGE_SIZE.F4_FOLIO : DOCX_PAGE_SIZE.A4;
 
   const doc = new Document({
+    numbering: {
+      config: [
+        {
+          reference: 'cp-numbering',
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.DECIMAL,
+              text: '%1.',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: { left: 360, hanging: 360 },
+                },
+              },
+            },
+          ],
+        },
+        {
+          reference: 'tahap-awal-numbering',
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.DECIMAL,
+              text: '%1.',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: { left: 360, hanging: 360 },
+                },
+              },
+            },
+          ],
+        },
+        {
+          reference: 'tahap-penutup-numbering',
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.DECIMAL,
+              text: '%1.',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: { left: 360, hanging: 360 },
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
     sections: [
       {
         properties: {

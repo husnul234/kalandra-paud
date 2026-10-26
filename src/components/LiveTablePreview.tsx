@@ -21,6 +21,14 @@ interface Props {
   isSaving?: boolean;
 }
 
+const cleanListText = (text?: string): string => {
+  if (!text) return '';
+  return text
+    .replace(/^[\s•\-\*\u2022\u25E6\u25AA\u25CF\u2013\u2014]+/, '')
+    .replace(/^\d+[\.\)]\s*/, '')
+    .trim();
+};
+
 export const LiveTablePreview: React.FC<Props> = ({
   data,
   onOpenExportModal,
@@ -47,10 +55,10 @@ export const LiveTablePreview: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      {/* 1. TOP ACTION TOOLBAR (Modern UI styling) */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      {/* 1. TOP ACTION TOOLBAR (Sticky when scrolling) */}
+      <div className="sticky top-16 sm:top-[72px] z-30 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-md flex flex-wrap items-center justify-between gap-3 transition-all">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E3A8A] flex items-center justify-center font-bold border border-blue-200">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E3A8A] flex items-center justify-center font-bold border border-blue-200 shrink-0">
             <FileCheck className="w-5 h-5 text-[#1E3A8A]" />
           </div>
           <div>
@@ -286,10 +294,19 @@ export const LiveTablePreview: React.FC<Props> = ({
                 <div className="bg-[#F8FAFC] p-3 font-bold text-[#1E3A8A] md:col-span-1 border-b md:border-b-0 md:border-r border-slate-400">
                   Capaian Pembelajaran (Verbatim CP 2025)
                 </div>
-                <div className="p-3 md:col-span-3 text-slate-800 space-y-1.5 leading-relaxed">
-                  {(data.desain_pembelajaran?.capaian_pembelajaran || []).map((cp, i) => (
-                    <p key={i}><strong>{i + 1}.</strong> {cp}</p>
-                  ))}
+                <div className="p-3 md:col-span-3 text-slate-800 leading-relaxed">
+                  {(data.desain_pembelajaran?.capaian_pembelajaran || []).length > 0 ? (
+                    <ol className="space-y-1.5">
+                      {(data.desain_pembelajaran?.capaian_pembelajaran || []).map((cp, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                          <span className="font-bold text-[#1E3A8A] min-w-[18px] text-right shrink-0 select-none">{i + 1}.</span>
+                          <span className="flex-1">{cleanListText(cp)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p>-</p>
+                  )}
                 </div>
               </div>
 
@@ -308,10 +325,19 @@ export const LiveTablePreview: React.FC<Props> = ({
                 <div className="bg-[#F8FAFC] p-3 font-bold text-[#1E3A8A] md:col-span-1 border-b md:border-b-0 md:border-r border-slate-400">
                   Tujuan Pembelajaran
                 </div>
-                <div className="p-3 md:col-span-3 text-slate-800 space-y-1 leading-relaxed">
-                  {(data.desain_pembelajaran?.tujuan_pembelajaran || []).map((tp, i) => (
-                    <p key={i}>• {tp}</p>
-                  ))}
+                <div className="p-3 md:col-span-3 text-slate-800 leading-relaxed">
+                  {(data.desain_pembelajaran?.tujuan_pembelajaran || []).length > 0 ? (
+                    <ul className="space-y-1.5">
+                      {(data.desain_pembelajaran?.tujuan_pembelajaran || []).map((tp, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                          <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                          <span className="flex-1">{cleanListText(tp)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>-</p>
+                  )}
                 </div>
               </div>
 
@@ -340,10 +366,28 @@ export const LiveTablePreview: React.FC<Props> = ({
                 <div className="bg-[#F8FAFC] p-3 font-bold text-[#1E3A8A] md:col-span-1 border-b md:border-b-0 md:border-r border-slate-400">
                   Kemitraan Pembelajaran
                 </div>
-                <div className="p-3 md:col-span-3 text-slate-800 space-y-1">
-                  <p><strong>• Lingkungan Sekolah:</strong> {data.desain_pembelajaran?.kemitraan_pembelajaran?.lingkungan_sekolah || '-'}</p>
-                  <p><strong>• Masyarakat:</strong> {data.desain_pembelajaran?.kemitraan_pembelajaran?.masyarakat || '-'}</p>
-                  <p><strong>• Lingkungan Luar Sekolah:</strong> {data.desain_pembelajaran?.kemitraan_pembelajaran?.lingkungan_luar_sekolah || '-'}</p>
+                <div className="p-3 md:col-span-3 text-slate-800 space-y-1.5">
+                  <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                    <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                    <div className="flex-1">
+                      <strong>Lingkungan Sekolah:</strong>{' '}
+                      <span>{cleanListText(data.desain_pembelajaran?.kemitraan_pembelajaran?.lingkungan_sekolah || '-')}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                    <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                    <div className="flex-1">
+                      <strong>Masyarakat/Keluarga:</strong>{' '}
+                      <span>{cleanListText(data.desain_pembelajaran?.kemitraan_pembelajaran?.masyarakat || '-')}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                    <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                    <div className="flex-1">
+                      <strong>Lingkungan Luar Sekolah:</strong>{' '}
+                      <span>{cleanListText(data.desain_pembelajaran?.kemitraan_pembelajaran?.lingkungan_luar_sekolah || '-')}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -352,10 +396,28 @@ export const LiveTablePreview: React.FC<Props> = ({
                 <div className="bg-[#F8FAFC] p-3 font-bold text-[#1E3A8A] md:col-span-1 border-b md:border-b-0 md:border-r border-slate-400">
                   Lingkungan Pembelajaran
                 </div>
-                <div className="p-3 md:col-span-3 text-slate-800 space-y-1">
-                  <p><strong>• Ruang Fisik:</strong> {data.desain_pembelajaran?.lingkungan_pembelajaran?.ruang_fisik || '-'}</p>
-                  <p><strong>• Ruang Virtual:</strong> {data.desain_pembelajaran?.lingkungan_pembelajaran?.ruang_virtual || '-'}</p>
-                  <p><strong>• Budaya Belajar:</strong> {data.desain_pembelajaran?.lingkungan_pembelajaran?.budaya_belajar || '-'}</p>
+                <div className="p-3 md:col-span-3 text-slate-800 space-y-1.5">
+                  <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                    <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                    <div className="flex-1">
+                      <strong>Ruang Fisik:</strong>{' '}
+                      <span>{cleanListText(data.desain_pembelajaran?.lingkungan_pembelajaran?.ruang_fisik || '-')}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                    <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                    <div className="flex-1">
+                      <strong>Ruang Virtual:</strong>{' '}
+                      <span>{cleanListText(data.desain_pembelajaran?.lingkungan_pembelajaran?.ruang_virtual || '-')}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                    <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                    <div className="flex-1">
+                      <strong>Budaya Belajar:</strong>{' '}
+                      <span>{cleanListText(data.desain_pembelajaran?.lingkungan_pembelajaran?.budaya_belajar || '-')}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -364,14 +426,43 @@ export const LiveTablePreview: React.FC<Props> = ({
                 <div className="bg-[#F8FAFC] p-3 font-bold text-[#1E3A8A] md:col-span-1 border-b md:border-b-0 md:border-r border-slate-400">
                   Pemanfaatan Digital
                 </div>
-                <div className="p-3 md:col-span-3 text-slate-800 space-y-1">
-                  <p><strong>• Perencanaan:</strong> {data.desain_pembelajaran?.pemanfaatan_digital?.perencanaan || '-'}</p>
-                  <p><strong>• Pelaksanaan:</strong> {data.desain_pembelajaran?.pemanfaatan_digital?.pelaksanaan || '-'}</p>
-                  <p><strong>• Asesmen:</strong> {data.desain_pembelajaran?.pemanfaatan_digital?.asesmen || '-'}</p>
+                <div className="p-3 md:col-span-3 text-slate-800 space-y-1.5">
+                  <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                    <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                    <div className="flex-1">
+                      <strong>Perencanaan:</strong>{' '}
+                      <span>{cleanListText(data.desain_pembelajaran?.pemanfaatan_digital?.perencanaan || '-')}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                    <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                    <div className="flex-1">
+                      <strong>Pelaksanaan:</strong>{' '}
+                      <span>{cleanListText(data.desain_pembelajaran?.pemanfaatan_digital?.pelaksanaan || '-')}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                    <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                    <div className="flex-1">
+                      <strong>Asesmen:</strong>{' '}
+                      <span>{cleanListText(data.desain_pembelajaran?.pemanfaatan_digital?.asesmen || '-')}</span>
+                    </div>
+                  </div>
                   {data.desain_pembelajaran?.pemanfaatan_digital?.tautan_media && (
-                    <p className="text-blue-700 underline font-mono text-[11px]">
-                      {data.desain_pembelajaran.pemanfaatan_digital.tautan_media}
-                    </p>
+                    <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                      <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                      <div className="flex-1">
+                        <strong>Tautan Media:</strong>{' '}
+                        <a
+                          href={data.desain_pembelajaran.pemanfaatan_digital.tautan_media}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-700 underline font-mono text-[11px] break-all"
+                        >
+                          {data.desain_pembelajaran.pemanfaatan_digital.tautan_media}
+                        </a>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -400,11 +491,16 @@ export const LiveTablePreview: React.FC<Props> = ({
                   {data.pengalaman_belajar?.awal?.pengantar && (
                     <p className="font-semibold text-slate-900">{data.pengalaman_belajar.awal.pengantar}</p>
                   )}
-                  <div className="space-y-1">
-                    {(data.pengalaman_belajar?.awal?.poin_kegiatan || []).map((pt, i) => (
-                      <p key={i}><strong>{i + 1}.</strong> {pt}</p>
-                    ))}
-                  </div>
+                  {(data.pengalaman_belajar?.awal?.poin_kegiatan || []).length > 0 && (
+                    <ol className="space-y-1.5 pt-1">
+                      {(data.pengalaman_belajar?.awal?.poin_kegiatan || []).map((pt, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                          <span className="font-bold text-[#1E3A8A] min-w-[18px] text-right shrink-0 select-none">{i + 1}.</span>
+                          <span className="flex-1">{cleanListText(pt)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
                 </div>
               </div>
 
@@ -423,24 +519,30 @@ export const LiveTablePreview: React.FC<Props> = ({
                       </div>
                       <div className="p-3 md:col-span-3 space-y-3.5">
                         {(h.kegiatan_list || []).map((k) => (
-                          <div key={k.nomor} className="space-y-1">
+                          <div key={k.nomor} className="space-y-1.5">
                             <div className="font-bold text-slate-900 text-xs">
                               Kegiatan {k.nomor} : {k.nama_kegiatan}{' '}
                               {k.label && <span className="font-normal italic text-[#D97706]">({k.label})</span>}
                             </div>
                             {k.alat_dan_bahan && (
-                              <p className="text-slate-800">
-                                <strong>• Alat dan bahan:</strong> {k.alat_dan_bahan}
-                              </p>
+                              <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                                <span className="text-slate-600 font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                                <div className="flex-1">
+                                  <strong>Alat & Bahan:</strong> {cleanListText(k.alat_dan_bahan)}
+                                </div>
+                              </div>
                             )}
                             {k.langkah && k.langkah.length > 0 && (
-                              <div className="space-y-0.5 pt-0.5">
-                                <strong className="text-slate-800">{k.judul_langkah || 'Cara bermain'}:</strong>
-                                {k.langkah.map((l, lIdx) => (
-                                  <p key={lIdx} className="text-slate-700 pl-3">
-                                    - {l}
-                                  </p>
-                                ))}
+                              <div className="space-y-1 pt-1">
+                                <strong className="text-slate-800 text-xs">{k.judul_langkah || 'Cara bermain'}:</strong>
+                                <ul className="space-y-1 pl-2">
+                                  {k.langkah.map((l, lIdx) => (
+                                    <li key={lIdx} className="flex items-start gap-2 text-xs text-slate-700 leading-relaxed">
+                                      <span className="text-slate-400 font-bold leading-none pt-0.5 shrink-0 select-none">-</span>
+                                      <span className="flex-1">{cleanListText(l)}</span>
+                                    </li>
+                                  ))}
+                                </ul>
                               </div>
                             )}
                           </div>
@@ -461,11 +563,16 @@ export const LiveTablePreview: React.FC<Props> = ({
                   {data.pengalaman_belajar?.penutup?.pengantar && (
                     <p className="font-semibold text-slate-900">{data.pengalaman_belajar.penutup.pengantar}</p>
                   )}
-                  <div className="space-y-1">
-                    {(data.pengalaman_belajar?.penutup?.poin_kegiatan || []).map((pt, i) => (
-                      <p key={i}><strong>{i + 1}.</strong> {pt}</p>
-                    ))}
-                  </div>
+                  {(data.pengalaman_belajar?.penutup?.poin_kegiatan || []).length > 0 && (
+                    <ol className="space-y-1.5 pt-1">
+                      {(data.pengalaman_belajar?.penutup?.poin_kegiatan || []).map((pt, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
+                          <span className="font-bold text-[#1E3A8A] min-w-[18px] text-right shrink-0 select-none">{i + 1}.</span>
+                          <span className="flex-1">{cleanListText(pt)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
                 </div>
               </div>
             </div>
@@ -489,10 +596,19 @@ export const LiveTablePreview: React.FC<Props> = ({
                   <div className="bg-[#EFF6FF] p-2.5 font-bold text-[#1E3A8A] border-b border-slate-400 text-center">
                     Asesmen pada Awal Pembelajaran
                   </div>
-                  <div className="p-3 space-y-1.5 text-slate-800 leading-relaxed">
-                    {(data.asesmen_pembelajaran?.awal || []).map((a, i) => (
-                      <p key={i}>• {a}</p>
-                    ))}
+                  <div className="p-3 text-slate-800 leading-relaxed">
+                    {(data.asesmen_pembelajaran?.awal || []).length > 0 ? (
+                      <ul className="space-y-1.5">
+                        {(data.asesmen_pembelajaran?.awal || []).map((a, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
+                            <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                            <span className="flex-1">{cleanListText(a)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>-</p>
+                    )}
                   </div>
                 </div>
 
@@ -501,10 +617,19 @@ export const LiveTablePreview: React.FC<Props> = ({
                   <div className="bg-[#EFF6FF] p-2.5 font-bold text-[#1E3A8A] border-b border-slate-400 text-center">
                     Asesmen pada Proses Pembelajaran
                   </div>
-                  <div className="p-3 space-y-1.5 text-slate-800 leading-relaxed">
-                    {(data.asesmen_pembelajaran?.proses || []).map((p, i) => (
-                      <p key={i}>• {p}</p>
-                    ))}
+                  <div className="p-3 text-slate-800 leading-relaxed">
+                    {(data.asesmen_pembelajaran?.proses || []).length > 0 ? (
+                      <ul className="space-y-1.5">
+                        {(data.asesmen_pembelajaran?.proses || []).map((p, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
+                            <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                            <span className="flex-1">{cleanListText(p)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>-</p>
+                    )}
                   </div>
                 </div>
 
@@ -513,10 +638,19 @@ export const LiveTablePreview: React.FC<Props> = ({
                   <div className="bg-[#EFF6FF] p-2.5 font-bold text-[#1E3A8A] border-b border-slate-400 text-center">
                     Asesmen pada Akhir Pembelajaran
                   </div>
-                  <div className="p-3 space-y-1.5 text-slate-800 leading-relaxed">
-                    {(data.asesmen_pembelajaran?.akhir || []).map((ak, i) => (
-                      <p key={i}>• {ak}</p>
-                    ))}
+                  <div className="p-3 text-slate-800 leading-relaxed">
+                    {(data.asesmen_pembelajaran?.akhir || []).length > 0 ? (
+                      <ul className="space-y-1.5">
+                        {(data.asesmen_pembelajaran?.akhir || []).map((ak, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
+                            <span className="text-[#1E3A8A] font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
+                            <span className="flex-1">{cleanListText(ak)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>-</p>
+                    )}
                   </div>
                 </div>
               </div>
