@@ -198,7 +198,7 @@ export async function executeDirectGeminiRequest(
     for (const model of GEMINI_MODEL_CHAIN) {
       if (onStatusUpdate) {
         onStatusUpdate({
-          message: `Menghubungkan ke Gemini (${model}) dengan kunci ${keyShort}...`,
+          message: 'Dokumen Perangkat Pembelajaran Anda sedang dibuat...',
           keyMasked: keyShort,
           model,
         });
@@ -256,7 +256,7 @@ export async function executeDirectGeminiRequest(
           console.warn(`[BYOK Direct] Quota limit 429 on key ${keyShort}. Rotasi ke kunci berikutnya.`);
           lastError = `Limit kuota (429) pada key ${keyShort}. Beralih ke kunci cadangan...`;
           if (onStatusUpdate) {
-            onStatusUpdate({ message: `Limit kuota (429) pada key ${keyShort}. Beralih ke kunci berikutnya...` });
+            onStatusUpdate({ message: 'Menyesuaikan antrean sistem, melanjutkan pembuatan dokumen...' });
           }
           break; // Break inner model loop, switch key
         }

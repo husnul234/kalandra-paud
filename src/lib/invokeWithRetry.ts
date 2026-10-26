@@ -89,7 +89,7 @@ export async function invokeGenerateWithRetry(
           phase: 'generating',
           attempt,
           message: attempt === 1 
-            ? 'Merumuskan dokumen pembelajaran mendalam...' 
+            ? 'Dokumen Perangkat Pembelajaran Anda sedang dibuat...' 
             : `Mencoba kembali (Percobaan ke-${attempt}) karena jeda jaringan...`,
         });
       }

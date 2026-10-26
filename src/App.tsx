@@ -9,6 +9,8 @@ import { AdminLayout } from './components/admin/AdminLayout';
 import { AuthPage } from './components/auth/AuthPage';
 import { ApiKeyManagerModal } from './components/ApiKeyManagerModal';
 import { ExportDocxModal } from './components/ExportDocxModal';
+import { ProfileModal } from './components/ProfileModal';
+import { supabase } from './lib/supabaseClient';
 import { SAMPLE_RPM_PAUD } from './data/default_sample_rpm';
 import { RpmPaudDocData } from './lib/docx-engine/docx-paud-builder';
 import { Sparkles, FileText, CheckCircle2 } from 'lucide-react';
@@ -23,6 +25,7 @@ const MainLayout: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'wizard' | 'preview' | 'history' | 'admin'>('wizard');
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [currentDoc, setCurrentDoc] = useState<RpmPaudDocData>(SAMPLE_RPM_PAUD);
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -76,24 +79,23 @@ const MainLayout: React.FC = () => {
   };
 
   // When wizard completes AI generation
-  const handleDocumentGenerated = (newDoc: RpmPaudDocData) => {
+  const handleDocumentGenerated = async (newDoc: RpmPaudDocData) => {
     setCurrentDoc(newDoc);
     setActiveTab('preview');
-    saveDocToStorage(newDoc);
-    showToast('✨ Dokumen RPM 1 Minggu berhasil disusun dan siap dicetak!');
+    await saveDocToStorage(newDoc, '✨ Dokumen RPM 1 Minggu berhasil disusun dan disimpan di Riwayat!');
   };
 
-  // Save document to history
-  const saveDocToStorage = (docToSave: RpmPaudDocData) => {
+  // Save document to history (Supabase DB + LocalStorage Hybrid)
+  const saveDocToStorage = async (docToSave: RpmPaudDocData, customSuccessMsg?: string) => {
     setIsSaving(true);
     try {
-      const existing = localStorage.getItem('kalandra_saved_rpm_docs');
-      const docs = existing ? JSON.parse(existing) : [];
-
       const info = docToSave.informasi_umum || {};
+      const docTitle = `RPM Minggu ${info.minggu_ke || '1'}: ${info.topik_subtopik || 'Tema PAUD'}`;
+      const docId = `rpm-${Date.now()}`;
+
       const newEntry = {
-        id: `rpm-${Date.now()}`,
-        title: `RPM Minggu ${info.minggu_ke || '1'}: ${info.topik_subtopik || 'Tema PAUD'}`,
+        id: docId,
+        title: docTitle,
         topik: info.topik_subtopik || 'Tema PAUD',
         jenjang: info.jenjang_kelas || 'Kelompok A',
         mingguKe: info.minggu_ke || '1',
@@ -101,11 +103,38 @@ const MainLayout: React.FC = () => {
         data: docToSave,
       };
 
+      // 1. Save to LocalStorage immediately
+      const existing = localStorage.getItem('kalandra_saved_rpm_docs');
+      const docs = existing ? JSON.parse(existing) : [];
       const updated = [newEntry, ...docs.filter((d: any) => d.title !== newEntry.title)];
-      localStorage.setItem('kalandra_saved_rpm_docs', JSON.stringify(updated.slice(0, 20)));
-      showToast('Draf dokumen tersimpan di Riwayat.');
+      localStorage.setItem('kalandra_saved_rpm_docs', JSON.stringify(updated.slice(0, 25)));
+
+      // 2. If logged in, save to Supabase generated_documents table
+      if (user?.id) {
+        const { error: dbError } = await supabase.from('generated_documents').insert({
+          user_id: user.id,
+          school_id: profile?.school_id || null,
+          title: docTitle,
+          jenjang_kelas: info.jenjang_kelas || 'Kelompok A (4-5 Tahun)',
+          semester: info.semester || '1',
+          minggu_ke: info.minggu_ke || '1',
+          bulan: info.bulan || '',
+          topik_subtopik: info.topik_subtopik || 'Tema PAUD',
+          dpl_selected: docToSave.identifikasi?.dimensi_profil_lulusan_terpilih || [],
+          used_model: 'gemini-3.6-flash',
+          document_json: docToSave,
+          is_starred: false,
+        });
+
+        if (dbError) {
+          console.warn('[saveDocToStorage] Supabase save warning:', dbError.message);
+        }
+      }
+
+      showToast(customSuccessMsg || '✅ Draf dokumen berhasil disimpan ke Riwayat!');
     } catch (e) {
       console.error('Save error:', e);
+      showToast('⚠️ Gagal menyimpan draf dokumen.');
     } finally {
       setIsSaving(false);
     }
@@ -120,6 +149,7 @@ const MainLayout: React.FC = () => {
         setActiveTab={handleTabChange}
         onOpenKeyModal={() => setIsKeyModalOpen(true)}
         onOpenAuth={() => setPageView('auth')}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onGoToLanding={() => setPageView('landing')}
       />
 
@@ -171,8 +201,8 @@ const MainLayout: React.FC = () => {
           <p className="font-semibold text-[#2A1532]">
             Kalandra PAUD — Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi
           </p>
-          <p>
-            Kepatuhan 100% Permendikdasmen No. 10/2025, 12/2025, 1/2026, Keputusan BSKAP No. 046/H/KR/2025 • BYOK Gemini Engine • Ekspor OOXML Word
+          <p className="text-[#74607B]/80 text-[11px]">
+            Platform Perencanaan Pembelajaran TK Fase Fondasi 2025/2026
           </p>
         </div>
       </footer>
@@ -190,6 +220,15 @@ const MainLayout: React.FC = () => {
         onClose={() => setIsExportModalOpen(false)}
         documentData={currentDoc}
         schoolName={profile?.school_name}
+      />
+
+      {/* Profile Guru & Satuan PAUD Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onProfileUpdated={() => {
+          showToast('Profil Guru & Satuan PAUD berhasil diperbarui!');
+        }}
       />
     </div>
   );

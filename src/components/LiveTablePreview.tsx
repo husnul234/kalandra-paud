@@ -28,12 +28,21 @@ export const LiveTablePreview: React.FC<Props> = ({
   isSaving = false,
 }) => {
   const [zoomLevel, setZoomLevel] = useState<number>(100);
+  const [justSaved, setJustSaved] = useState(false);
 
   const info = data.informasi_umum || {};
   const selectedDpl = data.identifikasi?.dimensi_profil_lulusan_terpilih || [];
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleSaveClick = async () => {
+    if (onSaveDocument) {
+      await onSaveDocument();
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 3000);
+    }
   };
 
   return (
@@ -87,12 +96,25 @@ export const LiveTablePreview: React.FC<Props> = ({
           {onSaveDocument && (
             <button
               type="button"
-              onClick={onSaveDocument}
+              onClick={handleSaveClick}
               disabled={isSaving}
-              className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+                justSaved
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                  : 'border border-slate-300 hover:bg-slate-50 text-slate-700'
+              }`}
             >
-              <Save className="w-4 h-4 text-slate-600" />
-              <span>{isSaving ? 'Menyimpan...' : 'Simpan Draf'}</span>
+              {justSaved ? (
+                <>
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Tersimpan di Riwayat!</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 text-slate-600" />
+                  <span>{isSaving ? 'Menyimpan...' : 'Simpan ke Riwayat'}</span>
+                </>
+              )}
             </button>
           )}
 

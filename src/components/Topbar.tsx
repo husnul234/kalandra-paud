@@ -23,6 +23,7 @@ interface Props {
   setActiveTab: (tab: 'wizard' | 'preview' | 'history' | 'admin') => void;
   onOpenKeyModal: () => void;
   onOpenAuth: () => void;
+  onOpenProfileModal?: () => void;
   onGoToLanding?: () => void;
 }
 
@@ -31,6 +32,7 @@ export const Topbar: React.FC<Props> = ({
   setActiveTab, 
   onOpenKeyModal, 
   onOpenAuth,
+  onOpenProfileModal,
   onGoToLanding 
 }) => {
   const { user, profile, signOut, isAdmin } = useAuth();
@@ -202,6 +204,15 @@ export const Topbar: React.FC<Props> = ({
                         </button>
                       )}
 
+                      {onOpenProfileModal && (
+                        <button
+                          onClick={onOpenProfileModal}
+                          className="w-full px-4 py-2 text-left text-xs text-[#2A1532] hover:bg-[#FAF3FB] flex items-center gap-2"
+                        >
+                          <User className="w-4 h-4 text-[#74607B]" /> Profil Guru & Satuan PAUD
+                        </button>
+                      )}
+
                       <button
                         onClick={onOpenKeyModal}
                         className="w-full px-4 py-2 text-left text-xs text-[#2A1532] hover:bg-[#FAF3FB] flex items-center gap-2"
@@ -216,7 +227,7 @@ export const Topbar: React.FC<Props> = ({
                           onClick={onOpenAuth}
                           className="w-full px-4 py-2 text-left text-xs text-[#522D60] hover:bg-[#FAF3FB] flex items-center gap-2 font-bold"
                         >
-                          <LogIn className="w-4 h-4" /> Masuk / Daftar Akun Resmi
+                          <LogIn className="w-4 h-4" /> Masuk ke Akun
                         </button>
                       ) : (
                         <button
@@ -289,6 +300,14 @@ export const Topbar: React.FC<Props> = ({
           >
             <LayoutDashboard className="w-4 h-4 text-[#74607B]" /> Riwayat Dokumen
           </button>
+          {user && onOpenProfileModal && (
+            <button
+              onClick={() => { onOpenProfileModal(); setShowMobileMenu(false); }}
+              className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 text-[#2A1532] hover:bg-[#FAF3FB]"
+            >
+              <User className="w-4 h-4 text-[#80426E]" /> Profil Guru & Satuan PAUD
+            </button>
+          )}
           {isAdmin && (
             <button
               onClick={() => { setActiveTab('admin'); setShowMobileMenu(false); }}
@@ -304,7 +323,7 @@ export const Topbar: React.FC<Props> = ({
               onClick={() => { onOpenAuth(); setShowMobileMenu(false); }}
               className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-[#522D60] flex items-center gap-2"
             >
-              <LogIn className="w-4 h-4" /> Masuk / Daftar Akun
+              <LogIn className="w-4 h-4" /> Masuk ke Akun
             </button>
           )}
         </div>

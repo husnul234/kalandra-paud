@@ -62,8 +62,6 @@ export const AdminUsersView: React.FC = () => {
   const [newInitialPassword, setNewInitialPassword] = useState('Kalandra2026!');
   const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [newRole, setNewRole] = useState<'admin' | 'guru'>('guru');
-  const [newSchool, setNewSchool] = useState('TK NEGERI PEMBINA 01');
-  const [newClass, setNewClass] = useState('A (4-5 Tahun)');
   const [createError, setCreateError] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -241,8 +239,6 @@ export const AdminUsersView: React.FC = () => {
         password: newInitialPassword,
         full_name: cleanName,
         role: newRole,
-        school_name: newSchool,
-        assigned_class: newClass,
       });
 
       await fetchUsers();
@@ -593,29 +589,6 @@ export const AdminUsersView: React.FC = () => {
                 >
                   <option value="guru">Guru (End-User Perencana RPM)</option>
                   <option value="admin">Admin (Pengelola Sistem)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Satuan PAUD</label>
-                <input
-                  type="text"
-                  value={newSchool}
-                  onChange={(e) => setNewSchool(e.target.value)}
-                  placeholder="TK NEGERI PEMBINA 01"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Kelompok Usia</label>
-                <select
-                  value={newClass}
-                  onChange={(e) => setNewClass(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
-                >
-                  <option value="A (4-5 Tahun)">Kelompok A (4-5 Tahun)</option>
-                  <option value="B (5-6 Tahun)">Kelompok B (5-6 Tahun)</option>
                 </select>
               </div>
 

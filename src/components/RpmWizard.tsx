@@ -141,13 +141,13 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
           onProgress: (p) => {
             if (p.phase === 'connecting') {
               setProgressStage(2);
-              setProgressMessage(p.message);
+              setProgressMessage(p.message || 'Dokumen Perangkat Pembelajaran Anda sedang dibuat...');
             } else if (p.phase === 'generating') {
               setProgressStage(3);
-              setProgressMessage('Menyusun 18 kegiatan bermain mendalam 6 hari...');
+              setProgressMessage('Dokumen Perangkat Pembelajaran Anda sedang dibuat...');
             } else if (p.phase === 'completed') {
               setProgressStage(4);
-              setProgressMessage('Validasi 8 DPL dan struktur JSON tuntas!');
+              setProgressMessage('Dokumen Perangkat Pembelajaran Anda selesai disusun!');
             }
           },
         }

@@ -11,27 +11,25 @@ interface Props {
 
 const STAGES = [
   { id: 1, label: 'Membaca Regulasi PAUD 2025 & Master CP', icon: ShieldCheck },
-  { id: 2, label: 'Koneksi Pool Gemini BYOK (Failover Check)', icon: KeyRound },
+  { id: 2, label: 'Koneksi Mesin AI Pembelajaran', icon: KeyRound },
   { id: 3, label: 'Menyusun 18 Kegiatan Bermain & Loose Parts 6 Hari', icon: Sparkles },
-  { id: 4, label: 'Validasi Skema JSON & Sinkronisasi 8 DPL', icon: Cpu },
+  { id: 4, label: 'Validasi Skema & Sinkronisasi 8 DPL', icon: Cpu },
 ];
 
 export const LiveProgressIndicator: React.FC<Props> = ({
   currentStage,
   statusMessage,
-  usedModel = 'gemini-3.6-flash',
-  keyMasked,
   attempt = 1,
 }) => {
   const progressPercent = Math.min(100, Math.round((currentStage / 4) * 100));
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-blue-200/80 p-6 md:p-8 shadow-xl space-y-6">
+    <div className="w-full bg-white rounded-2xl border border-[#E8D6EB] p-6 md:p-8 shadow-xl space-y-6">
       {/* Header Info */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-800 flex items-center justify-center shrink-0">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+          <div className="w-12 h-12 rounded-2xl bg-[#FAF3FB] text-[#522D60] flex items-center justify-center shrink-0">
+            <Loader2 className="w-6 h-6 animate-spin text-[#522D60]" />
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900">Merumuskan RPM Pembelajaran Mendalam</h3>
@@ -39,16 +37,12 @@ export const LiveProgressIndicator: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Telemetry Chips */}
+        {/* Status Badge */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-900 font-mono">
-            {usedModel}
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#FAF3FB] text-[#522D60] border border-[#E8D6EB] flex items-center gap-1.5 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#522D60]" />
+            <span>AI Pembelajaran PAUD</span>
           </span>
-          {keyMasked && (
-            <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 font-mono">
-              Key: {keyMasked}
-            </span>
-          )}
           {attempt > 1 && (
             <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
               Percobaan ke-{attempt}
@@ -60,7 +54,7 @@ export const LiveProgressIndicator: React.FC<Props> = ({
       {/* Progress Bar */}
       <div>
         <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-2">
-          <span>{statusMessage || 'Sedang memproses...'}</span>
+          <span>{statusMessage || 'Dokumen Perangkat Pembelajaran Anda sedang dibuat...'}</span>
           <span className="text-blue-700 font-bold">{progressPercent}%</span>
         </div>
         <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">

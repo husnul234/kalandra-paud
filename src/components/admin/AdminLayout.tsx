@@ -35,9 +35,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBackToApp }) => {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'users', label: 'Pengguna', icon: Users },
-    { id: 'schools', label: 'Sekolah', icon: Building2 },
-    { id: 'customers', label: 'Pelanggan Lama', icon: UserCheck },
+    { id: 'users', label: 'Pengguna & Guru', icon: Users },
+    { id: 'schools', label: 'Lembaga PAUD', icon: Building2 },
     { id: 'settings', label: 'Pengaturan', icon: Settings },
   ] as const;
 

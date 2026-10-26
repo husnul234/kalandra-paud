@@ -447,10 +447,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <p className="font-bold text-[#2A1532]">
             Kalandra PAUD — Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi
           </p>
-          <p>
-            Kepatuhan 100% Permendikdasmen No. 10/2025, 12/2025, 1/2026, Keputusan BSKAP No. 046/H/KR/2025 • BYOK Gemini Engine • Ekspor OOXML Word
+          <p className="text-[11px] text-[#74607B]/80">
+            Platform Perencanaan Pembelajaran TK Fase Fondasi 2025/2026
           </p>
-          <p className="text-[11px] text-[#74607B]/70 pt-2">
+          <p className="text-[11px] text-[#74607B]/70 pt-1">
             © 2026 Kalandra PAUD. Hak Cipta Dilindungi Undang-Undang.
           </p>
         </div>

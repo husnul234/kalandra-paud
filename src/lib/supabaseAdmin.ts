@@ -67,8 +67,8 @@ export async function adminCreateUser(input: CreateUserInput) {
       email: cleanEmail,
       full_name: cleanName,
       role: cleanEmail === 'pakhusnulid@gmail.com' ? 'admin' : input.role,
-      school_id: schoolId,
-      assigned_class: input.assigned_class || 'A (4-5 Tahun)',
+      school_id: schoolId || null,
+      assigned_class: input.assigned_class || '',
       is_active: true,
       updated_at: new Date().toISOString(),
     });
