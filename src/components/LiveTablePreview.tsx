@@ -694,7 +694,7 @@ export const LiveTablePreview: React.FC<Props> = ({
 
           {/* Running Footer Sheet */}
           <div className="mt-12 pt-3 border-t border-slate-200 flex justify-between items-center text-[10px] text-slate-400 italic">
-            <span>Kalandra PAUD — Terstandar Permendikdasmen No. 10/2025</span>
+            <span>Kalandra — Terstandar Permendikdasmen No. 10/2025</span>
             <span>Dokumen Perencanaan Pembelajaran Mendalam (Fase Fondasi)</span>
           </div>
         </div>

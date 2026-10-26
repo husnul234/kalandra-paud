@@ -42,11 +42,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Logo & Brand */}
           <div className="flex items-center gap-2.5 select-none cursor-pointer" onClick={onGoToApp}>
             <div className="w-10 h-10 rounded-2xl overflow-hidden shadow-md shadow-[#522D60]/20 shrink-0 border border-[#E8D6EB] hover:scale-105 transition-all bg-[#2A1532]">
-              <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
+              <img src="/kalandra_logo.png" alt="Kalandra" className="w-full h-full object-cover scale-[1.05]" />
             </div>
             <div>
               <span className="font-black text-base sm:text-lg tracking-tight text-[#2A1532] flex items-center gap-1.5">
-                KALANDRA PAUD
+                KALANDRA
               </span>
               <span className="hidden sm:block text-[11px] font-semibold text-[#80426E] -mt-1">
                 RPM TK Fase Fondasi 2025/2026
@@ -192,7 +192,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-2xl sm:text-3xl font-black text-[#2A1532]">
-              Mengapa Guru TK Membutuhkan Kalandra PAUD?
+              Mengapa Guru TK Membutuhkan Kalandra?
             </h2>
             <p className="text-xs sm:text-sm text-[#74607B] mt-2">
               Perubahan kurikulum dan tuntutan administrasi mingguan tidak lagi harus mengorbankan akhir pekan Anda
@@ -228,7 +228,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Box Solusi */}
             <div className="p-6 sm:p-8 rounded-3xl bg-[#FAF3FB] border border-[#E8D6EB] space-y-4 shadow-sm">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#522D60] text-white text-xs font-bold">
-                ✨ Solusi Cerdas Kalandra PAUD
+                ✨ Solusi Cerdas Kalandra
               </div>
               <ul className="space-y-3 text-xs sm:text-sm text-[#2A1532]">
                 <li className="flex items-start gap-2.5">
@@ -257,7 +257,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section id="fitur" className="py-20 max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <span className="text-xs font-bold text-[#80426E] uppercase tracking-wider">Fitur Dirancang Khusus untuk Pendidik PAUD</span>
-          <h2 className="text-3xl font-black text-[#2A1532]">4 Keunggulan Utama Kalandra PAUD</h2>
+          <h2 className="text-3xl font-black text-[#2A1532]">4 Keunggulan Utama Kalandra</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -316,7 +316,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Pratinjau Dokumen Identik Microsoft Word
             </h2>
             <p className="text-xs sm:text-sm text-[#74607B] max-w-xl mx-auto mt-2">
-              Tidak perlu membuang waktu merapikan margin dan tabel di Word. Kalandra PAUD menyusun berkas dengan standar resmi instansi.
+              Tidak perlu membuang waktu merapikan margin dan tabel di Word. Kalandra menyusun berkas dengan standar resmi instansi.
             </p>
           </div>
 
@@ -383,21 +383,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section id="faq" className="py-16 max-w-4xl mx-auto px-4 sm:px-6 space-y-8">
         <div className="text-center space-y-2">
           <span className="text-xs font-bold text-[#80426E] uppercase tracking-wider">Informasi Paling Sering Ditanyakan</span>
-          <h2 className="text-2xl sm:text-3xl font-black text-[#2A1532]">Pertanyaan Seputar Kalandra PAUD</h2>
+          <h2 className="text-2xl sm:text-3xl font-black text-[#2A1532]">Pertanyaan Seputar Kalandra</h2>
         </div>
 
         <div className="space-y-3">
           <div className="bg-white p-5 rounded-2xl border border-[#EFE6F2] shadow-xs">
             <h4 className="text-sm font-bold text-[#2A1532]">Apakah kurikulumnya sudah sesuai aturan Kemendikdasmen 2025/2026?</h4>
             <p className="text-xs text-[#74607B] mt-1.5 leading-relaxed">
-              Ya, 100% patuh. Kalandra PAUD secara tegas tidak lagi menggunakan istilah "P5" atau "Profil Pelajar Pancasila", melainkan menggunakan 8 Dimensi Profil Lulusan (DPL1-DPL8) sesuai Permendikdasmen No. 10/2025 serta siklus Deep Learning Permendikdasmen No. 1/2026.
+              Ya, 100% patuh. Kalandra secara tegas tidak lagi menggunakan istilah "P5" atau "Profil Pelajar Pancasila", melainkan menggunakan 8 Dimensi Profil Lulusan (DPL1-DPL8) sesuai Permendikdasmen No. 10/2025 serta siklus Deep Learning Permendikdasmen No. 1/2026.
             </p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-[#EFE6F2] shadow-xs">
             <h4 className="text-sm font-bold text-[#2A1532]">Bagaimana cara mendapatkan kunci Google Gemini API gratis?</h4>
             <p className="text-xs text-[#74607B] mt-1.5 leading-relaxed">
-              Sangat mudah! Anda cukup masuk ke Google AI Studio (aistudio.google.com), klik tombol "Get API Key", dan salin kunci tersebut ke menu Kunci BYOK di Kalandra PAUD. Kami sarankan mendaftarkan minimal 2 kunci agar rotasi otomatis berjalan lancar tanpa limit.
+              Sangat mudah! Anda cukup masuk ke Google AI Studio (aistudio.google.com), klik tombol "Get API Key", dan salin kunci tersebut ke menu Kunci BYOK di Kalandra. Kami sarankan mendaftarkan minimal 2 kunci agar rotasi otomatis berjalan lancar tanpa limit.
             </p>
           </div>
 
@@ -414,7 +414,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section className="py-16 bg-[#522D60] text-white">
         <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
           <div className="w-16 h-16 rounded-3xl overflow-hidden mx-auto shadow-2xl border border-white/20 bg-[#2A1532]">
-            <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
+            <img src="/kalandra_logo.png" alt="Kalandra" className="w-full h-full object-cover scale-[1.05]" />
           </div>
           <h2 className="text-2xl sm:text-4xl font-black tracking-tight">
             Siap Menghemat Waktu Administrasi Pembelajaran Anda?
@@ -445,13 +445,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <footer className="bg-white border-t border-[#EFE6F2] py-8 text-xs text-[#74607B] text-center">
         <div className="max-w-7xl mx-auto px-4 space-y-2">
           <p className="font-bold text-[#2A1532]">
-            Kalandra PAUD — Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi
+            Kalandra — Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi
           </p>
           <p className="text-[11px] text-[#74607B]/80">
             Platform Perencanaan Pembelajaran TK Fase Fondasi 2025/2026
           </p>
           <p className="text-[11px] text-[#74607B]/70 pt-1">
-            © 2026 Kalandra PAUD. Hak Cipta Dilindungi Undang-Undang.
+            © 2026 Kalandra. Hak Cipta Dilindungi Undang-Undang.
           </p>
         </div>
       </footer>

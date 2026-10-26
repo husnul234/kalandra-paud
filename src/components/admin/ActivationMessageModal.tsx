@@ -38,7 +38,7 @@ export const ActivationMessageModal: React.FC<ActivationMessageModalProps> = ({
 
   const messageText = `Halo Ibu/Bapak ${customer.fullName || 'Guru Hebat'} dari ${customer.schoolName || 'Satuan PAUD'},
 
-Akun Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi — *Kalandra PAUD* Anda telah aktif dan siap digunakan! 🎉
+Akun Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi — *Kalandra* Anda telah aktif dan siap digunakan! 🎉
 
 📋 *Rincian Akun*:
 • Nama: ${customer.fullName}
@@ -49,7 +49,7 @@ ${customer.expiryDate ? `• Berlaku Hingga: ${customer.expiryDate}\n` : ''}
 🔗 *Tautan Akses Aplikasi*:
 ${appUrl}
 
-💡 *Fitur Utama Kalandra PAUD*:
+💡 *Fitur Utama Kalandra*:
 ✅ Otomasi 18 Kegiatan Bermain Mendalam per Minggu (6 Hari Belajar)
 ✅ Kepatuhan 100% 8 Dimensi Profil Lulusan (Permendikdasmen No. 10/2025)
 ✅ Bebas Halusinasi — Ekspor Microsoft Word (.docx) Resmi Siap Cetak

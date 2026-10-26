@@ -106,7 +106,7 @@ export const AdminConsole: React.FC = () => {
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-800/80 text-blue-200 text-xs font-bold mb-2">
             <Shield className="w-3.5 h-3.5" /> SUPERADMIN & CREATOR CONSOLE
           </div>
-          <h1 className="text-2xl font-black tracking-tight">Pusat Tata Kelola Platform Kalandra PAUD</h1>
+          <h1 className="text-2xl font-black tracking-tight">Pusat Tata Kelola Platform Kalandra</h1>
           <p className="text-xs text-blue-200/80 mt-1 max-w-xl">
             Pantau aktivitas guru lintas satuan PAUD, manajemen lisensi & akun, serta audit kepatuhan regulasi Kemendikdasmen 2025/2026.
           </p>

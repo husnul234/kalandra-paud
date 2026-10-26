@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LandingPage } from './components/landing/LandingPage';
 import { Topbar } from './components/Topbar';
@@ -13,15 +14,15 @@ import { ProfileModal } from './components/ProfileModal';
 import { supabase } from './lib/supabaseClient';
 import { SAMPLE_RPM_PAUD } from './data/default_sample_rpm';
 import { RpmPaudDocData } from './lib/docx-engine/docx-paud-builder';
-import { Sparkles, FileText, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ShieldAlert } from 'lucide-react';
 
-export type PageView = 'landing' | 'app' | 'auth' | 'admin';
+/**
+ * Komponen Generator Utama RPM PAUD (/app)
+ */
+const GeneratorWorkspace: React.FC = () => {
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
 
-const MainLayout: React.FC = () => {
-  const { user, profile, isAdmin } = useAuth();
-  
-  // Default first page is the Landing Page
-  const [pageView, setPageView] = useState<PageView>('landing');
   const [activeTab, setActiveTab] = useState<'wizard' | 'preview' | 'history' | 'admin'>('wizard');
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -35,57 +36,20 @@ const MainLayout: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // 1. LANDING PAGE VIEW (Default on site visit)
-  if (pageView === 'landing') {
-    return (
-      <LandingPage
-        onGoToApp={() => setPageView('app')}
-        onGoToAuth={() => setPageView('auth')}
-        onGoToAdmin={() => setPageView('admin')}
-      />
-    );
-  }
-
-  // 2. AUTHENTICATION PAGE (Login / Register / Whitelist Access)
-  if (pageView === 'auth') {
-    return (
-      <AuthPage
-        onSuccess={(targetRole) => {
-          if (targetRole === 'admin') {
-            setPageView('admin');
-          } else {
-            setPageView('app');
-          }
-        }}
-        onBackToApp={() => setPageView('landing')}
-      />
-    );
-  }
-
-  // 3. ADMIN PANEL (Multi-menu with collapsible sidebar)
-  if (pageView === 'admin' && isAdmin) {
-    return (
-      <AdminLayout onBackToApp={() => setPageView('app')} />
-    );
-  }
-
-  // Handle tab switching in app
   const handleTabChange = (tab: 'wizard' | 'preview' | 'history' | 'admin') => {
     if (tab === 'admin') {
-      setPageView('admin');
+      navigate('/admin');
     } else {
       setActiveTab(tab);
     }
   };
 
-  // When wizard completes AI generation
   const handleDocumentGenerated = async (newDoc: RpmPaudDocData) => {
     setCurrentDoc(newDoc);
     setActiveTab('preview');
     await saveDocToStorage(newDoc, '✨ Dokumen RPM 1 Minggu berhasil disusun dan disimpan di Riwayat!');
   };
 
-  // Save document to history (Supabase DB + LocalStorage Hybrid)
   const saveDocToStorage = async (docToSave: RpmPaudDocData, customSuccessMsg?: string) => {
     setIsSaving(true);
     try {
@@ -103,13 +67,11 @@ const MainLayout: React.FC = () => {
         data: docToSave,
       };
 
-      // 1. Save to LocalStorage immediately
       const existing = localStorage.getItem('kalandra_saved_rpm_docs');
       const docs = existing ? JSON.parse(existing) : [];
       const updated = [newEntry, ...docs.filter((d: any) => d.title !== newEntry.title)];
       localStorage.setItem('kalandra_saved_rpm_docs', JSON.stringify(updated.slice(0, 25)));
 
-      // 2. If logged in, save to Supabase generated_documents table
       if (user?.id) {
         const { error: dbError } = await supabase.from('generated_documents').insert({
           user_id: user.id,
@@ -140,7 +102,6 @@ const MainLayout: React.FC = () => {
     }
   };
 
-  // 4. MAIN GENERATOR APPLICATION
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF7FB] text-[#2A1532] selection:bg-[#522D60] selection:text-white">
       {/* Topbar */}
@@ -148,9 +109,9 @@ const MainLayout: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         onOpenKeyModal={() => setIsKeyModalOpen(true)}
-        onOpenAuth={() => setPageView('auth')}
+        onOpenAuth={() => navigate('/login')}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
-        onGoToLanding={() => setPageView('landing')}
+        onGoToLanding={() => navigate('/')}
       />
 
       {/* Toast Notification */}
@@ -199,7 +160,7 @@ const MainLayout: React.FC = () => {
       <footer className="bg-white border-t border-[#EFE6F2] py-6 text-xs text-[#74607B] text-center">
         <div className="max-w-7xl mx-auto px-4 space-y-1">
           <p className="font-semibold text-[#2A1532]">
-            Kalandra PAUD — Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi
+            Kalandra — Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi
           </p>
           <p className="text-[#74607B]/80 text-[11px]">
             Platform Perencanaan Pembelajaran TK Fase Fondasi 2025/2026
@@ -234,10 +195,116 @@ const MainLayout: React.FC = () => {
   );
 };
 
+/**
+ * Route Guard Khusus Superadmin / Pengelola (/admin)
+ */
+const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, profile, isAdmin, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF7FB] flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 border-3 border-[#522D60] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs font-bold text-[#74607B]">Memuat otentikasi admin...</span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-[#FAF7FB] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-red-100 text-center space-y-4">
+          <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-7 h-7" />
+          </div>
+          <h2 className="text-lg font-black text-[#2A1532]">Akses Panel Khusus Admin</h2>
+          <p className="text-xs text-[#74607B] leading-relaxed">
+            Akun Anda terdaftar dengan peran <strong className="text-[#2A1532] capitalize">{profile?.role || 'guru'}</strong>. Halaman ini hanya dapat diakses oleh Pengelola & Superadmin Kalandra.
+          </p>
+          <button
+            onClick={() => navigate('/app')}
+            className="w-full py-2.5 px-4 bg-[#522D60] hover:bg-[#3E2149] text-white text-xs font-bold rounded-xl shadow-md transition-all"
+          >
+            Buka Generator RPM
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
+
+/**
+ * Root Application Router
+ */
+export const AppRoutes: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <Routes>
+      {/* 1. Beranda / Landing Page */}
+      <Route
+        path="/"
+        element={
+          <LandingPage
+            onGoToApp={() => navigate('/app')}
+            onGoToAuth={() => navigate('/login')}
+            onGoToAdmin={() => navigate('/admin')}
+          />
+        }
+      />
+
+      {/* 2. Halaman Autentikasi (Login / Register) */}
+      <Route
+        path="/login"
+        element={
+          <AuthPage
+            onSuccess={(targetRole) => {
+              if (targetRole === 'admin') {
+                navigate('/admin');
+              } else {
+                navigate('/app');
+              }
+            }}
+            onBackToApp={() => navigate('/')}
+          />
+        }
+      />
+      {/* Alias /auth -> /login */}
+      <Route path="/auth" element={<Navigate to="/login" replace />} />
+
+      {/* 3. Panel Admin (Khusus Superadmin) */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedAdminRoute>
+            <AdminLayout onBackToApp={() => navigate('/app')} />
+          </ProtectedAdminRoute>
+        }
+      />
+
+      {/* 4. Generator RPM TK Utama */}
+      <Route path="/app" element={<GeneratorWorkspace />} />
+
+      {/* Fallback ke Beranda jika URL tidak ditemukan */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <MainLayout />
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </AuthProvider>
   );
 };

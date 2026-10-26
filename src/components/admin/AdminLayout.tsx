@@ -92,16 +92,16 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBackToApp }) => {
             {sidebarOpen ? (
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shadow-xs border border-[#E8D6EB] bg-[#2A1532] shrink-0">
-                  <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
+                  <img src="/kalandra_logo.png" alt="Kalandra" className="w-full h-full object-cover scale-[1.05]" />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-extrabold text-sm text-[#2A1532] leading-tight">Admin Panel</span>
-                  <span className="text-[11px] text-[#74607B] font-medium">Kalandra PAUD</span>
+                  <span className="text-[11px] text-[#74607B] font-medium">Kalandra</span>
                 </div>
               </div>
             ) : (
               <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center mx-auto border border-[#E8D6EB] bg-[#2A1532]">
-                <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
+                <img src="/kalandra_logo.png" alt="Kalandra" className="w-full h-full object-cover scale-[1.05]" />
               </div>
             )}
 

@@ -89,10 +89,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBackToApp }) =>
         {/* Brand Header */}
         <div className="text-center mb-6">
           <div className="w-14 h-14 rounded-2xl overflow-hidden mx-auto mb-3 shadow-lg shadow-[#522D60]/20 border border-[#E8D6EB] bg-[#2A1532]">
-            <img src="/kalandra_logo.png" alt="Kalandra PAUD" className="w-full h-full object-cover scale-[1.05]" />
+            <img src="/kalandra_logo.png" alt="Kalandra" className="w-full h-full object-cover scale-[1.05]" />
           </div>
           <h2 className="text-xl font-black text-[#2A1532] tracking-tight">
-            KALANDRA PAUD
+            KALANDRA
           </h2>
           <p className="text-xs text-[#80426E] font-medium mt-0.5">
             Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi
@@ -180,7 +180,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBackToApp }) =>
 
       {/* Clean Footer Info without long regulation text */}
       <div className="mt-4 mb-2 text-center text-xs font-semibold text-[#522D60]/70 shrink-0">
-        Kalandra PAUD © 2026 • Platform Perencanaan Pembelajaran TK Fase Fondasi
+        Kalandra © 2026 • Platform Perencanaan Pembelajaran TK Fase Fondasi
       </div>
     </div>
   );

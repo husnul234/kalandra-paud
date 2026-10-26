@@ -808,7 +808,7 @@ export async function buildRpmPaudDocxBlob(
   const docTitle = `RPM 1 Minggu: ${info.topik_subtopik || 'Perencanaan Pembelajaran'}`;
 
   const header = createDocumentHeader(schoolName, docTitle);
-  const footer = createDocumentFooter('Kalandra PAUD • Kurikulum PAUD Permendikdasmen 2025/2026');
+  const footer = createDocumentFooter('Kalandra • Kurikulum PAUD Permendikdasmen 2025/2026');
 
   const selectedSize = config.pageSize === 'F4_FOLIO' ? DOCX_PAGE_SIZE.F4_FOLIO : DOCX_PAGE_SIZE.A4;
 
