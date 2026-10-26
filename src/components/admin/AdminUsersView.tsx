@@ -16,9 +16,17 @@ import {
   GraduationCap,
   Eye,
   EyeOff,
-  Loader2
+  Loader2,
+  Lock
 } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
+import { 
+  supabaseAdmin, 
+  adminCreateUser, 
+  adminDeleteUser, 
+  adminResetPassword, 
+  adminToggleUserStatus, 
+  adminToggleUserRole 
+} from '../../lib/supabaseAdmin';
 
 export interface UserRow {
   id: string;
@@ -38,38 +46,46 @@ export const AdminUsersView: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'guru'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Reset Password Dialog state
   const [isResetOpen, setIsResetOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
-  const [newPassword, setNewPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('Kalandra2026!');
   const [showPassword, setShowPassword] = useState(false);
 
   // Create User Dialog state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newFullName, setNewFullName] = useState('');
+  const [newInitialPassword, setNewInitialPassword] = useState('Kalandra2026!');
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [newRole, setNewRole] = useState<'admin' | 'guru'>('guru');
   const [newSchool, setNewSchool] = useState('TK NEGERI PEMBINA 01');
   const [newClass, setNewClass] = useState('A (4-5 Tahun)');
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch profiles
-      const { data: profiles, error } = await supabase
+      // 1. Fetch real profiles from database
+      const { data: profiles, error } = await supabaseAdmin
         .from('profiles')
         .select('*, schools(name)')
         .order('created_at', { ascending: false });
 
-      // 2. Fetch document counts per user
-      const { data: docs } = await supabase
+      if (error) {
+        console.warn('Fetch profiles error:', error);
+      }
+
+      // 2. Fetch real document counts per user
+      const { data: docs } = await supabaseAdmin
         .from('generated_documents')
         .select('user_id');
 
@@ -82,7 +98,7 @@ export const AdminUsersView: React.FC = () => {
         });
       }
 
-      const mapped: UserRow[] = (profiles || []).map((p) => ({
+      const mapped: UserRow[] = (profiles || []).map((p: any) => ({
         id: p.id,
         email: p.email,
         full_name: p.full_name || p.email.split('@')[0],
@@ -94,38 +110,9 @@ export const AdminUsersView: React.FC = () => {
         created_at: p.created_at ? new Date(p.created_at).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
       }));
 
-      // Ensure Superadmin Pak Husnul is always available in the view
-      if (!mapped.some((u) => u.email.toLowerCase() === 'pakhusnulid@gmail.com')) {
-        mapped.unshift({
-          id: 'admin-husnul-root',
-          email: 'pakhusnulid@gmail.com',
-          full_name: 'Pak Husnul (Administrator)',
-          role: 'admin',
-          school_name: 'Kalandra PAUD Official',
-          assigned_class: 'Superadmin Platform',
-          docs_count: docs?.length || 0,
-          is_active: true,
-          created_at: '2026-01-01',
-        });
-      }
-
       setUsers(mapped);
     } catch (e) {
       console.warn('Users fetch error:', e);
-      // Fallback minimum admin
-      setUsers([
-        {
-          id: 'admin-husnul-root',
-          email: 'pakhusnulid@gmail.com',
-          full_name: 'Pak Husnul (Administrator)',
-          role: 'admin',
-          school_name: 'Kalandra PAUD Official',
-          assigned_class: 'Superadmin Platform',
-          docs_count: 0,
-          is_active: true,
-          created_at: '2026-01-01',
-        },
-      ]);
     } finally {
       setIsLoading(false);
     }
@@ -152,15 +139,13 @@ export const AdminUsersView: React.FC = () => {
     );
 
     try {
-      await supabase
-        .from('profiles')
-        .update({ is_active: updated })
-        .eq('id', userId);
-    } catch (e) {
-      console.warn('Error updating profile status:', e);
+      await adminToggleUserStatus(userId, updated);
+      showToast(`Status akun ${target.full_name} berhasil ${updated ? 'diaktifkan' : 'dinonaktifkan'}.`);
+    } catch (e: any) {
+      console.error('Error updating status:', e);
+      showToast(`Gagal mengubah status: ${e.message}`);
+      fetchUsers();
     }
-
-    showToast(`Status akun ${target.full_name} berhasil ${updated ? 'diaktifkan' : 'dinonaktifkan'}.`);
   };
 
   const handleToggleRole = async (userId: string) => {
@@ -180,15 +165,13 @@ export const AdminUsersView: React.FC = () => {
     );
 
     try {
-      await supabase
-        .from('profiles')
-        .update({ role: nextRole })
-        .eq('id', userId);
-    } catch (e) {
-      console.warn('Error updating profile role:', e);
+      await adminToggleUserRole(userId, nextRole);
+      showToast(`Peran ${target.full_name} berhasil diubah menjadi ${nextRole}.`);
+    } catch (e: any) {
+      console.error('Error updating role:', e);
+      showToast(`Gagal mengubah peran: ${e.message}`);
+      fetchUsers();
     }
-
-    showToast(`Peran ${target.full_name} berhasil diubah menjadi ${nextRole}.`);
   };
 
   const handleOpenReset = (user: UserRow) => {
@@ -197,10 +180,23 @@ export const AdminUsersView: React.FC = () => {
     setIsResetOpen(true);
   };
 
-  const handleConfirmReset = () => {
+  const handleConfirmReset = async () => {
     if (!selectedUser) return;
-    showToast(`Instruksi pengaturan ulang kata sandi untuk ${selectedUser.full_name} berhasil dikirim.`);
-    setIsResetOpen(false);
+    if (newPassword.length < 6) {
+      alert('Kata sandi minimal 6 karakter.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await adminResetPassword(selectedUser.id, newPassword);
+      showToast(`Kata sandi untuk ${selectedUser.full_name} (${selectedUser.email}) berhasil diubah ke: ${newPassword}`);
+      setIsResetOpen(false);
+    } catch (e: any) {
+      alert(`Gagal mereset kata sandi: ${e.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteUser = async (userId: string, email: string) => {
@@ -208,57 +204,61 @@ export const AdminUsersView: React.FC = () => {
       showToast('Tidak dapat menghapus akun Superadmin utama.');
       return;
     }
-    if (confirm(`Apakah Anda yakin ingin menghapus akun pengguna ${email}?`)) {
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
 
+    if (confirm(`Apakah Anda yakin ingin menghapus akun ${email} secara permanen? Pengguna tidak akan dapat login lagi.`)) {
       try {
-        await supabase.from('profiles').delete().eq('id', userId);
-        await supabase.from('allowed_customers').delete().ilike('email', email);
-      } catch (e) {
-        console.warn('Error deleting user:', e);
+        await adminDeleteUser(userId);
+        setUsers((prev) => prev.filter((u) => u.id !== userId));
+        showToast(`Akun ${email} berhasil dihapus dari sistem.`);
+      } catch (e: any) {
+        alert(`Gagal menghapus akun: ${e.message}`);
+        fetchUsers();
       }
-
-      showToast(`Akun ${email} berhasil dihapus dari sistem.`);
     }
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreateError(null);
+
     const cleanEmail = newEmail.trim().toLowerCase();
     const cleanName = newFullName.trim();
-    if (!cleanEmail || !cleanName) return;
 
-    const newUser: UserRow = {
-      id: `u-${Date.now()}`,
-      email: cleanEmail,
-      full_name: cleanName,
-      role: newRole,
-      school_name: newSchool,
-      assigned_class: newClass,
-      docs_count: 0,
-      is_active: true,
-      created_at: new Date().toISOString().slice(0, 10),
-    };
-
-    setUsers([newUser, ...users]);
-    setIsCreateOpen(false);
-
-    try {
-      // Also register in allowed_customers so they can activate their password
-      await supabase.from('allowed_customers').insert({
-        email: cleanEmail,
-        full_name: cleanName,
-        school_name: newSchool,
-        account_type: 'annual',
-        is_active: true,
-      });
-    } catch (e) {
-      console.warn('Create user whitelist sync warning:', e);
+    if (!cleanEmail || !cleanName) {
+      setCreateError('Email dan Nama Lengkap wajib diisi.');
+      return;
     }
 
-    showToast(`Pengguna baru ${cleanName} berhasil ditambahkan dan di-whitelist!`);
-    setNewEmail('');
-    setNewFullName('');
+    if (newInitialPassword.length < 6) {
+      setCreateError('Kata sandi awal minimal 6 karakter.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await adminCreateUser({
+        email: cleanEmail,
+        password: newInitialPassword,
+        full_name: cleanName,
+        role: newRole,
+        school_name: newSchool,
+        assigned_class: newClass,
+      });
+
+      await fetchUsers();
+      setIsCreateOpen(false);
+      showToast(`Pengguna baru ${cleanName} (${cleanEmail}) berhasil didaftarkan dan dapat langsung login!`);
+
+      // Reset form
+      setNewEmail('');
+      setNewFullName('');
+      setNewInitialPassword('Kalandra2026!');
+    } catch (e: any) {
+      console.error('Error creating user:', e);
+      setCreateError(e.message || 'Gagal menambahkan pengguna baru.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredUsers = users.filter((u) => {
@@ -294,7 +294,7 @@ export const AdminUsersView: React.FC = () => {
             <Users className="w-6 h-6 text-[#80426E]" /> Pengguna & Peran Akun
           </h1>
           <p className="text-xs text-[#74607B] mt-0.5">
-            Kelola akun guru TK terdaftar, hak akses peran admin, dan status operasional sistem
+            Daftar akun pendidik PAUD terverifikasi di basis data Supabase resmi
           </p>
         </div>
 
@@ -308,7 +308,10 @@ export const AdminUsersView: React.FC = () => {
             <span>Segarkan</span>
           </button>
           <button
-            onClick={() => setIsCreateOpen(true)}
+            onClick={() => {
+              setCreateError(null);
+              setIsCreateOpen(true);
+            }}
             className="py-2 px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -384,7 +387,16 @@ export const AdminUsersView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EFE6F2] text-xs">
-              {filteredUsers.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-[#74607B]">
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-[#522D60]" />
+                      <span>Memuat data pengguna dari basis data Supabase...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-[#74607B]">
                     Tidak ada pengguna yang cocok dengan kriteria pencarian.
@@ -417,6 +429,7 @@ export const AdminUsersView: React.FC = () => {
                               ? 'bg-[#522D60] text-white shadow-xs'
                               : 'bg-[#FAF3FB] text-[#80426E] border border-[#E8D6EB] hover:bg-[#F6ECF8]'
                           } ${isSuperadmin ? 'cursor-default' : 'cursor-pointer'}`}
+                          title={isSuperadmin ? 'Peran Superadmin tidak dapat diubah' : 'Klik untuk mengubah peran'}
                         >
                           <Shield className="w-3 h-3 text-[#FFD38B]" />
                           <span className="capitalize">{u.role}</span>
@@ -449,6 +462,7 @@ export const AdminUsersView: React.FC = () => {
                               ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
                               : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
                           } ${isSuperadmin ? 'cursor-default' : 'cursor-pointer'}`}
+                          title={isSuperadmin ? 'Superadmin selalu aktif' : 'Klik untuk mengaktifkan/menonaktifkan'}
                         >
                           {u.is_active ? (
                             <>
@@ -503,7 +517,10 @@ export const AdminUsersView: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-[#522D60] text-white flex items-center justify-center">
                   <Plus className="w-4 h-4 text-[#FFD38B]" />
                 </div>
-                <h3 className="font-extrabold text-sm text-[#2A1532]">Tambah Pengguna Baru</h3>
+                <div>
+                  <h3 className="font-extrabold text-sm text-[#2A1532]">Tambah Pengguna Baru</h3>
+                  <p className="text-[11px] text-[#74607B]">Pengguna langsung terdaftar di Supabase dan bisa login</p>
+                </div>
               </div>
               <button
                 onClick={() => setIsCreateOpen(false)}
@@ -513,6 +530,13 @@ export const AdminUsersView: React.FC = () => {
               </button>
             </div>
 
+            {createError && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <span>{createError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleCreateUser} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-[#2A1532] mb-1">Email Pengguna *</label>
@@ -521,7 +545,7 @@ export const AdminUsersView: React.FC = () => {
                   required
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="guru@paudceria.sch.id"
+                  placeholder="guru@sekolah.sch.id"
                   className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
                 />
               </div>
@@ -536,6 +560,28 @@ export const AdminUsersView: React.FC = () => {
                   placeholder="Dewi Rahmawati, S.Pd."
                   className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">Kata Sandi Awal *</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-[#80426E] absolute left-3 top-2.5" />
+                  <input
+                    type={showCreatePassword ? 'text' : 'password'}
+                    required
+                    value={newInitialPassword}
+                    onChange={(e) => setNewInitialPassword(e.target.value)}
+                    placeholder="Min. 6 karakter"
+                    className="w-full pl-9 pr-10 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCreatePassword(!showCreatePassword)}
+                    className="absolute right-3 top-2.5 text-[#74607B] hover:text-[#522D60]"
+                  >
+                    {showCreatePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -583,9 +629,17 @@ export const AdminUsersView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="py-2 px-4 rounded-xl text-xs font-extrabold text-white bg-[#522D60] hover:bg-[#693774] shadow-sm"
+                  disabled={isSubmitting}
+                  className="py-2 px-4 rounded-xl text-xs font-extrabold text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  Simpan Pengguna
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <span>Daftarkan Pengguna</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -614,7 +668,7 @@ export const AdminUsersView: React.FC = () => {
 
             <div className="space-y-3">
               <p className="text-xs text-[#74607B]">
-                Masukkan kata sandi sementara baru untuk guru <span className="font-bold text-[#2A1532]">{selectedUser.full_name}</span> ({selectedUser.email}):
+                Masukkan kata sandi baru untuk <span className="font-bold text-[#2A1532]">{selectedUser.full_name}</span> ({selectedUser.email}):
               </p>
 
               <div className="relative">
@@ -643,10 +697,18 @@ export const AdminUsersView: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={handleConfirmReset}
-                  className="py-2 px-4 rounded-xl text-xs font-extrabold text-white bg-[#522D60] hover:bg-[#693774] shadow-sm"
+                  className="py-2 px-4 rounded-xl text-xs font-extrabold text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  Kirim & Simpan
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <span>Simpan Kata Sandi</span>
+                  )}
                 </button>
               </div>
             </div>

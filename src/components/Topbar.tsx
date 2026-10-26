@@ -33,7 +33,7 @@ export const Topbar: React.FC<Props> = ({
   onOpenAuth,
   onGoToLanding 
 }) => {
-  const { user, profile, signOut, isAdmin, switchToDemoRole } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
   const { activeKeys } = useGeminiKeys(user?.id);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -208,27 +208,6 @@ export const Topbar: React.FC<Props> = ({
                       >
                         <KeyRound className="w-4 h-4 text-[#74607B]" /> Kelola API Key BYOK
                       </button>
-
-                      {/* Demo role switchers if in demo mode */}
-                      {!user && (
-                        <div className="pt-1 border-t border-slate-100">
-                          <div className="px-4 py-1 text-[10px] font-bold text-[#74607B] uppercase">
-                            Ganti Peran Demonstrasi:
-                          </div>
-                          <button
-                            onClick={() => switchToDemoRole('guru')}
-                            className="w-full px-4 py-1.5 text-left text-xs text-[#2A1532] hover:bg-[#FAF3FB] flex items-center gap-2"
-                          >
-                            <User className="w-3.5 h-3.5 text-[#80426E]" /> Mode Guru Demo
-                          </button>
-                          <button
-                            onClick={() => switchToDemoRole('admin')}
-                            className="w-full px-4 py-1.5 text-left text-xs text-[#522D60] hover:bg-[#FAF3FB] flex items-center gap-2 font-bold"
-                          >
-                            <Shield className="w-3.5 h-3.5 text-[#522D60]" /> Mode Admin (Pak Husnul)
-                          </button>
-                        </div>
-                      )}
                     </div>
 
                     <div className="border-t border-slate-100 pt-1">

@@ -15,17 +15,6 @@ export interface UserProfile {
   is_active: boolean;
 }
 
-export interface AllowedCustomerInfo {
-  allowed: boolean;
-  isRegistered: boolean;
-  fullName?: string;
-  schoolName?: string;
-  accountType?: string;
-  isActive?: boolean;
-  claimedAt?: string | null;
-  notes?: string;
-}
-
 interface AuthContextType {
   session: Session | null;
   user: User | null;
@@ -42,12 +31,15 @@ interface AuthContextType {
     assignedClass?: string
   ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
-  switchToDemoRole: (role: 'admin' | 'guru') => void;
-  checkAllowedCustomer: (email: string) => Promise<AllowedCustomerInfo>;
   refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper to detect if email is superadmin
+export const isSuperadminEmail = (emailToCheck?: string | null): boolean => {
+  return emailToCheck?.trim().toLowerCase() === 'pakhusnulid@gmail.com';
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -55,34 +47,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Default initial guest/demo profile
-  const defaultGuruProfile: UserProfile = {
-    id: 'demo-guru-123',
-    email: 'guru.dewi@paudceria.sch.id',
-    full_name: 'Dewi Rahmawati, S.Pd.',
-    role: 'guru',
-    nip: '198906142015032002',
-    assigned_class: 'A (4-5 Tahun)',
-    school_name: 'TK NEGERI PEMBINA 01',
-    is_active: true,
-  };
+  // Clean up any legacy demo role keys in localStorage
+  useEffect(() => {
+    try {
+      localStorage.removeItem('kalandra_demo_role');
+    } catch (e) {}
+  }, []);
 
-  const defaultAdminProfile: UserProfile = {
-    id: 'admin-husnul-root',
-    email: 'pakhusnulid@gmail.com',
-    full_name: 'Pak Husnul (Administrator)',
-    role: 'admin',
-    nip: '197508122002122001',
-    school_name: 'Kalandra PAUD Official',
-    is_active: true,
-  };
-
-  // Helper to detect if email is superadmin
-  const isSuperadminEmail = (emailToCheck?: string | null): boolean => {
-    return emailToCheck?.trim().toLowerCase() === 'pakhusnulid@gmail.com';
-  };
-
-  // Fetch or setup profile
+  // Fetch or setup profile from database
   const fetchProfile = async (currentUser: User) => {
     const isSuperAdmin = isSuperadminEmail(currentUser.email);
 
@@ -97,29 +69,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile({
           id: data.id,
           email: data.email,
-          full_name: data.full_name || currentUser.email?.split('@')[0] || 'Guru PAUD',
-          // pakhusnulid@gmail.com selalu menjadi admin
+          full_name: data.full_name || currentUser.user_metadata?.full_name || (isSuperAdmin ? 'Pak Husnul' : 'Guru PAUD'),
           role: isSuperAdmin ? 'admin' : (data.role || 'guru'),
-          nip: data.nip,
+          nip: data.nip || '',
           assigned_class: data.assigned_class || 'A (4-5 Tahun)',
           school_id: data.school_id,
-          school_name: (data.schools as any)?.name || 'TK NEGERI PEMBINA 01',
+          school_name: (data.schools as any)?.name || currentUser.user_metadata?.school_name || 'TK NEGERI PEMBINA 01',
           is_active: data.is_active ?? true,
         });
         return;
       }
     } catch (e) {
-      console.warn('Profile fetch warning:', e);
+      console.warn('Profile fetch notice:', e);
     }
 
     // Fallback profile if database row not yet created
     setProfile({
       id: currentUser.id,
       email: currentUser.email || '',
-      full_name: (currentUser.user_metadata as any)?.full_name || (isSuperAdmin ? 'Pak Husnul (Administrator)' : 'Dewi Rahmawati, S.Pd.'),
-      role: isSuperAdmin ? 'admin' : ((currentUser.user_metadata as any)?.role || 'guru'),
-      assigned_class: 'A (4-5 Tahun)',
-      school_name: isSuperAdmin ? 'Kalandra PAUD Official' : 'TK NEGERI PEMBINA 01',
+      full_name: currentUser.user_metadata?.full_name || (isSuperAdmin ? 'Pak Husnul (Administrator)' : 'Guru PAUD'),
+      role: isSuperAdmin ? 'admin' : (currentUser.user_metadata?.role || 'guru'),
+      assigned_class: currentUser.user_metadata?.assigned_class || 'A (4-5 Tahun)',
+      school_name: currentUser.user_metadata?.school_name || (isSuperAdmin ? 'Kalandra PAUD Official' : 'TK NEGERI PEMBINA 01'),
       is_active: true,
     });
   };
@@ -130,103 +101,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Check whitelist in allowed_customers and registered status
-  const checkAllowedCustomer = async (emailToCheck: string): Promise<AllowedCustomerInfo> => {
-    const cleanEmail = emailToCheck.trim().toLowerCase();
-    if (!cleanEmail) return { allowed: false, isRegistered: false };
-
-    // 1. Superadmin check
-    if (isSuperadminEmail(cleanEmail)) {
-      let isRegistered = false;
-      try {
-        const { data } = await supabase.from('profiles').select('id').ilike('email', cleanEmail).maybeSingle();
-        if (data) isRegistered = true;
-      } catch (e) {
-        // ignore
-      }
-
-      return {
-        allowed: true,
-        isRegistered,
-        fullName: 'Pak Husnul (Administrator)',
-        schoolName: 'Kalandra PAUD Official',
-        accountType: 'lifetime',
-        isActive: true,
-      };
-    }
-
-    try {
-      // 2. Query allowed_customers from Supabase
-      const { data, error } = await supabase
-        .from('allowed_customers')
-        .select('*')
-        .ilike('email', cleanEmail)
-        .maybeSingle();
-
-      let record = data;
-
-      // Local storage fallback if database table not yet synced
-      if (error || !record) {
-        const localListStr = localStorage.getItem('kalandra_allowed_customers');
-        if (localListStr) {
-          try {
-            const list = JSON.parse(localListStr);
-            const found = list.find((c: any) => c.email?.toLowerCase() === cleanEmail);
-            if (found) record = found;
-          } catch (e) {}
-        }
-      }
-
-      if (!record) {
-        return { allowed: false, isRegistered: false };
-      }
-
-      // Check if user has already registered / activated password
-      let isRegistered = Boolean(record.claimed_at);
-      try {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('id')
-          .ilike('email', cleanEmail)
-          .maybeSingle();
-        if (profileData) {
-          isRegistered = true;
-        }
-      } catch (e) {
-        // ignore
-      }
-
-      return {
-        allowed: true,
-        isRegistered,
-        fullName: record.full_name,
-        schoolName: record.school_name,
-        accountType: record.account_type,
-        isActive: record.is_active ?? true,
-        claimedAt: record.claimed_at,
-        notes: record.notes,
-      };
-    } catch (err) {
-      console.error('Error checking allowed customer:', err);
-      return { allowed: false, isRegistered: false };
-    }
-  };
-
   useEffect(() => {
-    // 1. Initial session check
+    // 1. Initial real session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user).finally(() => setLoading(false));
       } else {
-        const savedDemoRole = localStorage.getItem('kalandra_demo_role');
-        setProfile(savedDemoRole === 'admin' ? defaultAdminProfile : defaultGuruProfile);
+        setProfile(null);
         setLoading(false);
       }
     });
 
-    // 2. Auth state changes
+    // 2. Real auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -235,8 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         fetchProfile(session.user).finally(() => setLoading(false));
       } else {
-        const savedDemoRole = localStorage.getItem('kalandra_demo_role');
-        setProfile(savedDemoRole === 'admin' ? defaultAdminProfile : defaultGuruProfile);
+        setProfile(null);
         setLoading(false);
       }
     });
@@ -247,11 +134,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
       if (error) {
         setLoading(false);
         return { success: false, error: error.message };
       }
+
       setSession(data.session);
       setUser(data.user);
       if (data.user) {
@@ -274,15 +166,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     assignedClass: string = 'A (4-5 Tahun)'
   ) => {
     setLoading(true);
-    const assignedRole = isSuperadminEmail(email) ? 'admin' : role;
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = fullName.trim();
+    const assignedRole = isSuperadminEmail(cleanEmail) ? 'admin' : role;
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: cleanEmail,
         password,
         options: {
           data: {
-            full_name: fullName,
+            full_name: cleanName,
             role: assignedRole,
             school_name: schoolName,
             assigned_class: assignedClass,
@@ -301,33 +195,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           await supabase.from('profiles').upsert({
             id: data.user.id,
-            email,
-            full_name: fullName,
+            email: cleanEmail,
+            full_name: cleanName,
             role: assignedRole,
             assigned_class: assignedClass,
           });
-
-          // Mark claimed in allowed_customers
-          await supabase
-            .from('allowed_customers')
-            .update({ claimed_at: new Date().toISOString() })
-            .ilike('email', email);
-
-          // Update local cache if available
-          const localListStr = localStorage.getItem('kalandra_allowed_customers');
-          if (localListStr) {
-            try {
-              const list = JSON.parse(localListStr);
-              const updated = list.map((c: any) =>
-                c.email?.toLowerCase() === email.toLowerCase()
-                  ? { ...c, claimed_at: new Date().toISOString() }
-                  : c
-              );
-              localStorage.setItem('kalandra_allowed_customers', JSON.stringify(updated));
-            } catch (e) {}
-          }
         } catch (dbErr) {
-          console.warn('Upsert profile / update claimed error:', dbErr);
+          console.warn('Upsert profile notice:', dbErr);
         }
         await fetchProfile(data.user);
       }
@@ -343,16 +217,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
-    setProfile(defaultGuruProfile);
-    localStorage.removeItem('kalandra_demo_role');
+    setProfile(null);
   };
 
-  const switchToDemoRole = (role: 'admin' | 'guru') => {
-    localStorage.setItem('kalandra_demo_role', role);
-    setProfile(role === 'admin' ? defaultAdminProfile : defaultGuruProfile);
-  };
-
-  const isAdmin = profile?.role === 'admin' || isSuperadminEmail(user?.email) || isSuperadminEmail(profile?.email);
+  const isAdmin = Boolean(
+    profile?.role === 'admin' ||
+    isSuperadminEmail(user?.email) ||
+    isSuperadminEmail(profile?.email)
+  );
 
   return (
     <AuthContext.Provider
@@ -365,8 +237,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signIn,
         signUp,
         signOut,
-        switchToDemoRole,
-        checkAllowedCustomer,
         refreshProfile,
       }}
     >
