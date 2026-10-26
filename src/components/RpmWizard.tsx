@@ -28,8 +28,8 @@ interface Props {
 }
 
 export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal }) => {
-  const { profile } = useAuth();
-  const { activeKeys } = useGeminiKeys(profile?.id);
+  const { user, profile } = useAuth();
+  const { activeKeys } = useGeminiKeys(user?.id);
 
   const [currentStep, setCurrentStep] = useState<number>(1);
 

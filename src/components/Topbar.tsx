@@ -34,7 +34,7 @@ export const Topbar: React.FC<Props> = ({
   onGoToLanding 
 }) => {
   const { user, profile, signOut, isAdmin, switchToDemoRole } = useAuth();
-  const { activeKeys } = useGeminiKeys(profile?.id);
+  const { activeKeys } = useGeminiKeys(user?.id);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 

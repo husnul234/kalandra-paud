@@ -16,7 +16,7 @@ import { Sparkles, FileText, CheckCircle2 } from 'lucide-react';
 export type PageView = 'landing' | 'app' | 'auth' | 'admin';
 
 const MainLayout: React.FC = () => {
-  const { profile, isAdmin } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   
   // Default first page is the Landing Page
   const [pageView, setPageView] = useState<PageView>('landing');
@@ -181,7 +181,7 @@ const MainLayout: React.FC = () => {
       <ApiKeyManagerModal
         isOpen={isKeyModalOpen}
         onClose={() => setIsKeyModalOpen(false)}
-        userId={profile?.id}
+        userId={user?.id}
       />
 
       {/* Export DOCX Modal */}

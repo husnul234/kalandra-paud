@@ -14,6 +14,12 @@ export interface UserApiKey {
 
 const LOCAL_STORAGE_KEY = 'kalandra_byok_gemini_keys';
 
+// Helper to validate whether a string is a standard UUID (v4/v1 etc.)
+const isValidUuid = (id?: string | null): boolean => {
+  if (!id) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
+
 export function useGeminiKeys(userId?: string) {
   const [keys, setKeys] = useState<UserApiKey[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -25,8 +31,8 @@ export function useGeminiKeys(userId?: string) {
     setLoading(true);
     let loaded: UserApiKey[] = [];
 
-    // Try Supabase if user is logged in
-    if (userId) {
+    // Try Supabase only if user is logged in with a valid UUID
+    if (userId && isValidUuid(userId)) {
       try {
         const { data, error } = await supabase
           .from('user_api_keys')
@@ -86,7 +92,7 @@ export function useGeminiKeys(userId?: string) {
       created_at: new Date().toISOString(),
     };
 
-    if (userId) {
+    if (userId && isValidUuid(userId)) {
       try {
         const { error } = await supabase.from('user_api_keys').insert({
           user_id: userId,
@@ -116,7 +122,7 @@ export function useGeminiKeys(userId?: string) {
     if (!target) return;
     const newStatus = !target.is_active;
 
-    if (userId && !id.startsWith('key-')) {
+    if (userId && isValidUuid(userId) && isValidUuid(id)) {
       try {
         await supabase
           .from('user_api_keys')
@@ -134,7 +140,7 @@ export function useGeminiKeys(userId?: string) {
 
   // Delete key
   const deleteKey = async (id: string) => {
-    if (userId && !id.startsWith('key-')) {
+    if (userId && isValidUuid(userId) && isValidUuid(id)) {
       try {
         await supabase.from('user_api_keys').delete().eq('id', id);
       } catch (err) {
