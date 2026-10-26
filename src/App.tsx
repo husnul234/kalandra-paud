@@ -47,7 +47,13 @@ const MainLayout: React.FC = () => {
   if (pageView === 'auth') {
     return (
       <AuthPage
-        onSuccess={() => setPageView('app')}
+        onSuccess={(targetRole) => {
+          if (targetRole === 'admin') {
+            setPageView('admin');
+          } else {
+            setPageView('app');
+          }
+        }}
         onBackToApp={() => setPageView('landing')}
       />
     );
