@@ -17,7 +17,10 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  Lock
+  Lock,
+  Sparkles,
+  Dices,
+  Crown
 } from 'lucide-react';
 import { 
   supabaseAdmin, 
@@ -27,6 +30,7 @@ import {
   adminToggleUserStatus, 
   adminToggleUserRole 
 } from '../../lib/supabaseAdmin';
+import { BulkAddMembersModal } from './BulkAddMembersModal';
 
 export interface UserRow {
   id: string;
@@ -57,12 +61,25 @@ export const AdminUsersView: React.FC = () => {
 
   // Create User Dialog state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newFullName, setNewFullName] = useState('');
-  const [newInitialPassword, setNewInitialPassword] = useState('Kalandra2026!');
+  const [newInitialPassword, setNewInitialPassword] = useState('Kalandra#789');
   const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [newRole, setNewRole] = useState<'admin' | 'guru'>('guru');
+  const [newTier, setNewTier] = useState<'standar' | 'pro'>('pro');
+  const [newDuration, setNewDuration] = useState<'1_bulan' | '6_bulan' | '1_tahun'>('1_tahun');
+  const [newSchoolName, setNewSchoolName] = useState('TK NEGERI PEMBINA 01');
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const handleGenerateRandomPassword = () => {
+    const words = ['Kalandra', 'Pendidik', 'GuruTK', 'Bintang', 'Cerdas', 'Pelangi', 'Merdeka', 'Hebat'];
+    const word = words[Math.floor(Math.random() * words.length)];
+    const num = Math.floor(100 + Math.random() * 900);
+    const syms = ['#', '!', '$', '@'];
+    const sym = syms[Math.floor(Math.random() * syms.length)];
+    setNewInitialPassword(`${word}${sym}${num}`);
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -239,16 +256,19 @@ export const AdminUsersView: React.FC = () => {
         password: newInitialPassword,
         full_name: cleanName,
         role: newRole,
+        tier: newTier,
+        duration: newDuration,
+        school_name: newSchoolName,
       });
 
       await fetchUsers();
       setIsCreateOpen(false);
-      showToast(`Pengguna baru ${cleanName} (${cleanEmail}) berhasil didaftarkan dan dapat langsung login!`);
+      showToast(`Pengguna baru ${cleanName} (${cleanEmail}) berhasil didaftarkan sebagai Paket ${newTier.toUpperCase()}!`);
 
       // Reset form
       setNewEmail('');
       setNewFullName('');
-      setNewInitialPassword('Kalandra2026!');
+      setNewInitialPassword('Kalandra#789');
     } catch (e: any) {
       console.error('Error creating user:', e);
       setCreateError(e.message || 'Gagal menambahkan pengguna baru.');
@@ -306,12 +326,20 @@ export const AdminUsersView: React.FC = () => {
           <button
             onClick={() => {
               setCreateError(null);
+              handleGenerateRandomPassword();
               setIsCreateOpen(true);
             }}
-            className="py-2 px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors"
+            className="py-2 px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Pengguna</span>
+          </button>
+          <button
+            onClick={() => setIsBulkOpen(true)}
+            className="py-2 px-3.5 rounded-xl text-[#522D60] bg-[#FAF3FB] hover:bg-[#F3E8F5] border border-[#522D60]/30 shadow-2xs flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+          >
+            <Users className="w-4 h-4 text-[#522D60]" />
+            <span>Tambah Massal</span>
           </button>
         </div>
       </div>
@@ -559,7 +587,17 @@ export const AdminUsersView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Kata Sandi Awal *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-[#2A1532]">Kata Sandi Awal *</label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateRandomPassword}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#80426E] hover:text-[#522D60] hover:underline"
+                  >
+                    <Dices className="w-3.5 h-3.5 text-[#D97706]" />
+                    <span>🎲 Acak Sandi</span>
+                  </button>
+                </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-[#80426E] absolute left-3 top-2.5" />
                   <input
@@ -568,7 +606,7 @@ export const AdminUsersView: React.FC = () => {
                     value={newInitialPassword}
                     onChange={(e) => setNewInitialPassword(e.target.value)}
                     placeholder="Min. 6 karakter"
-                    className="w-full pl-9 pr-10 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                    className="w-full pl-9 pr-10 py-2 text-xs font-mono rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
                   />
                   <button
                     type="button"
@@ -581,7 +619,51 @@ export const AdminUsersView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#2A1532] mb-1">Peran Akun</label>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">Nama Lembaga / Satuan TK PAUD</label>
+                <div className="relative">
+                  <Building2 className="w-4 h-4 text-[#80426E] absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    value={newSchoolName}
+                    onChange={(e) => setNewSchoolName(e.target.value)}
+                    placeholder="TK Aisyiah 01 / PAUD Kencana"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#2A1532] mb-1 flex items-center gap-1">
+                    <Crown className="w-3.5 h-3.5 text-[#D97706]" />
+                    <span>Paket Langganan</span>
+                  </label>
+                  <select
+                    value={newTier}
+                    onChange={(e) => setNewTier(e.target.value as any)}
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532] bg-[#FAF3FB]"
+                  >
+                    <option value="standar">Standar (15 RPM/bln)</option>
+                    <option value="pro">PRO (40 RPM/bln + AI)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#2A1532] mb-1">Masa Aktif</label>
+                  <select
+                    value={newDuration}
+                    onChange={(e) => setNewDuration(e.target.value as any)}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
+                  >
+                    <option value="1_bulan">1 Bulan</option>
+                    <option value="6_bulan">6 Bulan</option>
+                    <option value="1_tahun">1 Tahun (365 Hari)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2A1532] mb-1">Peran Hak Akses</label>
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value as any)}
@@ -688,6 +770,16 @@ export const AdminUsersView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* MODAL: BULK ADD MEMBERS */}
+      <BulkAddMembersModal
+        isOpen={isBulkOpen}
+        onClose={() => setIsBulkOpen(false)}
+        onSuccess={() => {
+          fetchUsers();
+          showToast('Pendaftaran massal anggota berhasil diproses!');
+        }}
+      />
     </div>
   );
 };

@@ -250,6 +250,12 @@ export function stripMarkdownJson(text: string): string {
   return clean.trim();
 }
 
+import { 
+  loadSystemKeyPool, 
+  markKeyRateLimited, 
+  acquireConcurrencySlot 
+} from './geminiKeyPool';
+
 /**
  * Direct Gemini API invocation with multi-key pool rotation and model fallback chain
  */
@@ -259,14 +265,20 @@ export async function executeDirectGeminiRequest(
   userPrompt: string,
   onStatusUpdate?: (status: { message: string; keyMasked?: string; model?: string }) => void
 ): Promise<{ success: boolean; data: any; usedModel: string; usedKeyMasked: string }> {
-  if (!apiKeys || apiKeys.length === 0) {
-    throw new Error('Tidak ada kunci API Gemini yang aktif. Silakan tambahkan kunci di menu BYOK.');
+  let activePool = apiKeys && apiKeys.length > 0 ? [...apiKeys] : [];
+  
+  if (activePool.length === 0) {
+    activePool = await loadSystemKeyPool();
+  }
+
+  if (activePool.length === 0) {
+    throw new Error('Layanan AI Kalandra sedang menyinkronkan kuota sistem. Silakan muat ulang atau coba beberapa saat lagi.');
   }
 
   let lastError = '';
 
-  for (let kIdx = 0; kIdx < apiKeys.length; kIdx++) {
-    const key = apiKeys[kIdx];
+  for (let kIdx = 0; kIdx < activePool.length; kIdx++) {
+    const key = activePool[kIdx];
     const keyShort = `...${key.slice(-4)}`;
 
     for (const model of GEMINI_MODEL_CHAIN) {
@@ -279,6 +291,7 @@ export async function executeDirectGeminiRequest(
       }
 
       try {
+        await acquireConcurrencySlot(350);
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
         const response = await fetch(url, {
           method: 'POST',
@@ -327,6 +340,7 @@ export async function executeDirectGeminiRequest(
 
         // Quota exhaustion 429 -> Rotate immediately to next key
         if (response.status === 429) {
+          markKeyRateLimited(key, 60);
           console.warn(`[BYOK Direct] Quota limit 429 on key ${keyShort}. Rotasi ke kunci berikutnya.`);
           lastError = `Limit kuota (429) pada key ${keyShort}. Beralih ke kunci cadangan...`;
           if (onStatusUpdate) {
@@ -433,3 +447,53 @@ Kembalikan HANYA teks JSON murni (tanpa tanda kutip markdown backtick json):
 
   return res.data as AiRekomendasiResult;
 }
+
+export interface PartitionedRevisionRequest {
+  sectionTitle: string;
+  currentContent: any;
+  userInstruction: string;
+  topikSubtopik: string;
+  jenjangKelas: string;
+}
+
+export interface PartitionedRevisionResponse {
+  summary: string;
+  revisedContent: any;
+  explanation: string;
+}
+
+/**
+ * Targeted Section Partitioned Document Editor for Pro Chat Assistant
+ * Only sends and receives the targeted section to save 85% tokens and prevent quota waste
+ */
+export async function executePartitionedDocumentEdit(
+  apiKeys: string[],
+  request: PartitionedRevisionRequest
+): Promise<PartitionedRevisionResponse> {
+  const systemPrompt = `Anda adalah Asisten Editor RPM PAUD Kemendikdasmen RI.
+Tugas Anda merevisi HANYA satu bagian spesifik dari dokumen pembelajaran TK berdasarkan instruksi guru.
+PENTING:
+- Tetap patuhi prinsip pembelajaran mendalam (berkesadaran, bermakna, menggembirakan).
+- Pertahankan struktur field JSON agar cocok dengan dokumen induk.
+- Jangan gunakan tes tertulis atau LKS calistung mekanis.`;
+
+  const userPrompt = `BAGIAN YANG INGIN DIREVISI: "${request.sectionTitle}"
+TOPIK: "${request.topikSubtopik}" (${request.jenjangKelas})
+
+KONTEN SAAT INI:
+${JSON.stringify(request.currentContent, null, 2)}
+
+PERMINTAAN PERUBAHAN DARI GURU:
+"${request.userInstruction}"
+
+Kembalikan HANYA teks JSON murni dengan format:
+{
+  "summary": "Ringkasan 1 kalimat tentang apa yang diubah",
+  "explanation": "Alasan pedagogis mengapa perubahan ini mendukung pembelajaran anak",
+  "revisedContent": <konten JSON bagian ini yang sudah diperbarui dengan struktur persis sama seperti KONTEN SAAT INI>
+}`;
+
+  const res = await executeDirectGeminiRequest(apiKeys, systemPrompt, userPrompt);
+  return res.data as PartitionedRevisionResponse;
+}
+

@@ -11,8 +11,14 @@ import {
   Eye,
   ZoomIn,
   ZoomOut,
-  ClipboardList
+  ClipboardList,
+  Edit3,
+  MessageSquare,
+  Bot,
+  Crown
 } from 'lucide-react';
+import { DocumentRevisionChatDrawer } from './chat/DocumentRevisionChatDrawer';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   data: RpmPaudDocData;
@@ -33,13 +39,17 @@ const cleanListText = (text?: string): string => {
 
 export const LiveTablePreview: React.FC<Props> = ({
   data,
+  onUpdateData,
   onOpenExportModal,
   onOpenExportLampiran,
   onSaveDocument,
   isSaving = false,
 }) => {
+  const { isPro, isAdmin } = useAuth();
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [justSaved, setJustSaved] = useState(false);
+  const [isInlineEditActive, setIsInlineEditActive] = useState(false);
+  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
 
   const info = data.informasi_umum || {};
   const selectedDpl = data.identifikasi?.dimensi_profil_lulusan_terpilih || [];
@@ -139,6 +149,35 @@ export const LiveTablePreview: React.FC<Props> = ({
             <span className="hidden sm:inline">Cetak</span>
           </button>
 
+          {/* Tombol Mode Edit Cepat Inline */}
+          <button
+            type="button"
+            onClick={() => setIsInlineEditActive(!isInlineEditActive)}
+            className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+              isInlineEditActive
+                ? 'bg-amber-500 text-white border border-amber-600 shadow-md ring-2 ring-amber-300'
+                : 'border border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+            title="Aktifkan penyuntingan teks langsung di lembar dokumen"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{isInlineEditActive ? 'Selesai Edit' : 'Edit Cepat'}</span>
+          </button>
+
+          {/* Tombol Asisten Revisi AI via Chat (Eksklusif PRO) */}
+          <button
+            type="button"
+            onClick={() => setIsChatDrawerOpen(true)}
+            className="px-3.5 py-2 bg-gradient-to-r from-[#522D60] to-[#80426E] hover:from-[#693774] hover:to-[#964E81] text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98] border border-amber-400/40 cursor-pointer"
+            title="Buka asisten revisi dokumen berbasis AI Chat (Mode Plan & Action)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+            <span>Revisi via Chat</span>
+            <span className="text-[10px] bg-amber-400 text-[#2A1532] px-1.5 py-0.2 rounded-full font-black">
+              PRO
+            </span>
+          </button>
+
           {/* Tombol Unduh Lampiran Terpisah */}
           {onOpenExportLampiran && (
             <button
@@ -164,12 +203,35 @@ export const LiveTablePreview: React.FC<Props> = ({
         </div>
       </div>
 
+      {/* Banner Notifikasi Mode Edit Cepat */}
+      {isInlineEditActive && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between gap-3 animate-fade-in shadow-xs">
+          <div className="flex items-center gap-2">
+            <Edit3 className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              <strong>Mode Edit Cepat Aktif:</strong> Anda dapat langsung mengklik dan mengedit teks tabel atau deskripsi di lembar putih dokumen di bawah ini. Klik <em>Simpan</em> di toolbar setelah selesai.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsInlineEditActive(false)}
+            className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer"
+          >
+            Selesai Edit
+          </button>
+        </div>
+      )}
+
       {/* 2. OFFICE DESK CANVAS SIMULATOR (SLATE BACKDROP) */}
       <div className="bg-slate-300/80 p-3 sm:p-8 rounded-2xl border border-slate-300 shadow-inner overflow-x-auto flex justify-center">
         {/* 3. WHITE PAPER SHEET (TRUE WYSIWYG MICROSOFT WORD REPLICA) */}
         <div 
+          contentEditable={isInlineEditActive}
+          suppressContentEditableWarning={true}
           style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
-          className="w-full max-w-[850px] bg-white shadow-2xl p-6 sm:p-12 md:p-14 border border-slate-300 text-slate-900 font-['Calibri',Arial,sans-serif] text-[13.5px] leading-relaxed transition-transform duration-200"
+          className={`w-full max-w-[850px] bg-white shadow-2xl p-6 sm:p-12 md:p-14 border border-slate-300 text-slate-900 font-['Calibri',Arial,sans-serif] text-[13.5px] leading-relaxed transition-transform duration-200 ${
+            isInlineEditActive ? 'ring-4 ring-amber-400/50 outline-hidden' : ''
+          }`}
         >
           {/* Running Top Header (Subtle gray header like Word) */}
           <div className="text-right text-[11px] italic text-slate-400 border-b border-slate-200 pb-2 mb-6">
@@ -858,6 +920,19 @@ export const LiveTablePreview: React.FC<Props> = ({
           </div>
         </div>
       </div>
+
+      {/* Asisten Revisi AI via Chat Drawer */}
+      <DocumentRevisionChatDrawer
+        isOpen={isChatDrawerOpen}
+        onClose={() => setIsChatDrawerOpen(false)}
+        documentData={data}
+        onApplyRevision={(revisedDoc, summary) => {
+          onUpdateData(revisedDoc);
+          if (onSaveDocument) {
+            onSaveDocument();
+          }
+        }}
+      />
     </div>
   );
 };

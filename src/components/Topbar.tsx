@@ -145,35 +145,39 @@ export const Topbar: React.FC<Props> = ({
                 title="Buka Pilihan Paket Langganan Standar & Pro"
               >
                 <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />
-                <span className="hidden sm:inline">Paket PRO</span>
+                <span className="hidden sm:inline">
+                  {profile?.tier === 'standar' ? 'Paket STANDAR' : 'Paket PRO'}
+                </span>
                 <span className="text-[10px] bg-[#522D60] text-white px-1.5 py-0.2 rounded-full font-extrabold">
-                  Pilihan
+                  {profile?.tier === 'standar' ? '15 RPM' : 'Aktif'}
                 </span>
               </button>
             )}
 
-            {/* BYOK Status Pill */}
-            <button
-              onClick={onOpenKeyModal}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
-                keyCount > 0
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                  : 'bg-[#FFFBF2] text-[#9A6A00] border-[#FFE5B3] hover:bg-[#FFF6E5]'
-              }`}
-              title="Klik untuk membuka Pengelola Kunci BYOK"
-            >
-              <KeyRound className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden lg:inline">BYOK:</span>
-              {keyCount > 0 ? (
-                <span className="flex items-center gap-1 text-emerald-700 font-extrabold">
-                  {keyCount} Aktif <CheckCircle className="w-3 h-3 text-emerald-600" />
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-[#9A6A00] font-extrabold">
-                  Pool Sistem <Sparkles className="w-3 h-3 text-[#FFD38B]" />
-                </span>
-              )}
-            </button>
+            {/* BYOK Status Pill (Admin Only) */}
+            {isAdmin && (
+              <button
+                onClick={onOpenKeyModal}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                  keyCount > 0
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                    : 'bg-[#FFFBF2] text-[#9A6A00] border-[#FFE5B3] hover:bg-[#FFF6E5]'
+                }`}
+                title="Klik untuk membuka Pengelola Kunci BYOK (Admin Mode)"
+              >
+                <KeyRound className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden lg:inline">BYOK Admin:</span>
+                {keyCount > 0 ? (
+                  <span className="flex items-center gap-1 text-emerald-700 font-extrabold">
+                    {keyCount} Aktif <CheckCircle className="w-3 h-3 text-emerald-600" />
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[#9A6A00] font-extrabold">
+                    Pool Sistem <Sparkles className="w-3 h-3 text-[#FFD38B]" />
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* User Profile Dropdown */}
             {user || profile ? (
@@ -240,12 +244,14 @@ export const Topbar: React.FC<Props> = ({
                         </button>
                       )}
 
-                      <button
-                        onClick={onOpenKeyModal}
-                        className="w-full px-4 py-2 text-left text-xs text-[#2A1532] hover:bg-[#FAF3FB] flex items-center gap-2"
-                      >
-                        <KeyRound className="w-4 h-4 text-[#74607B]" /> Kelola API Key BYOK
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={onOpenKeyModal}
+                          className="w-full px-4 py-2 text-left text-xs text-[#2A1532] hover:bg-[#FAF3FB] flex items-center gap-2"
+                        >
+                          <KeyRound className="w-4 h-4 text-[#74607B]" /> Kelola API Key BYOK (Admin)
+                        </button>
+                      )}
                     </div>
 
                     <div className="border-t border-slate-100 pt-1">

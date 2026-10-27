@@ -39,7 +39,7 @@ export const DocumentHistory: React.FC<Props> = ({
   onOpenExportModalWithData,
   onNewDocClick,
 }) => {
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   const [docs, setDocs] = useState<StoredDoc[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -200,6 +200,47 @@ export const DocumentHistory: React.FC<Props> = ({
             <Sparkles className="w-4 h-4 text-[#FFD38B]" />
             <span>+ Buat RPM Baru</span>
           </button>
+        </div>
+      </div>
+
+      {/* Capacity & Tier Bar */}
+      <div className="bg-[#FAF3FB] border border-[#E8D6EB] p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#522D60] text-white flex items-center justify-center font-bold shrink-0">
+            <HardDrive className="w-5 h-5 text-amber-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-extrabold text-[#2A1532]">
+                Kapasitas Penyimpanan: {docs.length} / {isPro ? 25 : 5} Dokumen
+              </span>
+              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                isPro ? 'bg-amber-400 text-[#2A1532]' : 'bg-[#D8C3DD] text-[#522D60]'
+              }`}>
+                {isPro ? 'PRO (Maks. 25)' : 'STANDAR (Maks. 5)'}
+              </span>
+            </div>
+            <p className="text-[11px] text-[#74607B]">
+              {isPro
+                ? 'Paket PRO aktif dengan batas 25 dokumen tersimpan di komputasi awan.'
+                : 'Paket Standar dibatasi maksimal 5 dokumen tersimpan. Tingkatkan ke PRO untuk menyimpan hingga 25 dokumen.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full sm:w-48 space-y-1">
+          <div className="w-full h-2 rounded-full bg-[#EFE6F2] overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all ${
+                docs.length >= (isPro ? 25 : 5) ? 'bg-rose-500' : 'bg-[#522D60]'
+              }`}
+              style={{ width: `${Math.min(100, (docs.length / (isPro ? 25 : 5)) * 100)}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-right font-mono text-[#74607B]">
+            {Math.round(Math.min(100, (docs.length / (isPro ? 25 : 5)) * 100))}% Terpakai
+          </p>
         </div>
       </div>
 

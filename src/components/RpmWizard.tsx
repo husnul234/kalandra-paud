@@ -29,7 +29,7 @@ interface Props {
 }
 
 export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal }) => {
-  const { user, profile } = useAuth();
+  const { user, profile, isPro, monthlyQuota } = useAuth();
   const { activeKeys } = useGeminiKeys(user?.id);
 
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -85,8 +85,8 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
       return;
     }
 
-    if (activeKeys.length === 0) {
-      onOpenKeyModal();
+    if (!isPro) {
+      setRecommendError('Fitur Rekomendasi AI DPL, CP Verbatim, dan Bahan Loose Parts merupakan fitur eksklusif Paket PRO (Rp 14.000/bln). Silakan tingkatkan paket Anda.');
       return;
     }
 
@@ -168,8 +168,22 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
 
   // Execute Generation
   const handleGenerate = async () => {
-    if (activeKeys.length === 0) {
-      setGenerationError('Anda belum mendaftarkan API Key Gemini. Buka tombol "Kunci BYOK" di kanan atas untuk menambahkan.');
+    // Quota Enforcement
+    let currentStoredCount = 0;
+    try {
+      const historyRaw = localStorage.getItem('kalandra_saved_rpm_docs');
+      if (historyRaw) {
+        currentStoredCount = JSON.parse(historyRaw).length;
+      }
+    } catch (e) {}
+
+    const maxQuota = isPro ? 40 : 15;
+    if (currentStoredCount >= maxQuota) {
+      setGenerationError(
+        `Anda telah mencapai batas kuota dokumen (${currentStoredCount}/${maxQuota} dokumen untuk ${
+          isPro ? 'Paket PRO' : 'Paket STANDAR'
+        }). Hapus beberapa dokumen dari riwayat atau tingkatkan paket Anda.`
+      );
       return;
     }
 

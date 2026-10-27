@@ -22,7 +22,7 @@ import { logSecurityEvent } from './lib/securityLogger';
  * Komponen Generator Utama RPM PAUD (/app)
  */
 const GeneratorWorkspace: React.FC = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isPro } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'wizard' | 'preview' | 'history' | 'admin'>('wizard');
@@ -74,7 +74,8 @@ const GeneratorWorkspace: React.FC = () => {
       const existing = localStorage.getItem('kalandra_saved_rpm_docs');
       const docs = existing ? JSON.parse(existing) : [];
       const updated = [newEntry, ...docs.filter((d: any) => d.title !== newEntry.title)];
-      localStorage.setItem('kalandra_saved_rpm_docs', JSON.stringify(updated.slice(0, 25)));
+      const historyLimit = isPro ? 25 : 5;
+      localStorage.setItem('kalandra_saved_rpm_docs', JSON.stringify(updated.slice(0, historyLimit)));
 
       if (user?.id) {
         const { error: dbError } = await supabase.from('generated_documents').insert({

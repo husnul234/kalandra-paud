@@ -177,11 +177,33 @@ serve(async (req) => {
       userApiKeys.push(systemSecret);
     }
 
+    // Fallback to admin system pool keys from database
+    if (userApiKeys.length === 0) {
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      if (serviceRoleKey && supabaseUrl) {
+        try {
+          const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
+          const { data: adminPoolKeys } = await adminSupabase
+            .from("user_api_keys")
+            .select("api_key")
+            .eq("provider", "gemini")
+            .eq("is_active", true);
+
+          if (adminPoolKeys && adminPoolKeys.length > 0) {
+            userApiKeys = adminPoolKeys.map((k: { api_key: string }) => k.api_key).filter(Boolean);
+          }
+        } catch (dbErr) {
+          console.warn("[generate-content-core] Error loading admin pool keys:", dbErr);
+        }
+      }
+    }
+
     if (userApiKeys.length === 0) {
       return new Response(
         JSON.stringify({
           needApiKey: true,
-          error: "Kunci API Gemini belum diatur. Silakan tambahkan API key di menu 'Kelola Kunci BYOK'.",
+          error: "Layanan AI sedang dalam sinkronisasi kuota. Silakan coba kembali dalam beberapa saat.",
         }),
         {
           status: 200,

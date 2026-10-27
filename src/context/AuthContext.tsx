@@ -13,6 +13,8 @@ export interface UserProfile {
   school_name?: string;
   phone?: string;
   is_active: boolean;
+  tier?: 'standar' | 'pro' | 'free';
+  monthly_quota?: number;
 }
 
 interface AuthContextType {
@@ -21,6 +23,8 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
+  isPro: boolean;
+  monthlyQuota: number;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUp: (
     email: string,
@@ -66,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (!error && data) {
+        const detectedTier = (data.tier || (data as any).subscription_tier || currentUser.user_metadata?.tier || (isSuperAdmin ? 'pro' : 'standar')) as 'standar' | 'pro' | 'free';
         setProfile({
           id: data.id,
           email: data.email,
@@ -76,6 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           school_id: data.school_id,
           school_name: (data.schools as any)?.name || currentUser.user_metadata?.school_name || 'TK NEGERI PEMBINA 01',
           is_active: data.is_active ?? true,
+          tier: detectedTier,
+          monthly_quota: detectedTier === 'standar' ? 15 : 40,
         });
         return;
       }
@@ -84,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Fallback profile if database row not yet created
+    const fallbackTier = (currentUser.user_metadata?.tier || (isSuperAdmin ? 'pro' : 'standar')) as 'standar' | 'pro' | 'free';
     setProfile({
       id: currentUser.id,
       email: currentUser.email || '',
@@ -92,6 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       assigned_class: currentUser.user_metadata?.assigned_class || 'A (4-5 Tahun)',
       school_name: currentUser.user_metadata?.school_name || (isSuperAdmin ? 'Kalandra PAUD Official' : 'TK NEGERI PEMBINA 01'),
       is_active: true,
+      tier: fallbackTier,
+      monthly_quota: fallbackTier === 'standar' ? 15 : 40,
     });
   };
 
@@ -226,6 +236,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isSuperadminEmail(profile?.email)
   );
 
+  const isPro = Boolean(isAdmin || profile?.tier === 'pro');
+  const monthlyQuota = profile?.monthly_quota ?? (profile?.tier === 'standar' ? 15 : 40);
+
   return (
     <AuthContext.Provider
       value={{
@@ -234,6 +247,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile,
         loading,
         isAdmin,
+        isPro,
+        monthlyQuota,
         signIn,
         signUp,
         signOut,

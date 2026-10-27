@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -11,13 +11,21 @@ import {
   Download, 
   Layers, 
   BookOpen, 
-  KeyRound, 
   LogIn, 
   HelpCircle,
   Building2,
   Users,
   ChevronRight,
-  Printer
+  Printer,
+  Crown,
+  ClipboardList,
+  Edit3,
+  Bot,
+  MessageSquare,
+  Shield,
+  Check,
+  Smartphone,
+  ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -33,6 +41,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onGoToAdmin,
 }) => {
   const { user, profile, isAdmin } = useAuth();
+  const [pricingCycle, setPricingCycle] = useState<'1_bulan' | '6_bulan' | '1_tahun'>('1_tahun');
+
+  // WhatsApp order link generator
+  const getWhatsAppOrderUrl = (tier: 'Standar' | 'PRO', periodLabel: string, price: string) => {
+    const text = `Halo Admin Kalandra, saya ingin mengaktifkan *Paket ${tier} (${periodLabel} - ${price})* untuk perencanaan pembelajaran TK saya. Mohon informasi rekening dan aktivasinya.`;
+    return `https://wa.me/6285156554580?text=${encodeURIComponent(text)}`;
+  };
 
   return (
     <div className="min-h-screen bg-[#FAF7FB] text-[#2A1532] flex flex-col selection:bg-[#522D60] selection:text-white">
@@ -57,8 +72,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-[#74607B]">
             <a href="#fitur" className="hover:text-[#522D60] transition-colors">Fitur Unggulan</a>
-            <a href="#regulasi" className="hover:text-[#522D60] transition-colors">Kepatuhan Regulasi</a>
-            <a href="#contoh" className="hover:text-[#522D60] transition-colors">Contoh Dokumen</a>
+            <a href="#lampiran" className="hover:text-[#522D60] transition-colors">4 Lampiran Observasi</a>
+            <a href="#asisten" className="hover:text-[#522D60] transition-colors">Revisi AI Chat</a>
+            <a href="#harga" className="hover:text-[#522D60] transition-colors">Daftar Harga</a>
             <a href="#faq" className="hover:text-[#522D60] transition-colors">Tanya Jawab</a>
           </nav>
 
@@ -67,7 +83,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {isAdmin && (
               <button
                 onClick={onGoToAdmin}
-                className="hidden sm:flex items-center gap-1.5 py-1.5 px-3 rounded-xl text-xs font-bold text-[#522D60] bg-[#FAF3FB] hover:bg-[#F4E8F6] border border-[#E8D6EB] transition-colors"
+                className="hidden sm:flex items-center gap-1.5 py-1.5 px-3 rounded-xl text-xs font-bold text-[#522D60] bg-[#FAF3FB] hover:bg-[#F4E8F6] border border-[#E8D6EB] transition-colors cursor-pointer"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-[#80426E]" />
                 <span>Panel Admin</span>
@@ -77,7 +93,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {user || profile ? (
               <button
                 onClick={onGoToApp}
-                className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all"
+                className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <span>Buka Generator RPM</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -86,16 +102,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <>
                 <button
                   onClick={onGoToAuth}
-                  className="py-1.5 px-3.5 rounded-xl text-xs font-bold text-[#522D60] hover:bg-[#FAF3FB] border border-[#D8C3DD] transition-colors flex items-center gap-1.5"
+                  className="py-1.5 px-3.5 rounded-xl text-xs font-bold text-[#522D60] hover:bg-[#FAF3FB] border border-[#D8C3DD] transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   <span>Masuk</span>
                 </button>
                 <button
                   onClick={onGoToApp}
-                  className="py-1.5 sm:py-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all"
+                  className="py-1.5 sm:py-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all cursor-pointer"
                 >
-                  <span>Mulai Gratis</span>
+                  <span>Mulai Sekarang</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </>
@@ -106,7 +122,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* 2. HERO SECTION */}
       <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden">
-        {/* Glow ambient background blobs with Color Hunt tones */}
+        {/* Ambient background glows */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-96 bg-gradient-to-b from-[#FAF3FB] via-[#FDF1EA]/30 to-transparent blur-3xl -z-10" />
         <div className="absolute top-20 right-10 w-72 h-72 rounded-full bg-[#FFD38B]/20 blur-3xl -z-10" />
         <div className="absolute top-40 left-10 w-80 h-80 rounded-full bg-[#80426E]/10 blur-3xl -z-10" />
@@ -115,12 +131,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Tag Pill */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#E8D6EB] shadow-xs text-xs font-bold text-[#80426E] animate-fade-in">
             <span className="w-2 h-2 rounded-full bg-[#522D60] animate-pulse" />
-            <span>Standar Baru Kurikulum Merdeka PAUD 2025/2026</span>
+            <span>Terstandar Pengawas PAUD 2025/2026 — Lolos Verifikasi Resmi</span>
           </div>
 
           {/* Headline */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#2A1532] tracking-tight leading-[1.15]">
-            Susun Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi{' '}
+            Susun RPM TK & 4 Lampiran Observasi Siap Cetak{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#522D60] via-[#80426E] to-[#F2A67B]">
               dalam 2 Menit
             </span>
@@ -128,26 +144,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* Subheadline */}
           <p className="max-w-3xl mx-auto text-sm sm:text-lg text-[#74607B] leading-relaxed">
-            Platform generator cerdas berkesadaran, bermakna, dan menggembirakan. Otomatisasi <strong>18 kegiatan bermain loose parts</strong> mingguan, kepatuhan mutlak <strong>8 Dimensi Profil Lulusan (8 DPL)</strong> tanpa istilah usang P5, dan ekspor Microsoft Word (.docx) resmi siap cetak tanpa halusinasi.
+            Platform otomatisasi kurikulum PAUD Fase Fondasi terlengkap. Merumuskan <strong>18 kegiatan main loose parts</strong>, kepatuhan mutlak <strong>8 Dimensi Profil Lulusan (8 DPL)</strong> tanpa P5, Taksonomi SOLO, Rubrik 4 Skala, dan <strong>4 Dokumen Lampiran Observasi</strong> terpisah siap cetak A4/F4 Folio.
           </p>
 
           {/* CTAs */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={onGoToApp}
-              className="w-full sm:w-auto px-8 py-3.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2.5 shadow-lg shadow-[#522D60]/25 transition-all active:scale-[0.98]"
+              className="w-full sm:w-auto px-8 py-3.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2.5 shadow-lg shadow-[#522D60]/25 transition-all active:scale-[0.98] cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-[#FFD38B]" />
-              <span>Mulai Susun RPM Sekarang (Gratis)</span>
+              <span>Mulai Susun RPM Sekarang</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-            <button
-              onClick={onGoToAuth}
-              className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-[#FAF3FB] text-[#522D60] border border-[#D8C3DD] rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs"
+            <a
+              href="#harga"
+              className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-[#FAF3FB] text-[#522D60] border border-[#D8C3DD] rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
             >
-              <LogIn className="w-4 h-4" />
-              <span>Masuk ke Akun Guru</span>
-            </button>
+              <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
+              <span>Lihat Pilihan Paket (Mulai Rp 9.000)</span>
+            </a>
           </div>
 
           {/* Regulatory Badges Bar */}
@@ -164,7 +180,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
               <div>
                 <div className="text-[11px] font-bold text-[#2A1532]">Permendikdasmen 1/2026</div>
-                <div className="text-[10px] text-[#74607B]">Deep Learning 3 Tahapan</div>
+                <div className="text-[10px] text-[#74607B]">Siklus Deep Learning 3 Tahap</div>
               </div>
             </div>
 
@@ -179,207 +195,486 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="p-3 bg-white rounded-2xl border border-[#EFE6F2] shadow-xs flex items-center gap-2.5">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
               <div>
-                <div className="text-[11px] font-bold text-[#2A1532]">BYOK Gemini Pooling</div>
-                <div className="text-[10px] text-[#74607B]">Bebas Limit Kuota 429</div>
+                <div className="text-[11px] font-bold text-[#2A1532]">Standar Pengawas</div>
+                <div className="text-[10px] text-[#74607B]">4 Lampiran Observasi Siap Cetak</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. PROBLEM VS SOLUTION */}
-      <section className="py-16 bg-white border-y border-[#EFE6F2]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-black text-[#2A1532]">
-              Mengapa Guru TK Membutuhkan Kalandra?
+      {/* 3. FEATURE SHOWCASE WITH VISUAL MOCKUPS */}
+      <section id="fitur" className="py-16 bg-white border-y border-[#EFE6F2]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-16">
+          
+          {/* Header */}
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-xs font-bold text-[#80426E] uppercase tracking-wider">
+              Pembaruan Terkini Standar Verifikasi 2025/2026
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2A1532]">
+              Fitur Lengkap Sesuai Hasil Telaah Pengawas
             </h2>
-            <p className="text-xs sm:text-sm text-[#74607B] mt-2">
-              Perubahan kurikulum dan tuntutan administrasi mingguan tidak lagi harus mengorbankan akhir pekan Anda
+            <p className="text-xs sm:text-sm text-[#74607B]">
+              Semua yang Anda butuhkan untuk perencanaan dan asesmen observasi harian tanpa perlu mengetik manual.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Box Masalah */}
-            <div className="p-6 sm:p-8 rounded-3xl bg-red-50/60 border border-red-200/80 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
-                ⚠️ Masalah Manual Guru Sebelumnya
+          {/* MOCKUP 1: AI Rekomendasi Topik & Pemetaan Otomatis */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF3FB] text-[#522D60] text-xs font-bold border border-[#E8D6EB]">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+                <span>Rekomendasi AI Otomatis (Eksklusif PRO)</span>
               </div>
-              <ul className="space-y-3 text-xs sm:text-sm text-red-950">
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0">✕</span>
-                  <span><strong>Lembur 6–8 jam:</strong> Merancang 18 kegiatan bermain berbeda tiap minggu memakan banyak waktu istirahat guru.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0">✕</span>
-                  <span><strong>Istilah usang P5:</strong> Masih kerap menggunakan istilah <i>"Profil Pelajar Pancasila"</i> yang sudah digantikan oleh 8 Dimensi Profil Lulusan (DPL).</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0">✕</span>
-                  <span><strong>Limit AI Kuota Habis (429):</strong> Chatbot AI gratis sering kali macet di tengah jalan karena batasan kuota harian.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0">✕</span>
-                  <span><strong>Tabel Word Pecah Saat Dicetak:</strong> Dokumen berantakan, terbelah di tengah kalimat, dan margin tidak rapi.</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Box Solusi */}
-            <div className="p-6 sm:p-8 rounded-3xl bg-[#FAF3FB] border border-[#E8D6EB] space-y-4 shadow-sm">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#522D60] text-white text-xs font-bold">
-                ✨ Solusi Cerdas Kalandra
-              </div>
-              <ul className="space-y-3 text-xs sm:text-sm text-[#2A1532]">
-                <li className="flex items-start gap-2.5">
-                  <span className="text-[#80426E] font-bold shrink-0">✓</span>
-                  <span><strong>Selesai dalam 2 Menit:</strong> Panduan 4 langkah terstruktur langsung meracik 18 kegiatan main PAUD mendalam.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-[#80426E] font-bold shrink-0">✓</span>
-                  <span><strong>Kepatuhan Regulasi 100%:</strong> Salinan Capaian Pembelajaran verbatim dari BSKAP 046/2025 dan pemetaan 8 DPL otomatis.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-[#80426E] font-bold shrink-0">✓</span>
-                  <span><strong>BYOK Auto-Failover:</strong> Simpan hingga 5 kunci Gemini gratis; sistem otomatis berpindah kunci jika limit 429 terjadi.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-[#80426E] font-bold shrink-0">✓</span>
-                  <span><strong>Word Siap Cetak (OOXML):</strong> File .docx biner murni dengan atribut <i>cantSplit</i> dan margin resmi A4 / F4 Folio.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. CORE FEATURES */}
-      <section id="fitur" className="py-20 max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold text-[#80426E] uppercase tracking-wider">Fitur Dirancang Khusus untuk Pendidik PAUD</span>
-          <h2 className="text-3xl font-black text-[#2A1532]">4 Keunggulan Utama Kalandra</h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Fitur 1 */}
-          <div className="bg-white p-6 rounded-3xl border border-[#EFE6F2] shadow-xs hover:border-[#D8C3DD] transition-all space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#522D60] text-white flex items-center justify-center font-bold">
-              <Award className="w-6 h-6 text-[#FFD38B]" />
-            </div>
-            <h3 className="text-base font-extrabold text-[#2A1532]">8 Dimensi Profil Lulusan</h3>
-            <p className="text-xs text-[#74607B] leading-relaxed">
-              Menerapkan Permendikdasmen No. 10/2025 secara penuh. Mengeliminasi total istilah lama P5 dengan validasi sistematis DPL 1 s.d. DPL 8.
-            </p>
-          </div>
-
-          {/* Fitur 2 */}
-          <div className="bg-white p-6 rounded-3xl border border-[#EFE6F2] shadow-xs hover:border-[#D8C3DD] transition-all space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#80426E] text-white flex items-center justify-center font-bold">
-              <Layers className="w-6 h-6 text-[#FFD38B]" />
-            </div>
-            <h3 className="text-base font-extrabold text-[#2A1532]">18 Kegiatan Main Loose Parts</h3>
-            <p className="text-xs text-[#74607B] leading-relaxed">
-              6 hari belajar dengan masing-masing tepat 3 kegiatan seimbang: Seni/Loose Parts, Motorik/Sosial, dan Keaksaraan Kontekstual (Bukan dril LKS).
-            </p>
-          </div>
-
-          {/* Fitur 3 */}
-          <div className="bg-white p-6 rounded-3xl border border-[#EFE6F2] shadow-xs hover:border-[#D8C3DD] transition-all space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#522D60] text-white flex items-center justify-center font-bold">
-              <KeyRound className="w-6 h-6 text-[#FFD38B]" />
-            </div>
-            <h3 className="text-base font-extrabold text-[#2A1532]">BYOK Gemini Multi-Key</h3>
-            <p className="text-xs text-[#74607B] leading-relaxed">
-              Gunakan kunci API gratis Google AI Studio milik Anda sendiri. Dilengkapi rotasi cerdas yang langsung melompat jika limit kuota tercapai.
-            </p>
-          </div>
-
-          {/* Fitur 4 */}
-          <div className="bg-white p-6 rounded-3xl border border-[#EFE6F2] shadow-xs hover:border-[#D8C3DD] transition-all space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#80426E] text-white flex items-center justify-center font-bold">
-              <Printer className="w-6 h-6 text-[#FFD38B]" />
-            </div>
-            <h3 className="text-base font-extrabold text-[#2A1532]">Ekspor Word True WYSIWYG</h3>
-            <p className="text-xs text-[#74607B] leading-relaxed">
-              Apa yang Anda lihat di layar pratinjau adalah apa yang Anda dapatkan di Microsoft Word (.docx). Siap cetak langsung ke kertas A4 atau F4 Folio.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. INTERACTIVE DOCUMENT MOCKUP TEASER */}
-      <section id="contoh" className="py-16 bg-slate-100 border-t border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-8">
-          <div>
-            <span className="text-xs font-bold text-[#80426E] uppercase tracking-wider">Kualitas Publisher-Grade Siap Cetak</span>
-            <h2 className="text-2xl sm:text-4xl font-black text-[#2A1532] mt-1">
-              Pratinjau Dokumen Identik Microsoft Word
-            </h2>
-            <p className="text-xs sm:text-sm text-[#74607B] max-w-xl mx-auto mt-2">
-              Tidak perlu membuang waktu merapikan margin dan tabel di Word. Kalandra menyusun berkas dengan standar resmi instansi.
-            </p>
-          </div>
-
-          {/* Visual Paper Sheet Preview */}
-          <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-slate-300 max-w-3xl mx-auto text-left font-['Calibri'] space-y-4">
-            <div className="text-center pb-4 border-b border-[#1E3A8A]/20 space-y-0.5">
-              <h3 className="text-lg font-bold text-[#1E3A8A] uppercase tracking-wide">
-                PERENCANAAN PEMBELAJARAN MENDALAM (RPM)
+              <h3 className="text-2xl font-black text-[#2A1532]">
+                Ketik Topik, AI Petakan DPL, CP & Loose Parts Seketika
               </h3>
-              <p className="text-xs font-bold text-[#1E3A8A]">
-                TK NEGERI PEMBINA 01 — FASE FONDASI
+              <p className="text-xs sm:text-sm text-[#74607B] leading-relaxed">
+                Cukup ketik topik pembelajaran (misal: <em>"Tanaman Apotek Hidup di Sekolah"</em>), sistem AI kami langsung memilihkan kombinasi Dimensi Profil Lulusan yang paling esensial, subelemen CP verbatim BSKAP 046/2025, dan bahan loose parts konkret yang aman untuk anak usia dini.
               </p>
-              <p className="text-[10px] text-slate-500">
-                Standar Kurikulum PAUD Permendikdasmen No. 10/2025, 12/2025, 1/2026 & BSKAP 046/2025
-              </p>
+              <ul className="space-y-2 text-xs font-semibold text-[#2A1532]">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Pemetaan 8 DPL akurat tanpa risiko salah pilih</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Kutipan Capaian Pembelajaran kata-per-kata persis regulasi</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Bahan loose parts murah dan mudah didapat di lingkungan sekitar</span>
+                </li>
+              </ul>
             </div>
 
-            {/* Mock Table Header */}
-            <div className="bg-[#1E3A8A] text-white px-3.5 py-1.5 text-xs font-bold flex justify-between items-center">
-              <span>1. IDENTIFIKASI</span>
-              <span className="text-[10px] font-normal text-blue-200">Permendikdasmen No. 10/2025 & No. 12/2025</span>
-            </div>
+            {/* Simulated UI Mockup Card */}
+            <div className="bg-[#FAF7FB] p-5 sm:p-6 rounded-3xl border border-[#D8C3DD] shadow-lg space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#EFE6F2]">
+                <span className="text-xs font-bold text-[#522D60] flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-500" /> Rekomendasi Kurikulum AI
+                </span>
+                <span className="text-[10px] bg-amber-400 text-[#2A1532] px-2 py-0.5 rounded-full font-black">
+                  PRO
+                </span>
+              </div>
 
-            {/* Mock Table Rows */}
-            <div className="border border-slate-300 divide-y divide-slate-300 text-xs">
-              <div className="grid grid-cols-4">
-                <div className="p-2.5 font-bold text-[#1E3A8A] border-r border-slate-300 bg-slate-50">
-                  Peserta Didik
-                </div>
-                <div className="col-span-3 p-2.5 text-slate-800 leading-relaxed text-[11px]">
-                  Peserta didik berada pada rentang usia 4–5 tahun (Kelompok A) dalam masa adaptasi awal masuk sekolah. Anak mulai mengeksplorasi lingkungan baru...
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-[#74607B]">Topik / Subtopik:</label>
+                <div className="p-2.5 bg-white rounded-xl border border-[#CBB4D1] text-xs font-semibold text-[#2A1532]">
+                  Tanaman Apotek Hidup di Lingkungan Sekolah (Kunyit, Jahe, Serai)
                 </div>
               </div>
-              <div className="grid grid-cols-4">
-                <div className="p-2.5 font-bold text-[#1E3A8A] border-r border-slate-300 bg-slate-50">
-                  Dimensi Profil Lulusan
+
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-[#74607B]">DPL Terpetakan:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="px-2 py-1 rounded-lg bg-[#522D60] text-white text-[10px] font-bold">
+                    DPL1 (Keimanan)
+                  </span>
+                  <span className="px-2 py-1 rounded-lg bg-[#522D60] text-white text-[10px] font-bold">
+                    DPL3 (Penalaran Kritis)
+                  </span>
+                  <span className="px-2 py-1 rounded-lg bg-[#522D60] text-white text-[10px] font-bold">
+                    DPL4 (Kreativitas)
+                  </span>
+                  <span className="px-2 py-1 rounded-lg bg-[#522D60] text-white text-[10px] font-bold">
+                    DPL7 (Kesehatan)
+                  </span>
                 </div>
-                <div className="col-span-3 p-2.5 text-[11px] space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-emerald-700 font-bold">[ v ]</span>
-                    <strong className="text-[#1E3A8A]">DPL1 - Keimanan dan Ketakwaan terhadap Tuhan YME</strong>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-emerald-700 font-bold">[ v ]</span>
-                    <strong className="text-[#1E3A8A]">DPL4 - Kreativitas (Eksplorasi Loose Parts)</strong>
-                  </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-[#74607B]">Rekomendasi Loose Parts:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="px-2 py-0.5 rounded-md bg-white border border-[#D8C3DD] text-[10px] font-semibold text-[#522D60]">
+                    Piring kertas
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-white border border-[#D8C3DD] text-[10px] font-semibold text-[#522D60]">
+                    Parutan kayu tumpul
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-white border border-[#D8C3DD] text-[10px] font-semibold text-[#522D60]">
+                    Cobek batu kecil
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-white border border-[#D8C3DD] text-[10px] font-semibold text-[#522D60]">
+                    Air hangat & mangkuk bening
+                  </span>
                 </div>
+              </div>
+
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] text-emerald-900 font-medium">
+                ✅ Berhasil diterapkan ke Langkah 2 & 3 dalam 1 klik!
+              </div>
+            </div>
+          </div>
+
+          {/* MOCKUP 2: 4 Lampiran Observasi Siap Cetak */}
+          <div id="lampiran" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center pt-8 border-t border-[#EFE6F2]">
+            {/* Simulated UI Mockup Grid */}
+            <div className="grid grid-cols-2 gap-3 bg-[#FAF7FB] p-5 sm:p-6 rounded-3xl border border-[#D8C3DD] shadow-lg order-2 lg:order-1">
+              {/* Lampiran 1 */}
+              <div className="bg-white p-3.5 rounded-2xl border border-[#E8D6EB] shadow-2xs space-y-1.5">
+                <div className="w-8 h-8 rounded-xl bg-[#522D60] text-white flex items-center justify-center font-bold text-xs">
+                  01
+                </div>
+                <h4 className="font-extrabold text-xs text-[#2A1532]">Catatan Anekdot</h4>
+                <p className="text-[10px] text-[#74607B]">
+                  Format kolom: Tanggal, Nama Anak, Peristiwa Bermakna, Analisis Capaian & Tindak Lanjut.
+                </p>
+              </div>
+
+              {/* Lampiran 2 */}
+              <div className="bg-white p-3.5 rounded-2xl border border-[#E8D6EB] shadow-2xs space-y-1.5">
+                <div className="w-8 h-8 rounded-xl bg-[#80426E] text-white flex items-center justify-center font-bold text-xs">
+                  02
+                </div>
+                <h4 className="font-extrabold text-xs text-[#2A1532]">Ceklis IKTP SOLO</h4>
+                <p className="text-[10px] text-[#74607B]">
+                  Matriks nama peserta didik x indikator gradasi ketercapaian tujuan pembelajaran.
+                </p>
+              </div>
+
+              {/* Lampiran 3 */}
+              <div className="bg-white p-3.5 rounded-2xl border border-[#E8D6EB] shadow-2xs space-y-1.5">
+                <div className="w-8 h-8 rounded-xl bg-[#522D60] text-white flex items-center justify-center font-bold text-xs">
+                  03
+                </div>
+                <h4 className="font-extrabold text-xs text-[#2A1532]">Hasil Karya Anak</h4>
+                <p className="text-[10px] text-[#74607B]">
+                  Kolom foto hasil karya, deskripsi proses kreasi loose parts, celoteh anak & refleksi.
+                </p>
+              </div>
+
+              {/* Lampiran 4 */}
+              <div className="bg-white p-3.5 rounded-2xl border border-[#E8D6EB] shadow-2xs space-y-1.5">
+                <div className="w-8 h-8 rounded-xl bg-[#80426E] text-white flex items-center justify-center font-bold text-xs">
+                  04
+                </div>
+                <h4 className="font-extrabold text-xs text-[#2A1532]">Foto Berseri</h4>
+                <p className="text-[10px] text-[#74607B]">
+                  Dokumentasi tahapan bermain (Awal, Proses, Akhir) lengkap dengan lembar tanda tangan.
+                </p>
               </div>
             </div>
 
-            <div className="pt-2 text-center">
+            <div className="space-y-4 order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF3FB] text-[#522D60] text-xs font-bold border border-[#E8D6EB]">
+                <ClipboardList className="w-3.5 h-3.5 text-[#80426E]" />
+                <span>Instrumen Asesmen Lengkap Pengawas</span>
+              </div>
+              <h3 className="text-2xl font-black text-[#2A1532]">
+                4 Dokumen Lampiran Observasi Siap Cetak Terpisah
+              </h3>
+              <p className="text-xs sm:text-sm text-[#74607B] leading-relaxed">
+                Pengawas sekolah selalu memeriksa kelengkapan lampiran evaluasi. Kalandra menyediakan tombol unduh <strong>Lampiran (.docx)</strong> terpisah yang langsung menghasilkan 4 instrumen observasi otentik dengan format tabel rapi dan lembar tanda tangan kepala sekolah.
+              </p>
+              <ul className="space-y-2 text-xs font-semibold text-[#2A1532]">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Tersedia pilihan ukuran kertas F4 Folio resmi maupun A4</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Diunduh terpisah agar tidak membengkakkan ketebalan file RPM utama</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Dilengkapi panduan rubrik asesmen 4 skala: BB, MB, BSH, dan BSB</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* MOCKUP 3: Asisten Revisi AI via Chat (Mode Plan & Action) */}
+          <div id="asisten" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center pt-8 border-t border-[#EFE6F2]">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF3FB] text-[#522D60] text-xs font-bold border border-[#E8D6EB]">
+                <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
+                <span>Revisi Seperti di VS Code (Eksklusif PRO)</span>
+              </div>
+              <h3 className="text-2xl font-black text-[#2A1532]">
+                Revisi Dokumen Cukup Chatting dengan AI
+              </h3>
+              <p className="text-xs sm:text-sm text-[#74607B] leading-relaxed">
+                Ingin mengubah kegiatan hari Kamis atau menyesuaikan rubrik asesmen? Anda tidak perlu mengulang proses dari awal. Cukup ketik instruksi di sidebar Chat, pilih <strong>Mode Plan</strong> untuk melihat preview perubahan, atau <strong>Mode Action</strong> untuk langsung diterapkan ke dokumen!
+              </p>
+              <ul className="space-y-2 text-xs font-semibold text-[#2A1532]">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span><strong>Mode Plan:</strong> Tampilkan usulan perbedaan (diff) sebelum Anda setujui</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span><strong>Mode Action:</strong> Terapkan perubahan instan ke lembar kerja tanpa jeda</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span><strong>Mode Edit Cepat:</strong> Klik langsung sel tabel di lembar pratinjau untuk ketik manual</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Simulated Chat Drawer Mockup */}
+            <div className="bg-white p-5 rounded-3xl border border-[#D8C3DD] shadow-xl space-y-3 font-sans">
+              <div className="flex items-center justify-between pb-2 border-b border-[#EFE6F2]">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-[#522D60] text-amber-300 flex items-center justify-center">
+                    <Bot className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-bold text-[#2A1532]">Asisten Revisi Kalandra</span>
+                </div>
+                <div className="flex items-center gap-1 bg-[#FAF3FB] px-2 py-0.5 rounded-lg text-[10px] font-bold text-[#522D60]">
+                  <span>Mode Plan</span>
+                </div>
+              </div>
+
+              {/* Chat Bubble User */}
+              <div className="bg-[#522D60] text-white p-2.5 rounded-2xl rounded-br-xs text-xs ml-8">
+                Ganti kegiatan main hari Rabu dengan eksplorasi daun kering dan cat air alami dari kunyit.
+              </div>
+
+              {/* Chat Bubble AI with Diff Proposal */}
+              <div className="bg-[#FAF7FB] border border-[#D8C3DD] p-3 rounded-2xl text-xs space-y-2 mr-4">
+                <p className="font-semibold text-[#2A1532]">
+                  📋 <strong>Rencana Perubahan Hari ke-3:</strong>
+                </p>
+                <div className="bg-white p-2 rounded-xl border border-slate-200 text-[11px] text-slate-800">
+                  <span className="text-emerald-700 font-bold">+ Kegiatan 1:</span> Membuat lukisan cap daun kering menggunakan pasta perasan kunyit (bermakna, DPL4 Kreativitas).
+                </div>
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-2xs">
+                    <Check className="w-3 h-3" /> Terapkan ke Dokumen
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 4. PRICELIST SECTION (TRANSPARAN & TERJANGKAU) */}
+      <section id="harga" className="py-20 bg-gradient-to-b from-[#FAF7FB] to-white border-b border-[#EFE6F2]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
+          
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <span className="text-xs font-bold text-[#80426E] uppercase tracking-wider">
+              Harga Sangat Terjangkau untuk Seluruh Pendidik PAUD
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#2A1532]">
+              Pilih Paket Sesuai Kebutuhan Anda
+            </h2>
+            <p className="text-xs sm:text-sm text-[#74607B]">
+              Investasi cerdas untuk menghemat waktu berharga Anda setiap akhir pekan. Bebas instalasi, aktif langsung.
+            </p>
+
+            {/* Cycle Selector Pills */}
+            <div className="inline-flex items-center bg-white p-1 rounded-2xl border border-[#D8C3DD] shadow-xs mt-4">
               <button
-                onClick={onGoToApp}
-                className="inline-flex items-center gap-2 text-xs font-bold text-[#522D60] hover:text-[#693774] underline"
+                type="button"
+                onClick={() => setPricingCycle('1_bulan')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  pricingCycle === '1_bulan'
+                    ? 'bg-[#522D60] text-white shadow-xs'
+                    : 'text-[#74607B] hover:text-[#2A1532]'
+                }`}
               >
-                <span>Buka Editor & Lihat Dokumen Lengkap 6 Hari →</span>
+                1 Bulan
+              </button>
+              <button
+                type="button"
+                onClick={() => setPricingCycle('6_bulan')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  pricingCycle === '6_bulan'
+                    ? 'bg-[#522D60] text-white shadow-xs'
+                    : 'text-[#74607B] hover:text-[#2A1532]'
+                }`}
+              >
+                6 Bulan <span className="text-[10px] bg-amber-400 text-[#2A1532] px-1.5 py-0.2 rounded-full font-extrabold ml-1">Hemat</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPricingCycle('1_tahun')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  pricingCycle === '1_tahun'
+                    ? 'bg-[#522D60] text-white shadow-xs'
+                    : 'text-[#74607B] hover:text-[#2A1532]'
+                }`}
+              >
+                1 Tahun (365 Hari) <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-full font-extrabold ml-1">Paling Hemat</span>
               </button>
             </div>
           </div>
+
+          {/* Pricing Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+            
+            {/* CARD 1: STANDAR */}
+            <div className="bg-white p-8 rounded-3xl border border-[#E8D6EB] shadow-xs hover:border-[#522D60]/30 transition-all flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-[#74607B]">
+                    Paket Standar
+                  </span>
+                  <span className="text-xs font-bold text-[#522D60] bg-[#FAF3FB] px-2.5 py-1 rounded-full border border-[#E8D6EB]">
+                    Untuk Guru Pemula
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl sm:text-4xl font-black text-[#2A1532]">
+                      {pricingCycle === '1_bulan' && 'Rp 9.000'}
+                      {pricingCycle === '6_bulan' && 'Rp 45.000'}
+                      {pricingCycle === '1_tahun' && 'Rp 79.000'}
+                    </span>
+                    <span className="text-xs text-[#74607B] font-semibold">
+                      {pricingCycle === '1_bulan' && '/ bulan'}
+                      {pricingCycle === '6_bulan' && '/ 6 bulan'}
+                      {pricingCycle === '1_tahun' && '/ tahun'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#74607B] mt-1">
+                    Hanya sekitar Rp 300 per hari untuk kemudahan menyusun RPM
+                  </p>
+                </div>
+
+                <ul className="space-y-3 text-xs font-semibold text-[#2A1532] pt-4 border-t border-[#EFE6F2]">
+                  <li className="flex items-center gap-2.5">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span><strong>15 Dokumen RPM</strong> per bulan</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Maksimal <strong>5 Dokumen</strong> tersimpan di Riwayat</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Dokumen Utama RPM 1 Minggu (.docx) Siap Cetak</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Mode Edit Cepat Manual di Pratinjau Dokumen</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-[#9F88A7] line-through">
+                    <span>4 Lampiran Observasi Siap Cetak Terpisah</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-[#9F88A7] line-through">
+                    <span>Rekomendasi AI DPL, CP & Loose Parts</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-[#9F88A7] line-through">
+                    <span>Asisten Revisi AI via Chat (Plan & Action)</span>
+                  </li>
+                </ul>
+              </div>
+
+              <a
+                href={getWhatsAppOrderUrl(
+                  'Standar',
+                  pricingCycle === '1_bulan' ? '1 Bulan' : pricingCycle === '6_bulan' ? '6 Bulan' : '1 Tahun',
+                  pricingCycle === '1_bulan' ? 'Rp 9.000' : pricingCycle === '6_bulan' ? 'Rp 45.000' : 'Rp 79.000'
+                )}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-3.5 px-4 bg-white hover:bg-[#FAF3FB] text-[#522D60] border-2 border-[#522D60] rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.98]"
+              >
+                <span>Pilih Paket Standar</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            {/* CARD 2: PRO (RECOMMENDED) */}
+            <div className="bg-gradient-to-b from-white to-[#FAF3FB] p-8 rounded-3xl border-2 border-[#522D60] shadow-xl relative flex flex-col justify-between space-y-6">
+              {/* Highlight Badge */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-amber-500 text-[#2A1532] text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-full shadow-md flex items-center gap-1.5">
+                <Crown className="w-3.5 h-3.5 fill-[#2A1532]" />
+                <span>Paling Direkomendasikan</span>
+              </div>
+
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-[#522D60]">
+                    Paket PRO Lengkap
+                  </span>
+                  <span className="text-xs font-extrabold text-amber-900 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300">
+                    Akses Semua Fitur
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl sm:text-4xl font-black text-[#2A1532]">
+                      {pricingCycle === '1_bulan' && 'Rp 14.000'}
+                      {pricingCycle === '6_bulan' && 'Rp 69.000'}
+                      {pricingCycle === '1_tahun' && 'Rp 119.000'}
+                    </span>
+                    <span className="text-xs text-[#74607B] font-semibold">
+                      {pricingCycle === '1_bulan' && '/ bulan'}
+                      {pricingCycle === '6_bulan' && '/ 6 bulan'}
+                      {pricingCycle === '1_tahun' && '/ tahun'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#74607B] mt-1">
+                    Hanya sekitar Rp 400 per hari, lengkap dengan asisten revisi dan lampiran
+                  </p>
+                </div>
+
+                <ul className="space-y-3 text-xs font-bold text-[#2A1532] pt-4 border-t border-[#EFE6F2]">
+                  <li className="flex items-center gap-2.5 text-[#522D60]">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span><strong>40 Dokumen RPM</strong> per bulan</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-[#522D60]">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Maksimal <strong>25 Dokumen</strong> tersimpan di Riwayat Awan</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-[#522D60]">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span><strong>4 Lampiran Observasi Siap Cetak</strong> Terpisah (.docx)</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-[#522D60]">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span><strong>Rekomendasi AI Cerdas:</strong> DPL, CP Verbatim & Loose Parts</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-[#522D60]">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span><strong>Asisten Revisi AI (Chat):</strong> Mode Plan & Action (10 tiket/dokumen)</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-[#522D60]">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Ekspor Resmi Kertas <strong>F4 Folio & A4</strong></span>
+                  </li>
+                </ul>
+              </div>
+
+              <a
+                href={getWhatsAppOrderUrl(
+                  'PRO',
+                  pricingCycle === '1_bulan' ? '1 Bulan' : pricingCycle === '6_bulan' ? '6 Bulan' : '1 Tahun',
+                  pricingCycle === '1_bulan' ? 'Rp 14.000' : pricingCycle === '6_bulan' ? 'Rp 69.000' : 'Rp 119.000'
+                )}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-3.5 px-4 bg-[#522D60] hover:bg-[#693774] text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md shadow-[#522D60]/20 active:scale-[0.98]"
+              >
+                <Crown className="w-4 h-4 text-amber-300 fill-amber-300" />
+                <span>Aktifkan Paket PRO Sekarang</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+
+          </div>
+
+          {/* Guarantee Note */}
+          <div className="text-center text-xs text-[#74607B] max-w-md mx-auto flex items-center justify-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Garansi aktivasi instan via WhatsApp resmi & bantuan teknis ramah guru.</span>
+          </div>
         </div>
       </section>
 
-      {/* 6. FAQ SECTION */}
+      {/* 5. FAQ SECTION */}
       <section id="faq" className="py-16 max-w-4xl mx-auto px-4 sm:px-6 space-y-8">
         <div className="text-center space-y-2">
           <span className="text-xs font-bold text-[#80426E] uppercase tracking-wider">Informasi Paling Sering Ditanyakan</span>
@@ -390,27 +685,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="bg-white p-5 rounded-2xl border border-[#EFE6F2] shadow-xs">
             <h4 className="text-sm font-bold text-[#2A1532]">Apakah kurikulumnya sudah sesuai aturan Kemendikdasmen 2025/2026?</h4>
             <p className="text-xs text-[#74607B] mt-1.5 leading-relaxed">
-              Ya, 100% patuh. Kalandra secara tegas tidak lagi menggunakan istilah "P5" atau "Profil Pelajar Pancasila", melainkan menggunakan 8 Dimensi Profil Lulusan (DPL1-DPL8) sesuai Permendikdasmen No. 10/2025 serta siklus Deep Learning Permendikdasmen No. 1/2026.
+              Ya, 100% patuh. Kalandra secara tegas tidak lagi menggunakan istilah lama "P5" atau "Profil Pelajar Pancasila", melainkan menggunakan 8 Dimensi Profil Lulusan (DPL1-DPL8) sesuai Permendikdasmen No. 10/2025, Standar Proses Deep Learning Permendikdasmen No. 1/2026, serta Capaian Pembelajaran verbatim BSKAP No. 046/2025.
             </p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-[#EFE6F2] shadow-xs">
-            <h4 className="text-sm font-bold text-[#2A1532]">Bagaimana cara mendapatkan kunci Google Gemini API gratis?</h4>
+            <h4 className="text-sm font-bold text-[#2A1532]">Apakah saya perlu mendaftarkan API key atau akun AI sendiri?</h4>
             <p className="text-xs text-[#74607B] mt-1.5 leading-relaxed">
-              Sangat mudah! Anda cukup masuk ke Google AI Studio (aistudio.google.com), klik tombol "Get API Key", dan salin kunci tersebut ke menu Kunci BYOK di Kalandra. Kami sarankan mendaftarkan minimal 2 kunci agar rotasi otomatis berjalan lancar tanpa limit.
+              Tidak perlu! Seluruh pembuatan dokumen di Kalandra telah terhubung langsung ke multi-pool server AI resmi Kalandra. Guru cukup fokus mengetikkan topik dan memilih kelas, sistem kami yang mengurus seluruh pemrosesan otomatis tanpa perlu repot teknis.
             </p>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-[#EFE6F2] shadow-xs">
-            <h4 className="text-sm font-bold text-[#2A1532]">Apakah file Word hasil unduhan bisa diedit kembali?</h4>
+            <h4 className="text-sm font-bold text-[#2A1532]">Apakah file Word hasil unduhan bisa diedit kembali di laptop?</h4>
             <p className="text-xs text-[#74607B] mt-1.5 leading-relaxed">
-              Tentu saja! Berkas yang diunduh berformat .docx biner resmi yang dapat dibuka dan diedit di Microsoft Word, Google Docs, maupun WPS Office di laptop atau ponsel Anda.
+              Tentu saja! Berkas yang diunduh berformat .docx biner resmi (OOXML) yang dapat langsung dibuka dan diedit di Microsoft Word, Google Docs, maupun WPS Office di laptop atau ponsel Anda.
+            </p>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-[#EFE6F2] shadow-xs">
+            <h4 className="text-sm font-bold text-[#2A1532]">Apa bedanya Paket Standar dan Paket PRO?</h4>
+            <p className="text-xs text-[#74607B] mt-1.5 leading-relaxed">
+              Paket Standar diperuntukkan bagi guru yang hanya membutuhkan dokumen utama RPM dengan kuota 15 dokumen/bulan. Paket PRO membuka seluruh fitur lanjutan: 4 Lampiran Observasi Siap Cetak (Anekdot, Ceklis SOLO, Hasil Karya, Foto Berseri), Rekomendasi AI DPL & Loose Parts, Asisten Revisi AI via Chat (Mode Plan & Action), dan kuota 40 dokumen/bulan.
             </p>
           </div>
         </div>
       </section>
 
-      {/* 7. BOTTOM BANNER CTA */}
+      {/* 6. BOTTOM BANNER CTA */}
       <section className="py-16 bg-[#522D60] text-white">
         <div className="max-w-4xl mx-auto px-4 text-center space-y-6">
           <div className="w-16 h-16 rounded-3xl overflow-hidden mx-auto shadow-2xl border border-white/20 bg-[#2A1532]">
@@ -425,14 +727,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={onGoToApp}
-              className="w-full sm:w-auto px-8 py-3.5 bg-[#FFD38B] hover:bg-[#ffe0a6] text-[#522D60] rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg transition-all"
+              className="w-full sm:w-auto px-8 py-3.5 bg-[#FFD38B] hover:bg-[#ffe0a6] text-[#522D60] rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
             >
-              <span>Mulai Buat RPM Sekarang (Gratis)</span>
+              <span>Mulai Buat RPM Sekarang</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={onGoToAuth}
-              className="w-full sm:w-auto px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
+              className="w-full sm:w-auto px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               <LogIn className="w-4 h-4" />
               <span>Masuk ke Akun</span>
@@ -441,14 +743,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* 8. FOOTER */}
+      {/* 7. FOOTER */}
       <footer className="bg-white border-t border-[#EFE6F2] py-8 text-xs text-[#74607B] text-center">
         <div className="max-w-7xl mx-auto px-4 space-y-2">
           <p className="font-bold text-[#2A1532]">
             Kalandra — Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi
           </p>
           <p className="text-[11px] text-[#74607B]/80">
-            Platform Perencanaan Pembelajaran TK Fase Fondasi 2025/2026
+            Platform Perencanaan Pembelajaran TK Fase Fondasi 2025/2026 Terstandar Pengawas
           </p>
           <p className="text-[11px] text-[#74607B]/70 pt-1">
             © 2026 Kalandra. Hak Cipta Dilindungi Undang-Undang.
