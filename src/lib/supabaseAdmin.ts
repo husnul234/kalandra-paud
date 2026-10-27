@@ -41,7 +41,7 @@ export async function adminCreateUser(input: CreateUserInput) {
         full_name: cleanName,
         role: input.role,
         tier,
-        school_name: input.school_name || 'TK NEGERI PEMBINA 01',
+        school_name: input.school_name || 'Satuan PAUD',
         needs_password_change: true,
       },
     },

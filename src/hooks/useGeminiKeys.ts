@@ -22,6 +22,7 @@ const isValidUuid = (id?: string | null): boolean => {
 
 export function useGeminiKeys(userId?: string) {
   const [keys, setKeys] = useState<UserApiKey[]>([]);
+  const [systemKeys, setSystemKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [testingKeyId, setTestingKeyId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ id: string; success: boolean; message: string } | null>(null);
@@ -62,6 +63,35 @@ export function useGeminiKeys(userId?: string) {
     }
 
     setKeys(loaded);
+
+    // Also fetch system admin keys pool from demo_api_keys or localStorage
+    let sysPool: string[] = [];
+    try {
+      const { data: demoData, error: demoErr } = await supabase
+        .from('demo_api_keys')
+        .select('api_key')
+        .eq('is_active', true);
+
+      if (!demoErr && demoData && demoData.length > 0) {
+        sysPool = demoData.map((d: { api_key: string }) => d.api_key).filter(Boolean);
+      }
+    } catch (e) {
+      console.warn('Could not fetch demo_api_keys:', e);
+    }
+
+    if (sysPool.length === 0) {
+      try {
+        const rawDemo = localStorage.getItem('kalandra_system_demo_keys');
+        if (rawDemo) {
+          const parsed = JSON.parse(rawDemo);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            sysPool = parsed.filter((k: any) => k.is_active && k.api_key).map((k: any) => k.api_key);
+          }
+        }
+      } catch (e) {}
+    }
+
+    setSystemKeys(sysPool);
     setLoading(false);
   }, [userId]);
 
@@ -105,6 +135,15 @@ export function useGeminiKeys(userId?: string) {
         if (error) {
           console.warn('Could not insert key to Supabase, saving locally:', error);
         }
+
+        // Also sync to demo_api_keys pool for shared teacher access
+        try {
+          await supabase.from('demo_api_keys').insert({
+            api_key: newKeyObj.api_key,
+            label: newKeyObj.label,
+            is_active: true,
+          });
+        } catch (_) {}
       } catch (e) {
         console.warn('Network error saving to Supabase:', e);
       }
@@ -179,11 +218,16 @@ export function useGeminiKeys(userId?: string) {
     }
   };
 
-  const activeKeys = keys.filter((k) => k.is_active).map((k) => k.api_key);
+  const userActiveKeys = keys.filter((k) => k.is_active).map((k) => k.api_key);
+  // If user has personal active keys, use them. Otherwise, seamlessly use admin system pool keys.
+  const activeKeys = userActiveKeys.length > 0 ? userActiveKeys : systemKeys;
 
   return {
     keys,
     activeKeys,
+    systemKeys,
+    systemKeyCount: systemKeys.length,
+    isUsingSystemKeys: userActiveKeys.length === 0 && systemKeys.length > 0,
     loading,
     addKey,
     toggleKey,

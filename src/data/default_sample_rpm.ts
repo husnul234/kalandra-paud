@@ -2,9 +2,9 @@ import { RpmPaudDocData } from '../lib/docx-engine/docx-paud-builder';
 
 export const SAMPLE_RPM_PAUD: RpmPaudDocData = {
   informasi_umum: {
-    guru: "Dewi Rahmawati, S.Pd.",
+    guru: "Guru PAUD",
     semester: "1 (Gasal)",
-    asal_sekolah: "TK NEGERI PEMBINA 01",
+    asal_sekolah: "Satuan PAUD",
     minggu_ke: "1",
     fase: "Fondasi",
     bulan: "Juli 2026",

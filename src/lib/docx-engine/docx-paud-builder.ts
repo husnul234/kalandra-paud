@@ -1078,9 +1078,9 @@ function buildLampiranInstrumen(data: RpmPaudDocData, info: RpmPaudDocData['info
 function buildSignatureBlock(config: DocxExportConfig, info: RpmPaudDocData['informasi_umum']): Table {
   const city = config.city || 'Kota';
   const docDate = config.documentDate || 'Juli 2026';
-  const principalName = config.principalName || 'Kepala Satuan PAUD';
+  const principalName = config.principalName || '...........................................';
   const principalNip = config.principalNip || '...........................................';
-  const teacherName = config.teacherName || info.guru || 'Guru Pengajar';
+  const teacherName = config.teacherName || info.guru || '...........................................';
   const teacherNip = config.teacherNip || '...........................................';
 
   return new Table({
@@ -1108,7 +1108,7 @@ function buildSignatureBlock(config: DocxExportConfig, info: RpmPaudDocData['inf
         cantSplit: true,
         children: [
           createTableCell(
-            [cellPara('Mengetahui,\nKepala Satuan PAUD', { bold: true, alignment: AlignmentType.CENTER })],
+            [cellPara(`Mengetahui,\nKepala ${info.asal_sekolah || 'Satuan PAUD'}`, { bold: true, alignment: AlignmentType.CENTER })],
             { widthPercent: 50 }
           ),
           createTableCell(

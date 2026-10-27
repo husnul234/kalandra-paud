@@ -48,7 +48,7 @@ export const LiveTablePreview: React.FC<Props> = ({
   onSaveDocument,
   isSaving = false,
 }) => {
-  const { isPro, isAdmin } = useAuth();
+  const { isPro, isAdmin, profile } = useAuth();
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [justSaved, setJustSaved] = useState(false);
   const [isInlineEditActive, setIsInlineEditActive] = useState(false);
@@ -965,7 +965,9 @@ export const LiveTablePreview: React.FC<Props> = ({
           <div className="pt-4 border-t border-slate-300 text-xs text-slate-900 font-['Calibri',Arial,sans-serif]">
             {/* Tempat & Tanggal Dokumen */}
             <div className="text-right mb-6">
-              <p>................................, ................................ 202...</p>
+              <p>
+                {profile?.city || '................................'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
             </div>
 
             {/* Kolom Tanda Tangan: Kepala Satuan & Guru */}
@@ -973,12 +975,12 @@ export const LiveTablePreview: React.FC<Props> = ({
               {/* Kolom Kiri: Kepala Satuan PAUD */}
               <div className="space-y-1">
                 <p>Mengetahui,</p>
-                <p className="font-bold">Kepala {info.asal_sekolah || 'Satuan PAUD'}</p>
+                <p className="font-bold">Kepala {info.asal_sekolah || profile?.school_name || 'Satuan PAUD'}</p>
                 <div className="h-20 flex items-center justify-center">
                   <span className="text-[10px] text-slate-300 italic">(Tanda Tangan & Cap Satuan)</span>
                 </div>
-                <p className="font-bold underline uppercase">( ................................................................ )</p>
-                <p>NIP. ................................................................</p>
+                <p className="font-bold underline uppercase">( {profile?.principal_name || '................................................................'} )</p>
+                <p>NIP. {profile?.principal_nip || '................................................................'}</p>
               </div>
 
               {/* Kolom Kanan: Guru Kelas */}
@@ -988,8 +990,8 @@ export const LiveTablePreview: React.FC<Props> = ({
                 <div className="h-20 flex items-center justify-center">
                   <span className="text-[10px] text-slate-300 italic">(Tanda Tangan Guru)</span>
                 </div>
-                <p className="font-bold underline uppercase">( {info.guru || '................................................................'} )</p>
-                <p>NIP. ................................................................</p>
+                <p className="font-bold underline uppercase">( {info.guru || profile?.full_name || '................................................................'} )</p>
+                <p>NIP. {profile?.nip || '................................................................'}</p>
               </div>
             </div>
           </div>

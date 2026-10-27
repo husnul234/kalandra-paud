@@ -88,8 +88,8 @@ function cellPara(
 function createSingleTeacherSignature(config: DocxExportConfig, info: any): (Paragraph | Table)[] {
   const city = config.city || 'Kabupaten/Kota';
   const docDate = config.documentDate || '14 Juli 2026';
-  const teacherName = config.teacherName || info.guru || 'Guru Pendidik, S.Pd.';
-  const teacherNip = config.teacherNip || '198906142015032002';
+  const teacherName = config.teacherName || info.guru || 'Guru Pendidik';
+  const teacherNip = config.teacherNip || '...........................................';
 
   return [
     new Paragraph({
@@ -539,10 +539,10 @@ export async function buildRpmLampiranDocxBlob(
   if (config.includeSignatures) {
     const city = config.city || 'Kabupaten/Kota';
     const docDate = config.documentDate || '14 Juli 2026';
-    const principalName = config.principalName || 'Nama Kepala Satuan PAUD, M.Pd.';
-    const principalNip = config.principalNip || '197508122002122001';
-    const teacherName = config.teacherName || info.guru || 'Nama Guru Kelas, S.Pd.';
-    const teacherNip = config.teacherNip || '198906142015032002';
+    const principalName = config.principalName || '...........................................';
+    const principalNip = config.principalNip || '...........................................';
+    const teacherName = config.teacherName || info.guru || '...........................................';
+    const teacherNip = config.teacherNip || '...........................................';
 
     sectionsChildren.push(
       new Paragraph({

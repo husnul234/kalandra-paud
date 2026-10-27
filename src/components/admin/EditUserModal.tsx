@@ -56,7 +56,7 @@ export const EditUserModal: React.FC<Props> = ({
     if (user) {
       setFullName(user.full_name || '');
       setPhone(user.phone || '');
-      setSchoolName(user.school_name || 'TK NEGERI PEMBINA 01');
+      setSchoolName(user.school_name || '');
       setAssignedClass(user.assigned_class || 'A (4-5 Tahun)');
       setTier(user.tier || 'pro');
       setDuration(user.duration || '1_tahun');

@@ -52,7 +52,7 @@ export const AdminCustomersView: React.FC = () => {
   const [formEmail, setFormEmail] = useState('');
   const [formName, setFormName] = useState('');
   const [formWhatsapp, setFormWhatsapp] = useState('');
-  const [formSchool, setFormSchool] = useState('TK NEGERI PEMBINA 01');
+  const [formSchool, setFormSchool] = useState('');
   const [formType, setFormType] = useState<'annual' | 'lite' | 'lifetime' | 'trial'>('annual');
   const [formNotes, setFormNotes] = useState('');
 
@@ -227,7 +227,7 @@ export const AdminCustomersView: React.FC = () => {
           email: cleanEmail,
           full_name: cleanName,
           whatsapp: formWhatsapp.trim(),
-          school_name: formSchool.trim() || 'TK NEGERI PEMBINA 01',
+          school_name: formSchool.trim() || 'Satuan PAUD',
           account_type: formType,
           subscription_start: startDate.toISOString(),
           subscription_end: endDate.toISOString(),
@@ -249,7 +249,7 @@ export const AdminCustomersView: React.FC = () => {
       email: cleanEmail,
       full_name: cleanName,
       whatsapp: formWhatsapp.trim(),
-      school_name: formSchool.trim() || 'TK NEGERI PEMBINA 01',
+      school_name: formSchool.trim() || 'Satuan PAUD',
       account_type: formType,
       subscription_start: startDate.toISOString().slice(0, 10),
       subscription_end: endDate.toISOString().slice(0, 10),
@@ -269,7 +269,7 @@ export const AdminCustomersView: React.FC = () => {
     setFormEmail('');
     setFormName('');
     setFormWhatsapp('');
-    setFormSchool('TK NEGERI PEMBINA 01');
+    setFormSchool('');
     setFormNotes('');
 
     // Open WhatsApp activation modal directly for admin convenience
@@ -575,7 +575,7 @@ export const AdminCustomersView: React.FC = () => {
                     type="text"
                     value={formSchool}
                     onChange={(e) => setFormSchool(e.target.value)}
-                    placeholder="TK NEGERI PEMBINA 01"
+                    placeholder="Contoh: TK Pembina / PAUD Ceria"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532]"
                   />
                 </div>

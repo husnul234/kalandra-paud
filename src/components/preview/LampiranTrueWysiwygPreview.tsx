@@ -1,5 +1,6 @@
 import React from 'react';
 import { RpmPaudDocData } from '../../lib/docx-engine/docx-paud-builder';
+import { useAuth } from '../../context/AuthContext';
 import { 
   ClipboardList, 
   FileText, 
@@ -26,6 +27,7 @@ export const LampiranTrueWysiwygPreview: React.FC<Props> = ({
   onUpdateData,
   onOpenExportLampiran,
 }) => {
+  const { profile } = useAuth();
   const info = data.informasi_umum || {};
   const iktpList = data.iktp_bergradasi || [];
 
@@ -428,18 +430,20 @@ export const LampiranTrueWysiwygPreview: React.FC<Props> = ({
         {/* Lembar Tanda Tangan Resmi Lengkap (Kepala Satuan PAUD & Guru Kelas) */}
         <div className="pt-4 border-t border-slate-300 text-xs">
           <div className="text-right mb-4">
-            <p className="text-slate-600">................................, ................................ 202...</p>
+            <p className="text-slate-600">
+              {profile?.city || '................................'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-8 text-center">
             <div className="space-y-1">
               <p className="text-slate-600">Mengetahui,</p>
-              <p className="font-bold text-slate-900">Kepala {info.asal_sekolah || 'Satuan PAUD'}</p>
+              <p className="font-bold text-slate-900">Kepala {info.asal_sekolah || profile?.school_name || 'Satuan PAUD'}</p>
               <div className="h-16 flex items-center justify-center">
                 <span className="text-[10px] text-slate-300 italic">(Tanda Tangan & Cap Satuan)</span>
               </div>
-              <p className="font-bold text-slate-900 underline uppercase">( ................................................................ )</p>
-              <p className="text-slate-500 text-[11px]">NIP. ................................................................</p>
+              <p className="font-bold text-slate-900 underline uppercase">( {profile?.principal_name || '................................................................'} )</p>
+              <p className="text-slate-500 text-[11px]">NIP. {profile?.principal_nip || '................................................................'}</p>
             </div>
 
             <div className="space-y-1">
@@ -448,8 +452,8 @@ export const LampiranTrueWysiwygPreview: React.FC<Props> = ({
               <div className="h-16 flex items-center justify-center">
                 <span className="text-[10px] text-slate-300 italic">(Tanda Tangan Guru)</span>
               </div>
-              <p className="font-bold text-slate-900 underline uppercase">( {info.guru || '................................................................'} )</p>
-              <p className="text-slate-500 text-[11px]">NIP. ................................................................</p>
+              <p className="font-bold text-slate-900 underline uppercase">( {info.guru || profile?.full_name || '................................................................'} )</p>
+              <p className="text-slate-500 text-[11px]">NIP. {profile?.nip || '................................................................'}</p>
             </div>
           </div>
         </div>

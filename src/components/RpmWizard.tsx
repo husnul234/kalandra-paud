@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGeminiKeys } from '../hooks/useGeminiKeys';
 import { DATA_8_DPL, MASTER_CP_PAUD, REKOMENDASI_LOOSE_PARTS, SubelemenCP } from '../data/cp_paud_data';
@@ -29,14 +29,18 @@ interface Props {
 }
 
 export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal }) => {
-  const { user, profile, isPro, monthlyQuota } = useAuth();
-  const { activeKeys } = useGeminiKeys(user?.id);
+  const { user, profile, isPro, monthlyQuota, isAdmin } = useAuth();
+  const { activeKeys, isUsingSystemKeys } = useGeminiKeys(user?.id);
 
   const [currentStep, setCurrentStep] = useState<number>(1);
 
   // Form State - Step 1: Identitas
   const [guru, setGuru] = useState(profile?.full_name || 'Dewi Rahmawati, S.Pd.');
-  const [asalSekolah, setAsalSekolah] = useState(profile?.school_name || 'TK NEGERI PEMBINA 01');
+  const [asalSekolah, setAsalSekolah] = useState(
+    profile?.school_name && profile.school_name !== 'TK NEGERI PEMBINA 01'
+      ? profile.school_name
+      : (profile?.school_name || 'Satuan PAUD')
+  );
   const [jenjangKelas, setJenjangKelas] = useState<'A (4-5 Tahun)' | 'B (5-6 Tahun)'>('A (4-5 Tahun)');
   const [semester, setSemester] = useState('1 (Gasal)');
   const [mingguKe, setMingguKe] = useState('1');
@@ -45,6 +49,19 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
   const [modelPembelajaran, setModelPembelajaran] = useState('Sentra');
   const [jumlahAnak, setJumlahAnak] = useState('15');
   const [topikSubtopik, setTopikSubtopik] = useState('Identitas / Diriku (Aku Istimewa: Ayo Kita Berkenalan)');
+
+  // Sync state with active profile
+  useEffect(() => {
+    if (profile?.full_name) {
+      setGuru(profile.full_name);
+    }
+    if (profile?.school_name) {
+      setAsalSekolah(profile.school_name);
+    }
+    if (profile?.assigned_class) {
+      setJenjangKelas(profile.assigned_class.includes('B') ? 'B (5-6 Tahun)' : 'A (4-5 Tahun)');
+    }
+  }, [profile?.full_name, profile?.school_name, profile?.assigned_class]);
 
   // Form State - Step 2: 8 DPL
   const [dplSelected, setDplSelected] = useState<string[]>([
@@ -242,10 +259,27 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
         origin: { y: 0.6 },
       });
 
-      // Pass result to parent preview
+      // Pass result to parent preview, guaranteeing user identity fields are preserved
+      const finalDoc: RpmPaudDocData = {
+        ...res.data,
+        informasi_umum: {
+          ...res.data?.informasi_umum,
+          guru: guru || res.data?.informasi_umum?.guru || 'Guru PAUD',
+          asal_sekolah: asalSekolah || res.data?.informasi_umum?.asal_sekolah || 'Satuan PAUD',
+          jenjang_kelas: jenjangKelas || res.data?.informasi_umum?.jenjang_kelas || 'Kelompok A (4-5 Tahun)',
+          semester: semester || res.data?.informasi_umum?.semester || '1 (Gasal)',
+          minggu_ke: mingguKe || res.data?.informasi_umum?.minggu_ke || '1',
+          bulan: bulan || res.data?.informasi_umum?.bulan || 'Juli 2026',
+          alokasi_waktu: alokasiWaktu || res.data?.informasi_umum?.alokasi_waktu || '6 x 3 JP',
+          model_pembelajaran: modelPembelajaran || res.data?.informasi_umum?.model_pembelajaran || 'Sentra',
+          jumlah_anak: jumlahAnak || res.data?.informasi_umum?.jumlah_anak || '15',
+          topik_subtopik: topikSubtopik || res.data?.informasi_umum?.topik_subtopik || 'Tema PAUD',
+        },
+      };
+
       setTimeout(() => {
         setIsGenerating(false);
-        onDocumentGenerated(res.data);
+        onDocumentGenerated(finalDoc);
       }, 600);
     } catch (err: any) {
       console.error('Generation failed:', err);
@@ -759,37 +793,60 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
               </div>
 
               {/* API Key Status Guard */}
-              <div className={`p-4 rounded-xl border flex items-start gap-3 ${
-                activeKeys.length > 0 
-                  ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                  : 'bg-amber-50/80 border-amber-200 text-amber-950'
-              }`}>
-                <KeyRound className={`w-5 h-5 shrink-0 mt-0.5 ${activeKeys.length > 0 ? 'text-emerald-700' : 'text-amber-700'}`} />
-                <div className="text-xs leading-relaxed flex-1">
-                  {activeKeys.length > 0 ? (
-                    <div>
-                      <p className="font-bold text-emerald-900">
-                        {activeKeys.length} Kunci API Gemini Aktif Terdeteksi
-                      </p>
-                      Sistem siap melakukan rotasi otomatis jika kuota per menit salah satu kunci mencapai batas (429).
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="font-bold text-amber-900">Belum Ada Kunci API Gemini yang Aktif</p>
-                      Silakan masukkan kunci Google Gemini API Anda terlebih dahulu untuk menjalankan inferensi.
-                    </div>
-                  )}
+              {!isAdmin ? (
+                // Regular Teacher View: Confirms centralized managed AI system is active
+                <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/70 text-emerald-950 flex items-start gap-3">
+                  <KeyRound className="w-5 h-5 shrink-0 mt-0.5 text-emerald-700" />
+                  <div className="text-xs leading-relaxed flex-1">
+                    <p className="font-bold text-emerald-900">
+                      Layanan AI Kalandra Aktif & Siap Digunakan
+                    </p>
+                    <p className="text-emerald-800 text-[11px] mt-0.5">
+                      {activeKeys.length > 0
+                        ? `Terhubung ke pool ${activeKeys.length} kunci AI sistem admin dengan rotasi otomatis dan kuota terjamin.`
+                        : 'Sistem inferensi AI otomatis menggunakan alokasi kuota server terpusat dari admin.'}
+                    </p>
+                  </div>
+                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold text-[11px] shrink-0 border border-emerald-300">
+                    Sistem Terkelola
+                  </span>
                 </div>
-                {activeKeys.length === 0 && (
+              ) : (
+                // Administrator View: Shows active pool status with option to manage keys
+                <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+                  activeKeys.length > 0 
+                    ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                    : 'bg-amber-50/80 border-amber-200 text-amber-950'
+                }`}>
+                  <KeyRound className={`w-5 h-5 shrink-0 mt-0.5 ${activeKeys.length > 0 ? 'text-emerald-700' : 'text-amber-700'}`} />
+                  <div className="text-xs leading-relaxed flex-1">
+                    {activeKeys.length > 0 ? (
+                      <div>
+                        <p className="font-bold text-emerald-900">
+                          {activeKeys.length} Kunci API Gemini Aktif Terdeteksi {isUsingSystemKeys ? '(Pool Admin/Sistem)' : '(Kunci Kustom)'}
+                        </p>
+                        <p className="text-emerald-800 text-[11px] mt-0.5">
+                          Sistem siap melakukan rotasi otomatis jika kuota per menit salah satu kunci mencapai batas (429).
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="font-bold text-amber-900">Belum Ada Kunci API Gemini yang Aktif</p>
+                        <p className="text-amber-800 text-[11px] mt-0.5">
+                          Silakan masukkan kunci Google Gemini API ke dalam pool admin untuk menjalankan inferensi.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={onOpenKeyModal}
-                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs shrink-0"
+                    className="px-3 py-1.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-lg font-bold text-xs shrink-0 transition-colors"
                   >
-                    Tambah Kunci
+                    Kelola Kunci
                   </button>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Error feedback */}
               {generationError && (
@@ -811,7 +868,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
                 <button
                   type="button"
                   onClick={handleGenerate}
-                  disabled={isGenerating || activeKeys.length === 0}
+                  disabled={isGenerating || (isAdmin && activeKeys.length === 0)}
                   className="px-8 py-3 bg-gradient-to-r from-[#522D60] to-[#80426E] hover:from-[#693774] hover:to-[#9C5586] text-white rounded-xl text-sm font-bold flex items-center gap-2.5 shadow-md shadow-[#522D60]/20 hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                   <Sparkles className="w-4 h-4 text-amber-400" />

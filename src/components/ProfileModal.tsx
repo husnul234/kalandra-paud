@@ -24,7 +24,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onClose,
   onProfileUpdated,
 }) => {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, updateProfile, refreshProfile } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [nip, setNip] = useState('');
@@ -41,17 +41,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     if (profile) {
       setFullName(profile.full_name || '');
       setNip(profile.nip || '');
-      setSchoolName(profile.school_name || '');
+      setSchoolName(profile.school_name && profile.school_name !== 'TK NEGERI PEMBINA 01' ? profile.school_name : (profile.school_name || ''));
       setAssignedClass(profile.assigned_class || 'A (4-5 Tahun)');
+      setPrincipalName(profile.principal_name || '');
+      setPrincipalNip(profile.principal_nip || '');
+      setCity(profile.city || '');
       
       // Load extra local profile data if available (e.g. principal details)
       try {
         const savedMeta = localStorage.getItem(`kalandra_profile_meta_${profile.id}`);
         if (savedMeta) {
           const parsed = JSON.parse(savedMeta);
-          setPrincipalName(parsed.principalName || '');
-          setPrincipalNip(parsed.principalNip || '');
-          setCity(parsed.city || '');
+          if (parsed.schoolName) setSchoolName(parsed.schoolName);
+          if (parsed.principalName) setPrincipalName(parsed.principalName);
+          if (parsed.principalNip) setPrincipalNip(parsed.principalNip);
+          if (parsed.city) setCity(parsed.city);
         }
       } catch (e) {}
     }
@@ -67,31 +71,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     setMessage(null);
 
     try {
-      // 1. Update Supabase profiles table
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: fullName.trim(),
-          nip: nip.trim(),
-          assigned_class: assignedClass,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', profile.id);
+      const res = await updateProfile({
+        full_name: fullName.trim(),
+        nip: nip.trim(),
+        school_name: schoolName.trim(),
+        assigned_class: assignedClass,
+        principal_name: principalName.trim(),
+        principal_nip: principalNip.trim(),
+        city: city.trim(),
+      });
 
-      if (error) {
-        console.warn('Profile update warning:', error);
+      if (!res.success) {
+        throw new Error(res.error);
       }
-
-      // 2. Also persist school name & signature metadata locally for instant signature reflection
-      localStorage.setItem(
-        `kalandra_profile_meta_${profile.id}`,
-        JSON.stringify({
-          schoolName: schoolName.trim(),
-          principalName: principalName.trim(),
-          principalNip: principalNip.trim(),
-          city: city.trim(),
-        })
-      );
 
       await refreshProfile();
       if (onProfileUpdated) onProfileUpdated();
@@ -103,7 +95,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
       setTimeout(() => {
         onClose();
-      }, 1000);
+      }, 800);
     } catch (err: any) {
       setMessage({
         type: 'error',
@@ -172,7 +164,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Dewi Rahmawati, S.Pd."
+                  placeholder="Contoh: Dewi Rahmawati, S.Pd."
                   className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] bg-white text-[#2A1532]"
                 />
               </div>
@@ -184,7 +176,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   type="text"
                   value={nip}
                   onChange={(e) => setNip(e.target.value)}
-                  placeholder="198906142015032002 / -"
+                  placeholder="Contoh: 198906142015032002 / -"
                   className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] bg-white text-[#2A1532]"
                 />
               </div>
@@ -220,7 +212,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 required
                 value={schoolName}
                 onChange={(e) => setSchoolName(e.target.value)}
-                placeholder="TK NEGERI PEMBINA 01"
+                placeholder="Contoh: TK Asik / PAUD Ceria"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#522D60] bg-white text-[#2A1532]"
               />
             </div>
@@ -234,7 +226,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   type="text"
                   value={principalName}
                   onChange={(e) => setPrincipalName(e.target.value)}
-                  placeholder="Hj. Siti Rahayu, M.Pd."
+                  placeholder="Contoh: Hj. Siti Rahayu, M.Pd."
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#522D60] bg-white text-[#2A1532]"
                 />
               </div>
@@ -260,7 +252,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="Jakarta Selatan"
+                placeholder="Contoh: Jakarta Selatan"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#522D60] bg-white text-[#2A1532]"
               />
             </div>

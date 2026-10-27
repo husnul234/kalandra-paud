@@ -11,10 +11,24 @@ export interface UserProfile {
   assigned_class?: string;
   school_id?: string;
   school_name?: string;
+  principal_name?: string;
+  principal_nip?: string;
+  city?: string;
   phone?: string;
   is_active: boolean;
   tier?: 'standar' | 'pro' | 'free';
   monthly_quota?: number;
+}
+
+export interface ProfileUpdateParams {
+  full_name?: string;
+  school_name?: string;
+  nip?: string;
+  assigned_class?: string;
+  principal_name?: string;
+  principal_nip?: string;
+  city?: string;
+  phone?: string;
 }
 
 interface AuthContextType {
@@ -36,6 +50,7 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateProfile: (updates: ProfileUpdateParams) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,24 +77,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (currentUser: User) => {
     const isSuperAdmin = isSuperadminEmail(currentUser.email);
 
+    // Read extra local profile metadata if saved on device
+    let localMeta: any = {};
+    try {
+      const savedMeta = localStorage.getItem(`kalandra_profile_meta_${currentUser.id}`);
+      if (savedMeta) {
+        localMeta = JSON.parse(savedMeta);
+      }
+    } catch (e) {}
+
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*, schools(name)')
+        .select('*, schools(*)')
         .eq('id', currentUser.id)
         .maybeSingle();
 
       if (!error && data) {
         const detectedTier = (data.tier || (data as any).subscription_tier || currentUser.user_metadata?.tier || (isSuperAdmin ? 'pro' : 'standar')) as 'standar' | 'pro' | 'free';
+
+        // Resolve school name: Priority to user customization (localMeta > metadata > profiles table > schools table > default)
+        const schoolObj = data.schools as any;
+        const resolvedSchoolName = 
+          localMeta.schoolName ||
+          currentUser.user_metadata?.school_name ||
+          (data as any).school_name ||
+          (schoolObj?.name && schoolObj.name !== 'TK NEGERI PEMBINA 01' ? schoolObj.name : null) ||
+          localMeta.schoolName ||
+          currentUser.user_metadata?.school_name ||
+          (schoolObj?.name) ||
+          (isSuperAdmin ? 'Kalandra PAUD Official' : 'Satuan PAUD');
+
+        const resolvedPrincipalName =
+          localMeta.principalName ||
+          currentUser.user_metadata?.principal_name ||
+          schoolObj?.principal_name ||
+          '';
+
+        const resolvedPrincipalNip =
+          localMeta.principalNip ||
+          currentUser.user_metadata?.principal_nip ||
+          schoolObj?.principal_nip ||
+          '';
+
+        const resolvedCity =
+          localMeta.city ||
+          currentUser.user_metadata?.city ||
+          schoolObj?.city_regency ||
+          '';
+
         setProfile({
           id: data.id,
           email: data.email,
-          full_name: data.full_name || currentUser.user_metadata?.full_name || (isSuperAdmin ? 'Pak Husnul' : 'Guru PAUD'),
+          full_name: data.full_name || localMeta.fullName || currentUser.user_metadata?.full_name || (isSuperAdmin ? 'Pak Husnul' : 'Guru PAUD'),
           role: isSuperAdmin ? 'admin' : (data.role || 'guru'),
-          nip: data.nip || '',
-          assigned_class: data.assigned_class || 'A (4-5 Tahun)',
+          nip: data.nip || localMeta.nip || currentUser.user_metadata?.nip || '',
+          assigned_class: data.assigned_class || localMeta.assignedClass || currentUser.user_metadata?.assigned_class || 'A (4-5 Tahun)',
           school_id: data.school_id,
-          school_name: (data.schools as any)?.name || currentUser.user_metadata?.school_name || 'TK NEGERI PEMBINA 01',
+          school_name: resolvedSchoolName,
+          principal_name: resolvedPrincipalName,
+          principal_nip: resolvedPrincipalNip,
+          city: resolvedCity,
           is_active: data.is_active ?? true,
           tier: detectedTier,
           monthly_quota: detectedTier === 'standar' ? 15 : 40,
@@ -95,10 +153,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile({
       id: currentUser.id,
       email: currentUser.email || '',
-      full_name: currentUser.user_metadata?.full_name || (isSuperAdmin ? 'Pak Husnul (Administrator)' : 'Guru PAUD'),
+      full_name: localMeta.fullName || currentUser.user_metadata?.full_name || (isSuperAdmin ? 'Pak Husnul (Administrator)' : 'Guru PAUD'),
       role: isSuperAdmin ? 'admin' : (currentUser.user_metadata?.role || 'guru'),
-      assigned_class: currentUser.user_metadata?.assigned_class || 'A (4-5 Tahun)',
-      school_name: currentUser.user_metadata?.school_name || (isSuperAdmin ? 'Kalandra PAUD Official' : 'TK NEGERI PEMBINA 01'),
+      nip: localMeta.nip || currentUser.user_metadata?.nip || '',
+      assigned_class: localMeta.assignedClass || currentUser.user_metadata?.assigned_class || 'A (4-5 Tahun)',
+      school_name: localMeta.schoolName || currentUser.user_metadata?.school_name || (isSuperAdmin ? 'Kalandra PAUD Official' : 'Satuan PAUD'),
+      principal_name: localMeta.principalName || currentUser.user_metadata?.principal_name || '',
+      principal_nip: localMeta.principalNip || currentUser.user_metadata?.principal_nip || '',
+      city: localMeta.city || currentUser.user_metadata?.city || '',
       is_active: true,
       tier: fallbackTier,
       monthly_quota: fallbackTier === 'standar' ? 15 : 40,
@@ -223,6 +285,131 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (updates: ProfileUpdateParams) => {
+    if (!user) return { success: false, error: 'Belum masuk ke akun.' };
+
+    const cleanName = updates.full_name !== undefined ? updates.full_name.trim() : (profile?.full_name || '');
+    const cleanSchool = updates.school_name !== undefined ? updates.school_name.trim() : (profile?.school_name || '');
+    const cleanNip = updates.nip !== undefined ? updates.nip.trim() : (profile?.nip || '');
+    const cleanClass = updates.assigned_class || profile?.assigned_class || 'A (4-5 Tahun)';
+    const cleanPrincipal = updates.principal_name !== undefined ? updates.principal_name.trim() : (profile?.principal_name || '');
+    const cleanPrincipalNip = updates.principal_nip !== undefined ? updates.principal_nip.trim() : (profile?.principal_nip || '');
+    const cleanCity = updates.city !== undefined ? updates.city.trim() : (profile?.city || '');
+
+    // 1. Instantly update React state for 0-latency UI reflection
+    setProfile((prev) =>
+      prev
+        ? {
+            ...prev,
+            full_name: cleanName,
+            school_name: cleanSchool,
+            nip: cleanNip,
+            assigned_class: cleanClass,
+            principal_name: cleanPrincipal,
+            principal_nip: cleanPrincipalNip,
+            city: cleanCity,
+          }
+        : null
+    );
+
+    // 2. Persist in localStorage immediately
+    try {
+      localStorage.setItem(
+        `kalandra_profile_meta_${user.id}`,
+        JSON.stringify({
+          fullName: cleanName,
+          schoolName: cleanSchool,
+          nip: cleanNip,
+          assignedClass: cleanClass,
+          principalName: cleanPrincipal,
+          principalNip: cleanPrincipalNip,
+          city: cleanCity,
+        })
+      );
+      if (cleanSchool) {
+        localStorage.setItem('kalandra_user_school_name', cleanSchool);
+      }
+    } catch (_) {}
+
+    try {
+      // 3. Update Supabase auth user_metadata
+      await supabase.auth.updateUser({
+        data: {
+          full_name: cleanName,
+          school_name: cleanSchool,
+          nip: cleanNip,
+          assigned_class: cleanClass,
+          principal_name: cleanPrincipal,
+          principal_nip: cleanPrincipalNip,
+          city: cleanCity,
+        },
+      });
+
+      // 4. Update profiles table (try with school_name, fallback if column absent in cache)
+      try {
+        const { error: pErr } = await supabase
+          .from('profiles')
+          .update({
+            full_name: cleanName,
+            nip: cleanNip,
+            assigned_class: cleanClass,
+            school_name: cleanSchool,
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq('id', user.id);
+
+        if (pErr && pErr.message?.includes('column')) {
+          await supabase
+            .from('profiles')
+            .update({
+              full_name: cleanName,
+              nip: cleanNip,
+              assigned_class: cleanClass,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id);
+        }
+      } catch (dbErr) {
+        console.warn('Profiles update notice:', dbErr);
+      }
+
+      // 5. Update allowed_customers if present (for whitelist record)
+      if (user.email) {
+        try {
+          await supabase
+            .from('allowed_customers')
+            .update({
+              full_name: cleanName,
+              school_name: cleanSchool,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('email', user.email.toLowerCase());
+        } catch (_) {}
+      }
+
+      // 6. Update schools table if user has school_id
+      if (profile?.school_id) {
+        try {
+          await supabase
+            .from('schools')
+            .update({
+              name: cleanSchool,
+              principal_name: cleanPrincipal,
+              principal_nip: cleanPrincipalNip,
+              city_regency: cleanCity,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', profile.school_id);
+        } catch (_) {}
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('updateProfile error:', err);
+      return { success: false, error: err.message || 'Gagal menyimpan pembaruan profil' };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -253,6 +440,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signOut,
         refreshProfile,
+        updateProfile,
       }}
     >
       {children}

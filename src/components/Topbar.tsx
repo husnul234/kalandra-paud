@@ -72,10 +72,15 @@ export const Topbar: React.FC<Props> = ({
             </div>
 
             {/* School Tag */}
-            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF3FB] text-[#2A1532] text-xs font-semibold border border-[#E8D6EB]">
-              <Building2 className="w-3.5 h-3.5 text-[#80426E]" />
-              <span>{profile?.school_name || 'TK NEGERI PEMBINA 01'}</span>
-            </div>
+            <button
+              onClick={onOpenProfileModal}
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF3FB] hover:bg-[#F3E8F5] text-[#2A1532] text-xs font-semibold border border-[#E8D6EB] transition-all cursor-pointer group"
+              title="Klik untuk mengubah nama sekolah / profil PAUD"
+            >
+              <Building2 className="w-3.5 h-3.5 text-[#80426E] group-hover:scale-110 transition-transform" />
+              <span className="truncate max-w-[220px]">{profile?.school_name || 'Satuan PAUD'}</span>
+              <span className="text-[10px] text-[#80426E]/70 font-normal underline ml-0.5 group-hover:text-[#522D60]">Ubah</span>
+            </button>
           </div>
 
           {/* Desktop Navigation Links */}

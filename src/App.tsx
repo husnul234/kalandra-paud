@@ -54,6 +54,32 @@ const GeneratorWorkspace: React.FC = () => {
     }
   }, [user]);
 
+  // Dynamically hydrate currentDoc default sample with active profile identity
+  React.useEffect(() => {
+    if (profile?.school_name || profile?.full_name) {
+      setCurrentDoc((prev) => {
+        if (
+          !prev.informasi_umum?.guru ||
+          prev.informasi_umum?.guru === 'Dewi Rahmawati, S.Pd.' ||
+          prev.informasi_umum?.guru === 'Guru PAUD' ||
+          !prev.informasi_umum?.asal_sekolah ||
+          prev.informasi_umum?.asal_sekolah === 'TK NEGERI PEMBINA 01' ||
+          prev.informasi_umum?.asal_sekolah === 'Satuan PAUD'
+        ) {
+          return {
+            ...prev,
+            informasi_umum: {
+              ...prev.informasi_umum,
+              guru: profile.full_name || prev.informasi_umum?.guru || 'Guru PAUD',
+              asal_sekolah: profile.school_name || prev.informasi_umum?.asal_sekolah || 'Satuan PAUD',
+            },
+          };
+        }
+        return prev;
+      });
+    }
+  }, [profile?.school_name, profile?.full_name]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);

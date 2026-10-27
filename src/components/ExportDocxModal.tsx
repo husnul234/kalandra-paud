@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { saveAs } from 'file-saver';
 import confetti from 'canvas-confetti';
+import { useAuth } from '../context/AuthContext';
 import { 
   FileDown, 
   X, 
@@ -29,25 +30,38 @@ export const ExportDocxModal: React.FC<Props> = ({
   isOpen,
   onClose,
   documentData,
-  schoolName = 'TK NEGERI PEMBINA 01',
+  schoolName,
   initialDocType = 'rpm',
 }) => {
+  const { profile } = useAuth();
+
   const [docType, setDocType] = useState<'rpm' | 'lampiran'>(initialDocType);
   const [pageSize, setPageSize] = useState<'A4' | 'F4_FOLIO'>('A4');
   const [includeSignatures, setIncludeSignatures] = useState(true);
-  const [city, setCity] = useState('Jakarta');
-  const [documentDate, setDocumentDate] = useState('14 Juli 2026');
-  const [principalName, setPrincipalName] = useState('Hj. Siti Rahayu, M.Pd.');
-  const [principalNip, setPrincipalNip] = useState('197508122002122001');
-  const [teacherName, setTeacherName] = useState(documentData.informasi_umum?.guru || 'Dewi Rahmawati, S.Pd.');
-  const [teacherNip, setTeacherNip] = useState('198906142015032002');
+  const [city, setCity] = useState(profile?.city || 'Jakarta');
+  const [documentDate, setDocumentDate] = useState(() => 
+    new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+  );
+  const [principalName, setPrincipalName] = useState(profile?.principal_name || '');
+  const [principalNip, setPrincipalNip] = useState(profile?.principal_nip || '');
+  const [teacherName, setTeacherName] = useState(documentData.informasi_umum?.guru || profile?.full_name || '');
+  const [teacherNip, setTeacherNip] = useState(profile?.nip || '');
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setDocType(initialDocType);
+      if (profile?.city) setCity(profile.city);
+      if (profile?.principal_name) setPrincipalName(profile.principal_name);
+      if (profile?.principal_nip) setPrincipalNip(profile.principal_nip);
+      if (documentData.informasi_umum?.guru) {
+        setTeacherName(documentData.informasi_umum.guru);
+      } else if (profile?.full_name) {
+        setTeacherName(profile.full_name);
+      }
+      if (profile?.nip) setTeacherNip(profile.nip);
     }
-  }, [isOpen, initialDocType]);
+  }, [isOpen, initialDocType, profile, documentData]);
 
   if (!isOpen) return null;
 
@@ -65,16 +79,26 @@ export const ExportDocxModal: React.FC<Props> = ({
         teacherNip,
       };
 
-      const safeTopic = documentData.informasi_umum?.topik_subtopik?.replace(/[^a-zA-Z0-9]/g, '_') || 'PAUD';
+      const resolvedSchool = documentData.informasi_umum?.asal_sekolah || profile?.school_name || schoolName || 'Satuan PAUD';
+      const finalDocData: RpmPaudDocData = {
+        ...documentData,
+        informasi_umum: {
+          ...documentData.informasi_umum,
+          asal_sekolah: resolvedSchool,
+          guru: teacherName || documentData.informasi_umum?.guru || profile?.full_name || 'Guru PAUD',
+        },
+      };
+
+      const safeTopic = finalDocData.informasi_umum?.topik_subtopik?.replace(/[^a-zA-Z0-9]/g, '_') || 'PAUD';
 
       let blob: Blob;
       let fileName: string;
 
       if (docType === 'lampiran') {
-        blob = await buildRpmLampiranDocxBlob(documentData, config);
+        blob = await buildRpmLampiranDocxBlob(finalDocData, config);
         fileName = `Lampiran_Observasi_Kelas_${safeTopic}.docx`;
       } else {
-        blob = await buildRpmPaudDocxBlob(documentData, config);
+        blob = await buildRpmPaudDocxBlob(finalDocData, config);
         fileName = `RPM_1_Minggu_${safeTopic}.docx`;
       }
 

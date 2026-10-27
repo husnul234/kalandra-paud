@@ -80,7 +80,7 @@ export const AdminUsersView: React.FC = () => {
   const [newRole, setNewRole] = useState<'admin' | 'guru'>('guru');
   const [newTier, setNewTier] = useState<'standar' | 'pro'>('pro');
   const [newDuration, setNewDuration] = useState<'1_bulan' | '6_bulan' | '1_tahun'>('1_tahun');
-  const [newSchoolName, setNewSchoolName] = useState('TK NEGERI PEMBINA 01');
+  const [newSchoolName, setNewSchoolName] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
 
   const handleGenerateRandomPassword = () => {
@@ -152,7 +152,7 @@ export const AdminUsersView: React.FC = () => {
           email: p.email,
           full_name: p.full_name || p.email.split('@')[0],
           role: p.email?.toLowerCase() === 'pakhusnulid@gmail.com' ? 'admin' : (p.role || 'guru'),
-          school_name: p.school_name || (p.schools as any)?.name || cust.school_name || 'TK NEGERI PEMBINA 01',
+          school_name: cust.school_name || p.school_name || (p.schools as any)?.name || 'Satuan PAUD',
           assigned_class: p.assigned_class || 'A (4-5 Tahun)',
           docs_count: docsCountMap[p.id] || 0,
           is_active: p.is_active ?? true,
