@@ -182,11 +182,12 @@ export async function adminUpdateUser(input: UpdateUserInput) {
   const cleanEmail = input.email.trim().toLowerCase();
   const cleanName = input.full_name.trim();
 
-  // 1. Update profiles table (only columns that exist in profiles schema)
+  // 1. Update profiles table (with avatar_url fallback for school_name)
   const profileUpdates: any = {
     full_name: cleanName,
     role: input.role,
     assigned_class: input.assigned_class || '',
+    avatar_url: input.school_name || '',
     updated_at: new Date().toISOString(),
   };
 

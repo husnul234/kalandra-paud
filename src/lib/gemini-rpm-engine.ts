@@ -1,14 +1,14 @@
 import { DATA_8_DPL } from '../data/cp_paud_data';
 
 export const GEMINI_MODEL_CHAIN = [
-  'gemini-3.6-flash',
-  'gemini-3.5-flash',
-  'gemini-3.0-flash',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
+  'gemini-3.5-flash',
+  'gemini-3.6-flash',
+  'gemini-3.0-flash',
 ];
 
-export const SYSTEM_INSTRUCTION_RPM_PAUD = `Anda adalah Pakar Kurikulum Pendidikan Anak Usia Dini (PAUD) Kemendikdasmen RI yang menguasai penyusunan Perencanaan Pembelajaran Mendalam (Deep Learning) Fase Fondasi untuk TK Kelompok A (usia 4-5 tahun) dan Kelompok B (usia 5-6 tahun).
+export const SYSTEM_INSTRUCTION_RPM_PAUD = `Anda adalah Pakar Kurikulum Pendidikan Anak Usia Dini (PAUD) Kemendikdasmen RI yang menguasai penyusunan Perencanaan Pembelajaran Mendalam (Deep Learning) Fase Fondasi untuk Kelompok Bermain / KB (usia 3-4 tahun), TK Kelompok A (usia 4-5 tahun), dan Kelompok B (usia 5-6 tahun).
 Standar dokumen yang Anda hasilkan harus setara dengan dokumen yang telah LULUS VERIFIKASI PENGAWAS, mencakup: IKTP bergradasi Taksonomi SOLO, Rubrik Asesmen 4 Skala (BB/MB/BSH/BSB), Catatan Keselamatan Anak, dan 4 Lampiran Instrumen Observasi.
 
 TUGAS UTAMA:
@@ -37,6 +37,7 @@ ATURAN ANTI-HALUSINASI & PEDAGOGI PAUD (WAJIB DIPATUHI):
    - Setiap judul kegiatan WAJIB diikuti tanda kurung berisi minimal 1 Prinsip Pembelajaran (berkesadaran / bermakna / menggembirakan) dan 1 Dimensi Profil Lulusan yang relevan.
    - Jika kegiatan melibatkan gunting, cat, cairan, panas, atau ketinggian: tambahkan catatan_keselamatan sebagai array string dalam objek kegiatan itu.
 6. Kesesuaian Tahap Perkembangan Usia (DAP):
+   - Jika Jenjang/Kelas adalah KB (3-4 Tahun) / Usia 3-4 Tahun: Tahap sensori-motorik dan eksplorasi konkret. Rancang kegiatan yang sangat aman (DILARANG gunting tajam atau partikel kecil berisiko tersedak), gunakan loose parts berukuran besar (kardus, daun besar, mangkok plastik, wadah bertutup, playdough buatan sendiri), fokus pada stimulasi motorik kasar, eksplorasi indera (meraba tekstur, warna, bunyi), meniru gerakan hewan/lagu, serta pendampingan intensif penuh oleh guru.
    - Jika Jenjang/Kelas adalah A (4-5 Tahun): Koordinasi motorik halus masih berkembang. Tuliskan eksplisit jika guru telah menyiapkan garis pola dasar pada Pijakan Lingkungan Main, anak menjiplak sederhana, menggunting garis lurus, mengecat, merakit loose parts, dan bermain.
    - Jika Jenjang/Kelas adalah B (5-6 Tahun): Anak dilibatkan sejak membuat pola sederhana, menggunting dengan gunting anak secara mandiri, mengukur dengan satuan tidak baku, dan merakit konstruksi yang lebih menantang.
 7. IKTP Bergradasi Taksonomi SOLO (WAJIB untuk setiap Tujuan Pembelajaran):

@@ -191,6 +191,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 onChange={(e) => setAssignedClass(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] bg-white text-[#2A1532]"
               >
+                <option value="KB (3-4 Tahun)">Kelompok Bermain / KB (3-4 Tahun)</option>
                 <option value="A (4-5 Tahun)">Kelompok A (4-5 Tahun)</option>
                 <option value="B (5-6 Tahun)">Kelompok B (5-6 Tahun)</option>
               </select>

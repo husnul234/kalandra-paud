@@ -345,7 +345,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       });
 
-      // 4. Update profiles table (try with school_name, fallback if column absent in cache)
+      // 4. Update profiles table (try with school_name & avatar_url fallback)
       try {
         const { error: pErr } = await supabase
           .from('profiles')
@@ -353,6 +353,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             full_name: cleanName,
             nip: cleanNip,
             assigned_class: cleanClass,
+            avatar_url: cleanSchool,
             school_name: cleanSchool,
             updated_at: new Date().toISOString(),
           } as any)
@@ -365,6 +366,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               full_name: cleanName,
               nip: cleanNip,
               assigned_class: cleanClass,
+              avatar_url: cleanSchool,
               updated_at: new Date().toISOString(),
             })
             .eq('id', user.id);

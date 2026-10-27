@@ -19,7 +19,9 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   HelpCircle,
-  Loader2 
+  Loader2,
+  Plus,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -41,7 +43,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
       ? profile.school_name
       : (profile?.school_name || 'Satuan PAUD')
   );
-  const [jenjangKelas, setJenjangKelas] = useState<'A (4-5 Tahun)' | 'B (5-6 Tahun)'>('A (4-5 Tahun)');
+  const [jenjangKelas, setJenjangKelas] = useState<'KB (3-4 Tahun)' | 'A (4-5 Tahun)' | 'B (5-6 Tahun)'>('A (4-5 Tahun)');
   const [semester, setSemester] = useState('1 (Gasal)');
   const [mingguKe, setMingguKe] = useState('1');
   const [bulan, setBulan] = useState('Juli 2026');
@@ -59,7 +61,13 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
       setAsalSekolah(profile.school_name);
     }
     if (profile?.assigned_class) {
-      setJenjangKelas(profile.assigned_class.includes('B') ? 'B (5-6 Tahun)' : 'A (4-5 Tahun)');
+      if (profile.assigned_class.includes('KB') || profile.assigned_class.includes('3-4')) {
+        setJenjangKelas('KB (3-4 Tahun)');
+      } else if (profile.assigned_class.includes('B') || profile.assigned_class.includes('5-6')) {
+        setJenjangKelas('B (5-6 Tahun)');
+      } else {
+        setJenjangKelas('A (4-5 Tahun)');
+      }
     }
   }, [profile?.full_name, profile?.school_name, profile?.assigned_class]);
 
@@ -82,6 +90,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
     'Daun kering aneka bentuk',
   ]);
   const [catatanGuru, setCatatanGuru] = useState('');
+  const [customLoosePartInput, setCustomLoosePartInput] = useState('');
 
   // Generation State - Step 4
   const [isGenerating, setIsGenerating] = useState(false);
@@ -180,6 +189,28 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
       setSelectedLooseParts(selectedLooseParts.filter((p) => p !== item));
     } else {
       setSelectedLooseParts([...selectedLooseParts, item]);
+    }
+  };
+
+  // Add Custom Loose Parts
+  const handleAddCustomLoosePart = () => {
+    if (!customLoosePartInput.trim()) return;
+    const parts = customLoosePartInput
+      .split(/[,;\n]+/)
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+
+    const newParts = parts.filter((p) => !selectedLooseParts.includes(p));
+    if (newParts.length > 0) {
+      setSelectedLooseParts([...selectedLooseParts, ...newParts]);
+    }
+    setCustomLoosePartInput('');
+  };
+
+  const handleKeyDownCustomLoosePart = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddCustomLoosePart();
     }
   };
 
@@ -373,6 +404,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
                 onChange={(e) => setJenjangKelas(e.target.value as any)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-medium"
               >
+                <option value="KB (3-4 Tahun)">Kelompok Bermain / KB (3-4 Tahun) — Sensori-Motorik & Eksplorasi Aman</option>
                 <option value="A (4-5 Tahun)">Kelompok A (4-5 Tahun) — Pola Dasar Siap Pijakan Guru</option>
                 <option value="B (5-6 Tahun)">Kelompok B (5-6 Tahun) — Menggunting Mandiri & Merakit</option>
               </select>
@@ -687,8 +719,8 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
           </div>
 
           {/* Loose Parts Selection Pills */}
-          <div className="pt-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+          <div className="pt-2 space-y-3">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
               Pilih Bahan Material Lepasan (Loose Parts) yang Tersedia:
             </label>
             <div className="flex flex-wrap gap-2">
@@ -710,6 +742,56 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
                   </button>
                 );
               })}
+
+              {/* Custom loose parts added by teacher */}
+              {selectedLooseParts
+                .filter((item) => !REKOMENDASI_LOOSE_PARTS.includes(item))
+                .map((item) => (
+                  <span
+                    key={item}
+                    className="px-3 py-1.5 rounded-full text-xs font-bold bg-amber-200 text-amber-950 border border-amber-400 flex items-center gap-1.5 shadow-xs"
+                  >
+                    <Check className="w-3.5 h-3.5 text-amber-800" />
+                    {item}
+                    <button
+                      type="button"
+                      onClick={() => toggleLoosePart(item)}
+                      className="ml-0.5 p-0.5 hover:bg-amber-300 rounded-full text-amber-900 transition-colors"
+                      title="Hapus loose part ini"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+            </div>
+
+            {/* Field Isian Loose Parts Kustom */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+              <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                Tambahkan Loose Parts Sendiri (Kustom):
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customLoosePartInput}
+                  onChange={(e) => setCustomLoosePartInput(e.target.value)}
+                  onKeyDown={handleKeyDownCustomLoosePart}
+                  placeholder="Ketik loose part (contoh: cangkang kerang, pelepah pisang, botol yakult)..."
+                  className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCustomLoosePart}
+                  disabled={!customLoosePartInput.trim()}
+                  className="px-4 py-2 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all disabled:opacity-40 shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Tambah
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-1">
+                Tip: Anda dapat mengetikkan beberapa bahan sekaligus dipisahkan tanda koma (,). Tekan Enter atau klik Tambah.
+              </p>
             </div>
           </div>
 
@@ -857,11 +939,11 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
               )}
 
               {/* CTA Action Button */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 gap-2">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5"
+                  className="px-3 sm:px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
                 >
                   <ChevronLeft className="w-4 h-4" /> Kembali
                 </button>
@@ -869,10 +951,10 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
                   type="button"
                   onClick={handleGenerate}
                   disabled={isGenerating || (isAdmin && activeKeys.length === 0)}
-                  className="px-8 py-3 bg-gradient-to-r from-[#522D60] to-[#80426E] hover:from-[#693774] hover:to-[#9C5586] text-white rounded-xl text-sm font-bold flex items-center gap-2.5 shadow-md shadow-[#522D60]/20 hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-50"
+                  className="px-4 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-[#522D60] to-[#80426E] hover:from-[#693774] hover:to-[#9C5586] text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-[#522D60]/20 hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 whitespace-nowrap"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>Susun Dokumen Pembelajaran Mendalam Sekarang</span>
+                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Susun Dokumen RPM</span>
                 </button>
               </div>
             </div>

@@ -79,17 +79,9 @@ export const LiveTablePreview: React.FC<Props> = ({
             <FileCheck className="w-5 h-5 text-[#1E3A8A]" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
-                Pratinjau Dokumen True-WYSIWYG Word
-              </h2>
-              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-[#1E3A8A] border border-blue-200">
-                Identik dengan .docx
-              </span>
-            </div>
-            <p className="text-xs text-slate-500">
-              Format Calibri, Navy #1E3A8A, layout tabel, dan tanda tangan 100% presisi sesuai hasil unduhan.
-            </p>
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+              Pratinjau Dokumen
+            </h2>
           </div>
         </div>
 

@@ -124,6 +124,18 @@ export const AdminUsersView: React.FC = () => {
         });
       }
 
+      // 1.8 Fetch Supabase Auth user_metadata if available for admin
+      const authUserMap: Record<string, any> = {};
+      try {
+        const { data: authList } = await supabaseAdmin.auth.admin.listUsers();
+        if (authList?.users) {
+          authList.users.forEach((u: any) => {
+            if (u.id) authUserMap[u.id] = u;
+            if (u.email) authUserMap[u.email.toLowerCase().trim()] = u;
+          });
+        }
+      } catch (_) {}
+
       // 2. Fetch real document counts per user
       const { data: docs } = await supabaseAdmin
         .from('generated_documents')
@@ -141,23 +153,46 @@ export const AdminUsersView: React.FC = () => {
       const mapped: UserRow[] = (profiles || []).map((p: any) => {
         const cleanEmail = (p.email || '').toLowerCase().trim();
         const cust = customerMap[cleanEmail] || {};
+        const authUser = authUserMap[p.id] || authUserMap[cleanEmail] || {};
+        const authMeta = authUser.user_metadata || {};
 
         let userTier: 'standar' | 'pro' | 'free' = 'pro';
-        const rawTier = (p.tier || cust.account_type || '').toLowerCase();
+        const rawTier = (p.tier || cust.account_type || authMeta.tier || '').toLowerCase();
         if (rawTier.includes('standar')) userTier = 'standar';
         else if (rawTier.includes('free') || rawTier.includes('gratis')) userTier = 'free';
+
+        // Resolve real school name from user metadata, profile fallback, or customer table
+        const resolvedSchool =
+          authMeta.school_name ||
+          p.school_name ||
+          p.avatar_url ||
+          (cust.school_name && cust.school_name !== 'TK NEGERI PEMBINA 01' ? cust.school_name : '') ||
+          cust.school_name ||
+          (p.schools as any)?.name ||
+          'Satuan PAUD';
+
+        const resolvedClass =
+          authMeta.assigned_class ||
+          p.assigned_class ||
+          'A (4-5 Tahun)';
+
+        const resolvedName =
+          authMeta.full_name ||
+          p.full_name ||
+          cust.full_name ||
+          p.email.split('@')[0];
 
         return {
           id: p.id,
           email: p.email,
-          full_name: p.full_name || p.email.split('@')[0],
+          full_name: resolvedName,
           role: p.email?.toLowerCase() === 'pakhusnulid@gmail.com' ? 'admin' : (p.role || 'guru'),
-          school_name: cust.school_name || p.school_name || (p.schools as any)?.name || 'Satuan PAUD',
-          assigned_class: p.assigned_class || 'A (4-5 Tahun)',
+          school_name: resolvedSchool,
+          assigned_class: resolvedClass,
           docs_count: docsCountMap[p.id] || 0,
           is_active: p.is_active ?? true,
           created_at: p.created_at ? new Date(p.created_at).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
-          phone: p.phone || cust.whatsapp || '',
+          phone: p.phone || cust.whatsapp || authMeta.phone || '',
           tier: userTier,
           duration: cust.duration || '1_tahun',
           expiry_date: cust.subscription_end ? new Date(cust.subscription_end).toISOString().slice(0, 10) : undefined,

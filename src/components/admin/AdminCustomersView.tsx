@@ -77,22 +77,38 @@ export const AdminCustomersView: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
+      // Fetch profiles to get any updated school_name (from avatar_url)
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('email, avatar_url, full_name');
+      const profileMap: Record<string, any> = {};
+      if (profs) {
+        profs.forEach((p: any) => {
+          if (p.email) profileMap[p.email.toLowerCase().trim()] = p;
+        });
+      }
+
       if (!error && data) {
-        const mapped: AllowedCustomerRow[] = data.map((c) => ({
-          id: c.id,
-          email: c.email,
-          full_name: c.full_name || c.email.split('@')[0],
-          whatsapp: c.whatsapp || '',
-          school_name: c.school_name || 'Satuan PAUD',
-          account_type: c.account_type || 'annual',
-          subscription_start: c.subscription_start ? new Date(c.subscription_start).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
-          subscription_end: c.subscription_end
-            ? new Date(c.subscription_end).toISOString().slice(0, 10)
-            : undefined,
-          is_active: c.is_active ?? true,
-          notes: c.notes || '',
-          claimed_at: c.claimed_at,
-        }));
+        const mapped: AllowedCustomerRow[] = data.map((c) => {
+          const prof = profileMap[c.email.toLowerCase().trim()] || {};
+          const resolvedSchool = prof.avatar_url || c.school_name || 'Satuan PAUD';
+
+          return {
+            id: c.id,
+            email: c.email,
+            full_name: prof.full_name || c.full_name || c.email.split('@')[0],
+            whatsapp: c.whatsapp || '',
+            school_name: resolvedSchool,
+            account_type: c.account_type || 'annual',
+            subscription_start: c.subscription_start ? new Date(c.subscription_start).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+            subscription_end: c.subscription_end
+              ? new Date(c.subscription_end).toISOString().slice(0, 10)
+              : undefined,
+            is_active: c.is_active ?? true,
+            notes: c.notes || '',
+            claimed_at: c.claimed_at,
+          };
+        });
         setCustomers(mapped);
         syncToLocalStorage(mapped);
       } else {
