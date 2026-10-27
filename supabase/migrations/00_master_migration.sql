@@ -237,3 +237,21 @@ VALUES
   ('TK NEGERI PEMBINA 01', '20108921', 'Jl. Merdeka No. 45', 'Kecamatan Ceria', 'Kota Jakarta Selatan', 'DKI Jakarta', 'Hj. Siti Rahayu, M.Pd.', '197508122002122001'),
   ('TK KARTIKA CENDEKIA', '20109844', 'Jl. Pendidikan No. 12', 'Kecamatan Melati', 'Kota Bandung', 'Jawa Barat', 'Dra. Endang Lestari', '198103152006042003')
 ON CONFLICT (npsn) DO NOTHING;
+
+-- 11. SECURITY HARDENING: ANTI PRIVILEGE ESCALATION TRIGGER (OWASP A01 & A06)
+CREATE OR REPLACE FUNCTION public.prevent_self_role_escalation()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.role <> OLD.role AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Akses Ditolak: Anda tidak diizinkan mengubah hak akses/peran akun.';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS tr_prevent_self_role_escalation ON public.profiles;
+CREATE TRIGGER tr_prevent_self_role_escalation
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.prevent_self_role_escalation();
+

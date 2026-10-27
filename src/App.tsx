@@ -15,6 +15,7 @@ import { supabase } from './lib/supabaseClient';
 import { SAMPLE_RPM_PAUD } from './data/default_sample_rpm';
 import { RpmPaudDocData } from './lib/docx-engine/docx-paud-builder';
 import { CheckCircle2, ShieldAlert } from 'lucide-react';
+import { logSecurityEvent } from './lib/securityLogger';
 
 /**
  * Komponen Generator Utama RPM PAUD (/app)
@@ -202,6 +203,20 @@ const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children
   const { user, profile, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  React.useEffect(() => {
+    if (!loading && user && !isAdmin) {
+      logSecurityEvent('ADMIN_UNAUTHORIZED_ACCESS', {
+        userId: user.id,
+        details: { email: user.email, role: profile?.role, path: location.pathname },
+      });
+    } else if (!loading && user && isAdmin) {
+      logSecurityEvent('ADMIN_ACCESS_ATTEMPT', {
+        userId: user.id,
+        details: { email: user.email, path: location.pathname },
+      });
+    }
+  }, [loading, user, isAdmin, profile, location.pathname]);
 
   if (loading) {
     return (

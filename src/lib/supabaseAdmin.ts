@@ -1,15 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://uffqfoycagixryyrwpsk.supabase.co';
-const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZnFmb3ljYWdpeHJ5eXJ3cHNrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5Mjk4MzM3NywiZXhwIjoyMTA4NTU5Mzc3fQ.ocH55NnfiQj8HLeW-UI9dv9cTyDZ3ivpoYreAqzFQFs';
-
-// Dedicated administrative client bypassing RLS with full Auth Admin access
-export const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+// Export the authenticated client. For admin operations on tables (profiles, schools, generated_documents),
+// the user's JWT already grants full admin privileges via Supabase RLS (is_admin() = true).
+// NO service_role master key is ever exposed or bundled into the client.
+export const supabaseAdmin = supabase;
 
 export interface CreateUserInput {
   email: string;
@@ -22,21 +16,22 @@ export interface CreateUserInput {
 }
 
 /**
- * Creates a real authenticated user in auth.users, confirmed, and synced to profiles
+ * Creates a new user securely through Supabase Auth and links profile
  */
 export async function adminCreateUser(input: CreateUserInput) {
   const cleanEmail = input.email.trim().toLowerCase();
   const cleanName = input.full_name.trim();
 
-  // 1. Create user in Supabase Auth
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+  // Register user via Supabase Auth
+  const { data: authData, error: authError } = await supabase.auth.signUp({
     email: cleanEmail,
     password: input.password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: cleanName,
-      role: input.role,
-      school_name: input.school_name || 'TK NEGERI PEMBINA 01',
+    options: {
+      data: {
+        full_name: cleanName,
+        role: input.role,
+        school_name: input.school_name || 'TK NEGERI PEMBINA 01',
+      },
     },
   });
 
@@ -46,27 +41,23 @@ export async function adminCreateUser(input: CreateUserInput) {
 
   const userId = authData.user?.id;
   if (!userId) {
-    throw new Error('Gagal mendapatkan ID pengguna baru');
+    throw new Error('Gagal mendapatkan ID pengguna baru.');
   }
 
-  // 2. Ensure or update profile entry with role, assigned class, and school
-  // Wait a brief moment for database trigger to create profile row if needed
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
-  // Find or use default school ID
-  const { data: schools } = await supabaseAdmin
+  // Ensure school exists or find default
+  const { data: schools } = await supabase
     .from('schools')
     .select('id')
     .limit(1);
   const schoolId = schools?.[0]?.id;
 
-  const { error: profileError } = await supabaseAdmin
+  const { error: profileError } = await supabase
     .from('profiles')
     .upsert({
       id: userId,
       email: cleanEmail,
       full_name: cleanName,
-      role: cleanEmail === 'pakhusnulid@gmail.com' ? 'admin' : input.role,
+      role: input.role,
       school_id: schoolId || null,
       assigned_class: input.assigned_class || '',
       is_active: true,
@@ -74,44 +65,41 @@ export async function adminCreateUser(input: CreateUserInput) {
     });
 
   if (profileError) {
-    console.warn('Profile sync notice:', profileError.message);
+    console.warn('[adminCreateUser] Profile sync notice:', profileError.message);
   }
 
   return authData.user;
 }
 
 /**
- * Deletes a user completely from auth.users (cascades to profiles, documents, keys)
+ * Deletes a user profile from the database
  */
 export async function adminDeleteUser(userId: string) {
-  // Delete from profiles first
-  await supabaseAdmin.from('profiles').delete().eq('id', userId);
-  
-  // Delete from auth.users
-  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  const { error } = await supabase.from('profiles').delete().eq('id', userId);
   if (error) {
     throw new Error(error.message);
   }
 }
 
 /**
- * Resets a user's password directly in auth.users
+ * Sends a secure password reset email to the user
  */
-export async function adminResetPassword(userId: string, newPassword: string) {
-  const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-    password: newPassword,
+export async function adminResetPassword(userEmail: string) {
+  const cleanEmail = userEmail.trim().toLowerCase();
+  const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+    redirectTo: `${window.location.origin}/login`,
   });
   if (error) {
     throw new Error(error.message);
   }
-  return data.user;
+  return true;
 }
 
 /**
- * Updates a user's active/inactive status
+ * Updates a user's active/inactive status (Protected by RLS is_admin())
  */
 export async function adminToggleUserStatus(userId: string, isActive: boolean) {
-  const { error } = await supabaseAdmin
+  const { error } = await supabase
     .from('profiles')
     .update({ is_active: isActive })
     .eq('id', userId);
@@ -121,10 +109,10 @@ export async function adminToggleUserStatus(userId: string, isActive: boolean) {
 }
 
 /**
- * Updates a user's role (admin vs guru)
+ * Updates a user's role (Protected by RLS is_admin())
  */
 export async function adminToggleUserRole(userId: string, newRole: 'admin' | 'guru') {
-  const { error } = await supabaseAdmin
+  const { error } = await supabase
     .from('profiles')
     .update({ role: newRole })
     .eq('id', userId);

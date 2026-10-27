@@ -187,11 +187,11 @@ export const AdminUsersView: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await adminResetPassword(selectedUser.id, newPassword);
-      showToast(`Kata sandi untuk ${selectedUser.full_name} (${selectedUser.email}) berhasil diubah ke: ${newPassword}`);
+      await adminResetPassword(selectedUser.email);
+      showToast(`Tautan reset kata sandi aman telah dikirimkan ke email ${selectedUser.email}.`);
       setIsResetOpen(false);
     } catch (e: any) {
-      alert(`Gagal mereset kata sandi: ${e.message}`);
+      alert(`Gagal mengirim tautan reset kata sandi: ${e.message}`);
     } finally {
       setIsSubmitting(false);
     }

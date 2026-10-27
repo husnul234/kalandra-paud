@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { logSecurityEvent } from '../../lib/securityLogger';
 import { 
   Sparkles, 
   Mail, 
@@ -10,7 +11,8 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Loader2, 
-  ArrowLeft 
+  ArrowLeft,
+  Clock
 } from 'lucide-react';
 
 interface AuthPageProps {
@@ -31,11 +33,47 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBackToApp }) =>
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // OWASP A07: Brute Force Throttling State
+  const [failedAttempts, setFailedAttempts] = useState<number>(() => {
+    const saved = sessionStorage.getItem('kalandra_auth_failed_count');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+  const [lockoutSeconds, setLockoutSeconds] = useState<number>(() => {
+    const lockoutUntil = sessionStorage.getItem('kalandra_auth_lockout_until');
+    if (lockoutUntil) {
+      const diff = Math.ceil((parseInt(lockoutUntil, 10) - Date.now()) / 1000);
+      return diff > 0 ? diff : 0;
+    }
+    return 0;
+  });
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setLockoutSeconds((prev) => {
+        if (prev <= 1) {
+          sessionStorage.removeItem('kalandra_auth_lockout_until');
+          sessionStorage.setItem('kalandra_auth_failed_count', '0');
+          setFailedAttempts(0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutSeconds]);
+
   // Handle Sign In
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
+
+    if (lockoutSeconds > 0) {
+      setErrorMessage(`Terlalu banyak percobaan gagal. Silakan tunggu ${lockoutSeconds} detik.`);
+      return;
+    }
 
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !password) {
@@ -48,15 +86,51 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBackToApp }) =>
     setIsLoading(false);
 
     if (res.success) {
+      // Reset rate limit on success
+      sessionStorage.removeItem('kalandra_auth_failed_count');
+      sessionStorage.removeItem('kalandra_auth_lockout_until');
+      setFailedAttempts(0);
+
+      // Log successful login
+      await logSecurityEvent('AUTH_LOGIN_SUCCESS', {
+        details: { email: cleanEmail },
+      });
+
       const isSuperadmin = cleanEmail === 'pakhusnulid@gmail.com';
       setSuccessMessage('Berhasil masuk! Mengalihkan ke aplikasi...');
       setTimeout(() => {
         onSuccess(isSuperadmin ? 'admin' : 'guru');
       }, 500);
     } else {
+      const newFailed = failedAttempts + 1;
+      setFailedAttempts(newFailed);
+      sessionStorage.setItem('kalandra_auth_failed_count', newFailed.toString());
+
+      // Log failed attempt (OWASP A09)
+      await logSecurityEvent('AUTH_LOGIN_FAILED', {
+        details: {
+          email: cleanEmail,
+          attempt: newFailed,
+        },
+      });
+
+      // Trigger 60-second lockout on 5 consecutive failures (OWASP A07)
+      if (newFailed >= 5) {
+        const lockoutUntil = Date.now() + 60 * 1000;
+        sessionStorage.setItem('kalandra_auth_lockout_until', lockoutUntil.toString());
+        setLockoutSeconds(60);
+
+        await logSecurityEvent('AUTH_RATE_LIMIT_TRIGGERED', {
+          details: { email: cleanEmail, consecutiveFailures: newFailed },
+        });
+
+        setErrorMessage('Terlalu banyak percobaan login gagal. Demi keamanan, akun dikunci sementara selama 60 detik.');
+        return;
+      }
+
       setErrorMessage(
         res.error?.includes('Invalid login credentials')
-          ? 'Email atau kata sandi tidak sesuai. Silakan periksa kembali.'
+          ? `Email atau kata sandi tidak sesuai. (Percobaan ${newFailed}/5)`
           : res.error || 'Gagal masuk akun. Silakan coba lagi.'
       );
     }
@@ -160,13 +234,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBackToApp }) =>
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || lockoutSeconds > 0}
             className="w-full py-2.5 px-4 rounded-xl font-extrabold text-xs text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 active:scale-[0.98]"
           >
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Memverifikasi Kata Sandi...</span>
+              </>
+            ) : lockoutSeconds > 0 ? (
+              <>
+                <Clock className="w-4 h-4 text-amber-300 animate-pulse" />
+                <span>Terkunci ({lockoutSeconds}d)</span>
               </>
             ) : (
               <>
