@@ -128,11 +128,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBackToApp }) =>
         return;
       }
 
-      setErrorMessage(
-        res.error?.includes('Invalid login credentials')
-          ? `Email atau kata sandi tidak sesuai. (Percobaan ${newFailed}/5)`
-          : res.error || 'Gagal masuk akun. Silakan coba lagi.'
-      );
+      if (res.error?.toLowerCase().includes('too many') || res.error?.includes('429') || res.error?.toLowerCase().includes('rate limit')) {
+        setErrorMessage('Terlalu banyak percobaan login dalam waktu singkat. Demi keamanan sistem, mohon tunggu 1-2 menit sebelum mencoba lagi.');
+      } else {
+        setErrorMessage(
+          res.error?.includes('Invalid login credentials')
+            ? `Email atau kata sandi tidak sesuai. (Percobaan ${newFailed}/5)`
+            : res.error || 'Gagal masuk akun. Silakan coba lagi.'
+        );
+      }
     }
   };
 

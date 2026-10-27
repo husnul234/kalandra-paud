@@ -4,8 +4,8 @@
 -- kata sandi pengguna secara langsung di database Supabase tanpa harus lewat email.
 -- ==============================================================================
 
--- 0. Pastikan pgcrypto aktif
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- 0. Pastikan pgcrypto aktif di schema extensions
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA extensions;
 
 -- 1. Tambahkan kolom tier ke tabel profiles (jika belum ada)
 ALTER TABLE public.profiles 
@@ -19,7 +19,6 @@ ALTER TABLE public.allowed_customers
   ADD COLUMN IF NOT EXISTS billing_cycle TEXT DEFAULT '1_tahun';
 
 -- 3. Fungsi RPC 1: admin_update_user_password (by UUID)
--- Menggunakan extensions.crypt dan gen_salt('bf') untuk meng-update encrypted_password di auth.users secara aman
 CREATE OR REPLACE FUNCTION public.admin_update_user_password(
   target_user_id UUID, 
   new_plain_password TEXT
@@ -46,10 +45,10 @@ BEGIN
   END IF;
 
   -- Update sandi terenkripsi & konfirmasi email secara instan di tabel internal auth.users
+  -- CATATAN: Jangan update kolom "confirmed_at" karena bertipe GENERATED COLUMN di Supabase Auth
   UPDATE auth.users
-  SET encrypted_password = crypt(new_plain_password, gen_salt('bf')),
+  SET encrypted_password = extensions.crypt(new_plain_password, extensions.gen_salt('bf')),
       email_confirmed_at = COALESCE(email_confirmed_at, now()),
-      confirmed_at = COALESCE(confirmed_at, now()),
       updated_at = now()
   WHERE id = target_user_id;
 
@@ -70,7 +69,7 @@ AS $$
 DECLARE
   v_clean_email TEXT := lower(trim(target_email));
 BEGIN
-  -- Validasi Keamanan
+  -- Validasi Keamanan: Pastikan yang memanggil adalah admin yang sah dan aktif atau superadmin utama
   IF NOT EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid() 
@@ -84,10 +83,11 @@ BEGIN
     RAISE EXCEPTION 'Kata sandi baru minimal 6 karakter.';
   END IF;
 
+  -- Update sandi terenkripsi & konfirmasi email secara instan di tabel internal auth.users
+  -- CATATAN: Jangan update kolom "confirmed_at" karena bertipe GENERATED COLUMN di Supabase Auth
   UPDATE auth.users
-  SET encrypted_password = crypt(new_plain_password, gen_salt('bf')),
+  SET encrypted_password = extensions.crypt(new_plain_password, extensions.gen_salt('bf')),
       email_confirmed_at = COALESCE(email_confirmed_at, now()),
-      confirmed_at = COALESCE(confirmed_at, now()),
       updated_at = now()
   WHERE lower(email) = v_clean_email;
 
@@ -95,6 +95,6 @@ BEGIN
 END;
 $$;
 
--- Berikan izin akses eksekusi RPC hanya ke authenticated users (dijaga oleh pengecekan admin di dalam fungsi)
+-- Berikan izin akses eksekusi RPC ke authenticated users (dijaga oleh pengecekan admin di dalam fungsi)
 GRANT EXECUTE ON FUNCTION public.admin_update_user_password(UUID, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_update_user_password_by_email(TEXT, TEXT) TO authenticated;
