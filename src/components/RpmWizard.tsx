@@ -96,7 +96,7 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressStage, setProgressStage] = useState(1);
   const [progressMessage, setProgressMessage] = useState('');
-  const [usedModel, setUsedModel] = useState('gemini-2.0-flash');
+  const [usedModel, setUsedModel] = useState('gemini-3.1-flash-lite');
   const [usedKeyMasked, setUsedKeyMasked] = useState('');
   const [generationError, setGenerationError] = useState<string | null>(null);
 

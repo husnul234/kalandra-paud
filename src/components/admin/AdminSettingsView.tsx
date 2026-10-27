@@ -375,7 +375,7 @@ export const AdminSettingsView: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {GEMINI_MODEL_CHAIN.map((model, idx) => (
             <div
               key={model}
@@ -395,15 +395,19 @@ export const AdminSettingsView: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="font-mono font-bold text-xs text-[#2A1532] truncate">{model}</div>
+              <div className="font-mono font-bold text-xs text-[#2A1532] truncate" title={model}>{model}</div>
               <p className="text-[10px] text-[#74607B] mt-1">
                 {idx === 0
-                  ? 'Kecepatan & Nalar Tertinggi'
+                  ? 'Prioritas Cepat & Kuota Tinggi (500 RPD)'
                   : idx === 1
-                  ? 'Fallback Pertama (Stabil)'
+                  ? 'Fallback Ringan Stabil'
                   : idx === 2
-                  ? 'Fallback Ringan'
-                  : 'Cadangan Darurat Lite'}
+                  ? 'Fallback Nalar Gemini 3'
+                  : idx === 3
+                  ? 'Cadangan Kuota 500 RPD'
+                  : idx === 4
+                  ? 'Penalaran Mendalam'
+                  : 'Cadangan Darurat'}
               </p>
             </div>
           ))}

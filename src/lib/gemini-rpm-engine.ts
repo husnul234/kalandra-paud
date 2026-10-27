@@ -1,10 +1,13 @@
 import { DATA_8_DPL } from '../data/cp_paud_data';
 
 export const GEMINI_MODEL_CHAIN = [
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
-  'gemini-1.5-pro',
+  'gemini-3.1-flash-lite',
+  'gemini-2.5-flash-lite',
+  'gemini-3-flash-preview',
+  'gemini-3.5-flash-lite',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-2.5-flash',
 ];
 
 export const SYSTEM_INSTRUCTION_RPM_PAUD = `Anda adalah Pakar Kurikulum Pendidikan Anak Usia Dini (PAUD) Kemendikdasmen RI yang menguasai penyusunan Perencanaan Pembelajaran Mendalam (Deep Learning) Fase Fondasi untuk Kelompok Bermain / KB (usia 3-4 tahun), TK Kelompok A (usia 4-5 tahun), dan Kelompok B (usia 5-6 tahun).

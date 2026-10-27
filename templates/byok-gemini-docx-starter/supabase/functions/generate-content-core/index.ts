@@ -12,11 +12,13 @@ const corsHeaders = {
  * WARNING: Models must match the tier available to the account.
  */
 const GEMINI_MODEL_CHAIN = [
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
+  "gemini-3-flash-preview",
+  "gemini-3.5-flash-lite",
   "gemini-3.6-flash",
   "gemini-3.5-flash",
-  "gemini-3.0-flash",
   "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
 ];
 
 function getGeminiEndpoint(model: string, apiKey: string): string {
