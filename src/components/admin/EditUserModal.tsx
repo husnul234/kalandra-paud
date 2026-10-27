@@ -134,8 +134,12 @@ export const EditUserModal: React.FC<Props> = ({
       });
 
       let notice = 'Data akun pengguna berhasil diperbarui!';
-      if (res?.passwordResult?.updated) {
-        notice = `Data profil diperbarui! ${res.passwordResult.message}`;
+      if (newPassword.trim()) {
+        if (res?.passwordResult?.updated) {
+          notice = `Data profil diperbarui! ${res.passwordResult.message}`;
+        } else {
+          notice = `Profil disimpan. Catatan Sandi: ${res?.passwordResult?.message || 'Cek konsol'}`;
+        }
       }
 
       onSuccess(notice, newPassword.trim() || undefined);

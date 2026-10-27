@@ -15,7 +15,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
-import { adminUpdateUser } from '../../lib/supabaseAdmin';
+import { adminUpdateUser, adminDirectSetPassword } from '../../lib/supabaseAdmin';
 
 export interface WhatsAppUserTarget {
   id?: string;
@@ -50,6 +50,8 @@ export const WhatsAppActivationModal: React.FC<Props> = ({
   const [activePreset, setActivePreset] = useState<'lengkap' | 'singkat' | 'reminder'>('lengkap');
   const [messageBody, setMessageBody] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -163,29 +165,46 @@ Jika ada kendala saat login atau butuh bantuan lainnya, silakan langsung balas p
 
   if (!isOpen || !user) return null;
 
-  const handleCopy = () => {
+  const handleSavePasswordToAccount = async (pwdOverride?: string) => {
+    if (!user) return false;
+    const pwd = (pwdOverride || tempPassword).trim();
+    if (pwd.length < 6) {
+      setSyncStatus('error');
+      setSyncMessage('Kata sandi minimal 6 karakter.');
+      return false;
+    }
+
+    setSyncStatus('saving');
+    setSyncMessage(null);
+    try {
+      const res = await adminDirectSetPassword(user.id || '', user.email, pwd);
+      if (res.updated) {
+        setSyncStatus('saved');
+        setSyncMessage('Kata sandi berhasil disimpan dan akun aktif ✓');
+        setTimeout(() => setSyncStatus('idle'), 3500);
+        return true;
+      } else {
+        setSyncStatus('error');
+        setSyncMessage(res.message);
+        return false;
+      }
+    } catch (err: any) {
+      setSyncStatus('error');
+      setSyncMessage(err.message || 'Gagal menyimpan kata sandi ke akun.');
+      return false;
+    }
+  };
+
+  const handleCopy = async () => {
+    await handleSavePasswordToAccount();
     navigator.clipboard.writeText(messageBody);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
 
   const handleSendWhatsApp = async () => {
-    // 0. If admin customized the temporary password, sync to user account in DB
-    const cleanPwd = tempPassword.trim();
-    if (user.id && cleanPwd.length >= 6 && cleanPwd !== user.initialPassword) {
-      try {
-        await adminUpdateUser({
-          userId: user.id,
-          email: user.email,
-          full_name: user.fullName,
-          role: 'guru',
-          new_password: cleanPwd,
-        });
-        localStorage.setItem(`kalandra_pwd_change_needed_${user.email.toLowerCase()}`, 'true');
-      } catch (e) {
-        console.warn('Sync temp password warning:', e);
-      }
-    }
+    // 0. Auto-sync password directly to user account in DB
+    await handleSavePasswordToAccount();
 
     // 1. Save phone number if checked
     const cleanPhone = phoneNumber.replace(/\D/g, '');
@@ -306,25 +325,62 @@ Jika ada kendala saat login atau butuh bantuan lainnya, silakan langsung balas p
 
             {/* Temporary Password Input */}
             <div className="pt-2 border-t border-[#EFE6F2]">
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1">
                 <label className="text-xs font-bold text-[#2A1532] flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-[#80426E]" />
                   <span>Kata Sandi Sementara (Diberikan ke Pengguna):</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={handleGenerateRandomPassword}
-                  className="text-[11px] font-bold text-[#80426E] hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <Sparkles className="w-3 h-3 text-amber-500" />
-                  <span>Acak Sandi</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSavePasswordToAccount()}
+                    disabled={syncStatus === 'saving'}
+                    className={`text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+                      syncStatus === 'saved'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : syncStatus === 'saving'
+                        ? 'bg-slate-100 text-slate-600'
+                        : 'bg-white hover:bg-[#FAF3FB] text-[#80426E] hover:text-[#522D60] border border-[#D8C3DD] shadow-2xs'
+                    }`}
+                    title="Simpan kata sandi ini langsung ke akun pengguna"
+                  >
+                    {syncStatus === 'saving' ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-[#80426E] border-t-transparent rounded-full animate-spin" />
+                        <span>Menyimpan...</span>
+                      </>
+                    ) : syncStatus === 'saved' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-700">Tersimpan di Akun ✓</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Simpan Sandi ke Akun</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleGenerateRandomPassword}
+                    className="text-[11px] font-bold text-[#80426E] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-500" />
+                    <span>Acak Sandi</span>
+                  </button>
+                </div>
               </div>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={tempPassword}
-                  onChange={(e) => setTempPassword(e.target.value)}
+                  onChange={(e) => {
+                    setTempPassword(e.target.value);
+                    setSyncStatus('idle');
+                    setSyncMessage(null);
+                  }}
                   placeholder="Contoh: Kalandra#2026"
                   className="w-full px-3 py-2 pr-10 text-xs font-mono rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532] bg-white"
                 />
@@ -336,6 +392,13 @@ Jika ada kendala saat login atau butuh bantuan lainnya, silakan langsung balas p
                   {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
               </div>
+              {syncMessage && (
+                <p className={`text-[11px] font-bold mt-1 ${
+                  syncStatus === 'saved' ? 'text-emerald-700' : 'text-red-600'
+                }`}>
+                  {syncMessage}
+                </p>
+              )}
               <p className="text-[10px] text-[#74607B] mt-1">
                 Kata sandi ini tercantum otomatis di pesan WA. Guru akan diberikan dialog ganti sandi saat login pertama (bisa dilewati).
               </p>

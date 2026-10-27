@@ -285,7 +285,7 @@ export const AdminUsersView: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await adminCreateUser({
+      const createRes = await adminCreateUser({
         email: cleanEmail,
         password: newInitialPassword,
         full_name: cleanName,
@@ -301,6 +301,7 @@ export const AdminUsersView: React.FC = () => {
 
       // Open WhatsApp Activation Modal immediately for easy copy & send
       setSelectedWhatsAppUser({
+        id: createRes?.user?.id,
         fullName: cleanName,
         email: cleanEmail,
         schoolName: newSchoolName,

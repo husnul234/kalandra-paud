@@ -102,6 +102,11 @@ export async function adminCreateUser(input: CreateUserInput) {
     console.warn('[adminCreateUser] allowed_customers sync note:', custErr);
   }
 
+    // 3. Immediately confirm email & password hash via RPC so user can login without email confirmation barrier
+    try {
+      await adminDirectSetPassword(userId, cleanEmail, input.password);
+    } catch (_) {}
+
   return { user: authData.user, password: input.password, tier, expiresAt };
 }
 
@@ -249,69 +254,92 @@ export async function adminUpdateUser(input: UpdateUserInput) {
 
   if (input.new_password && input.new_password.trim().length >= 6) {
     const pass = input.new_password.trim();
-    let updatedDirectly = false;
+    passwordResult = await adminDirectSetPassword(input.userId, cleanEmail, pass);
+  }
 
-    try {
-      localStorage.setItem(`kalandra_pwd_change_needed_${cleanEmail}`, 'true');
-      sessionStorage.removeItem(`kalandra_pwd_skipped_${input.userId}`);
-    } catch (_) {}
+  return { success: true, passwordResult };
+}
 
-    // A. Attempt RPC admin_update_user_password (if migration 08 has been run)
+/**
+ * Direct password updater utilizing RPC functions with auto email confirmation
+ */
+export async function adminDirectSetPassword(userId: string, email: string, newPlainPassword: string) {
+  const cleanEmail = email.trim().toLowerCase();
+  const pass = newPlainPassword.trim();
+  let updatedDirectly = false;
+  let lastErrorMsg = '';
+
+  try {
+    localStorage.setItem(`kalandra_pwd_change_needed_${cleanEmail}`, 'true');
+    sessionStorage.removeItem(`kalandra_pwd_skipped_${cleanEmail}`);
+    if (userId) {
+      sessionStorage.removeItem(`kalandra_pwd_skipped_${userId}`);
+    }
+  } catch (_) {}
+
+  // A. Attempt RPC admin_update_user_password (by UUID)
+  if (userId) {
     try {
       const { data: rpcData, error: rpcError } = await supabase.rpc('admin_update_user_password', {
-        target_user_id: input.userId,
+        target_user_id: userId,
         new_plain_password: pass,
       });
 
       if (!rpcError && rpcData) {
         updatedDirectly = true;
-        passwordResult = {
+        return {
           updated: true,
           method: 'direct',
-          message: 'Kata sandi berhasil diubah langsung di basis data.',
+          message: 'Kata sandi berhasil diubah dan akun diaktifkan langsung di basis data.',
         };
+      } else if (rpcError) {
+        lastErrorMsg = rpcError.message;
+        console.warn('RPC admin_update_user_password error:', rpcError.message);
       }
-    } catch (e) {
-      console.warn('RPC admin_update_user_password note:', e);
-    }
-
-    // B. Attempt supabase.auth.admin.updateUserById (works if service role or server admin enabled)
-    if (!updatedDirectly) {
-      try {
-        const { error: authErr } = await supabase.auth.admin.updateUserById(input.userId, {
-          password: pass,
-        });
-        if (!authErr) {
-          updatedDirectly = true;
-          passwordResult = {
-            updated: true,
-            method: 'direct',
-            message: 'Kata sandi berhasil diperbarui langsung.',
-          };
-        }
-      } catch (authE) {
-        console.warn('Direct auth update note:', authE);
-      }
-    }
-
-    // C. Fallback: Send password reset link to user email
-    if (!updatedDirectly) {
-      try {
-        await adminResetPassword(cleanEmail);
-        passwordResult = {
-          updated: true,
-          method: 'email',
-          message: `Tautan atur ulang kata sandi telah dikirimkan ke email ${cleanEmail}.`,
-        };
-      } catch (emailErr: any) {
-        passwordResult = {
-          updated: false,
-          method: 'failed',
-          message: `Gagal mengirim tautan reset kata sandi: ${emailErr.message}`,
-        };
-      }
+    } catch (e: any) {
+      lastErrorMsg = e.message;
+      console.warn('RPC admin_update_user_password exception:', e);
     }
   }
 
-  return { success: true, passwordResult };
+  // B. Attempt RPC admin_update_user_password_by_email (by Email)
+  if (!updatedDirectly && cleanEmail) {
+    try {
+      const { data: rpcEmailData, error: rpcEmailError } = await supabase.rpc('admin_update_user_password_by_email', {
+        target_email: cleanEmail,
+        new_plain_password: pass,
+      });
+
+      if (!rpcEmailError && rpcEmailData) {
+        updatedDirectly = true;
+        return {
+          updated: true,
+          method: 'direct',
+          message: 'Kata sandi berhasil diubah via email terdaftar.',
+        };
+      } else if (rpcEmailError) {
+        lastErrorMsg = rpcEmailError.message;
+        console.warn('RPC admin_update_user_password_by_email error:', rpcEmailError.message);
+      }
+    } catch (e: any) {
+      lastErrorMsg = e.message;
+      console.warn('RPC admin_update_user_password_by_email exception:', e);
+    }
+  }
+
+  // C. Fallback: Send password reset link to user email
+  try {
+    await adminResetPassword(cleanEmail);
+    return {
+      updated: false,
+      method: 'email',
+      message: `Tautan reset sandi dikirim ke ${cleanEmail} (Catatan: Skrip RPC 08 di SQL Editor Supabase perlu dijalankan untuk ubah langsung).`,
+    };
+  } catch (emailErr: any) {
+    return {
+      updated: false,
+      method: 'failed',
+      message: `Gagal memperbarui sandi: ${lastErrorMsg || emailErr.message}`,
+    };
+  }
 }

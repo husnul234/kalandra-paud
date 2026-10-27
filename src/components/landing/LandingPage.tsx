@@ -25,7 +25,9 @@ import {
   Shield,
   Check,
   Smartphone,
-  ExternalLink
+  ExternalLink,
+  X,
+  TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -46,7 +48,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   // WhatsApp order link generator
   const getWhatsAppOrderUrl = (tier: 'Standar' | 'PRO', periodLabel: string, price: string) => {
     const text = `Halo Admin Kalandra, saya ingin mengaktifkan *Paket ${tier} (${periodLabel} - ${price})* untuk perencanaan pembelajaran TK saya. Mohon informasi rekening dan aktivasinya.`;
-    return `https://wa.me/6285156554580?text=${encodeURIComponent(text)}`;
+    return `https://wa.me/6288228511309?text=${encodeURIComponent(text)}`;
   };
 
   return (
@@ -74,6 +76,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <a href="#fitur" className="hover:text-[#522D60] transition-colors">Fitur Unggulan</a>
             <a href="#lampiran" className="hover:text-[#522D60] transition-colors">4 Lampiran Observasi</a>
             <a href="#asisten" className="hover:text-[#522D60] transition-colors">Revisi AI Chat</a>
+            <a href="#perbandingan" className="hover:text-[#522D60] transition-colors">Perbandingan</a>
             <a href="#harga" className="hover:text-[#522D60] transition-colors">Daftar Harga</a>
             <a href="#faq" className="hover:text-[#522D60] transition-colors">Tanya Jawab</a>
           </nav>
@@ -454,6 +457,184 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
+      {/* 3.5. COMPARISON SECTION (KENAPA KALANDRA BERBEDA? - ADAPTASI SIAP GURU) */}
+      <section id="perbandingan" className="py-20 bg-white border-b border-[#EFE6F2]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-10">
+          
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF3FB] border border-[#E8D6EB] text-[#522D60] text-xs font-black uppercase tracking-wider">
+              <TrendingUp className="w-3.5 h-3.5 text-[#80426E]" />
+              <span>Perbandingan Layanan</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#2A1532] tracking-tight">
+              Kenapa <span className="text-[#522D60]">KALANDRA</span> Berbeda?
+            </h2>
+            <p className="text-xs sm:text-sm text-[#74607B] leading-relaxed">
+              Bandingkan cara konvensional/manual dengan Kalandra — selisih waktunya bisa Bunda/Bapak Guru gunakan untuk mendampingi tumbuh kembang anak secara lebih bermakna.
+            </p>
+          </div>
+
+          {/* Table Container */}
+          <div className="bg-[#FAF7FB] rounded-3xl border border-[#E8D6EB] overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#E8D6EB] bg-white">
+                    <th className="py-4.5 px-6 text-xs font-black uppercase tracking-wider text-[#74607B] w-1/3">
+                      Aspek Perencanaan
+                    </th>
+                    <th className="py-4.5 px-6 text-xs font-black uppercase tracking-wider text-[#8A7991] w-1/3">
+                      Cara Konvensional / Manual
+                    </th>
+                    <th className="py-4.5 px-6 text-xs font-black uppercase tracking-wider text-[#522D60] bg-[#FAF3FB] w-1/3">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        <span>Kalandra RPM TK</span>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#EFE6F2] text-xs font-medium">
+                  {/* Row 1 */}
+                  <tr className="hover:bg-white/60 transition-colors">
+                    <td className="py-4 px-6 font-bold text-[#2A1532]">
+                      Waktu Pembuatan 1 Dokumen RPM
+                    </td>
+                    <td className="py-4 px-6 text-[#74607B]">
+                      <div className="flex items-center gap-2 text-rose-600 font-semibold">
+                        <X className="w-4 h-4 shrink-0" />
+                        <span>3 – 6 Jam (Lelah & Menumpuk)</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 bg-[#FAF3FB]/60 font-bold text-[#522D60]">
+                      <div className="flex items-center gap-2 text-emerald-700">
+                        <Check className="w-4 h-4 shrink-0 text-emerald-600 stroke-[3]" />
+                        <span>&lt; 2 Menit (Otomatis & Lengkap)</span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Row 2 */}
+                  <tr className="hover:bg-white/60 transition-colors">
+                    <td className="py-4 px-6 font-bold text-[#2A1532]">
+                      Kepatuhan Kurikulum 2025/2026
+                    </td>
+                    <td className="py-4 px-6 text-[#74607B]">
+                      <div className="flex items-center gap-2 text-[#74607B]">
+                        <X className="w-4 h-4 text-rose-500 shrink-0" />
+                        <span>Perlu riset manual regulasi baru</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 bg-[#FAF3FB]/60 font-bold text-[#522D60]">
+                      <div className="flex items-center gap-2 text-emerald-700">
+                        <Check className="w-4 h-4 shrink-0 text-emerald-600 stroke-[3]" />
+                        <span>Otomatis & Terverifikasi (Permendikdasmen No. 10/2025 & 8 DPL)</span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Row 3 */}
+                  <tr className="hover:bg-white/60 transition-colors">
+                    <td className="py-4 px-6 font-bold text-[#2A1532]">
+                      Format & Lembar Pengesahan
+                    </td>
+                    <td className="py-4 px-6 text-[#74607B]">
+                      <div className="flex items-center gap-2 text-[#74607B]">
+                        <X className="w-4 h-4 text-rose-500 shrink-0" />
+                        <span>Susun sendiri tabel & format dari nol</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 bg-[#FAF3FB]/60 font-bold text-[#522D60]">
+                      <div className="flex items-center gap-2 text-emerald-700">
+                        <Check className="w-4 h-4 shrink-0 text-emerald-600 stroke-[3]" />
+                        <span>Siap Pakai & Profesional (Lengkap TTD KS & Guru)</span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Row 4 */}
+                  <tr className="hover:bg-white/60 transition-colors">
+                    <td className="py-4 px-6 font-bold text-[#2A1532]">
+                      4 Dokumen Lampiran Observasi Siap Cetak
+                    </td>
+                    <td className="py-4 px-6 text-[#74607B]">
+                      <div className="flex items-center gap-2 text-[#74607B]">
+                        <X className="w-4 h-4 text-rose-500 shrink-0" />
+                        <span>Dibuat manual terpisah berhari-hari</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 bg-[#FAF3FB]/60 font-bold text-[#522D60]">
+                      <div className="flex items-center gap-2 text-emerald-700">
+                        <Check className="w-4 h-4 shrink-0 text-emerald-600 stroke-[3]" />
+                        <span>Tersinkronisasi 100% (Anekdot, Ceklis, Karya, Foto)</span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Row 5 */}
+                  <tr className="hover:bg-white/60 transition-colors">
+                    <td className="py-4 px-6 font-bold text-[#2A1532]">
+                      Ekspor Dokumen Word (.docx) & PDF
+                    </td>
+                    <td className="py-4 px-6 text-[#74607B]">
+                      <div className="flex items-center gap-2 text-[#74607B]">
+                        <X className="w-4 h-4 text-rose-500 shrink-0" />
+                        <span>Atur layout & margin manual berantakan</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 bg-[#FAF3FB]/60 font-bold text-[#522D60]">
+                      <div className="flex items-center gap-2 text-emerald-700">
+                        <Check className="w-4 h-4 shrink-0 text-emerald-600 stroke-[3]" />
+                        <span>1 Klik Download (Format Standar F4 & A4 Siap Print)</span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Row 6 */}
+                  <tr className="hover:bg-white/60 transition-colors">
+                    <td className="py-4 px-6 font-bold text-[#2A1532]">
+                      Konsistensi & Asisten Revisi
+                    </td>
+                    <td className="py-4 px-6 text-[#74607B]">
+                      <div className="flex items-center gap-2 text-[#74607B]">
+                        <X className="w-4 h-4 text-rose-500 shrink-0" />
+                        <span>Sulit konsisten, bongkar ulang dokumen</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 bg-[#FAF3FB]/60 font-bold text-[#522D60]">
+                      <div className="flex items-center gap-2 text-emerald-700">
+                        <Check className="w-4 h-4 shrink-0 text-emerald-600 stroke-[3]" />
+                        <span>AI Assistant via Chat (Plan & Action Otomatis)</span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Row 7 */}
+                  <tr className="hover:bg-white/60 transition-colors">
+                    <td className="py-4 px-6 font-bold text-[#2A1532]">
+                      Biaya & Efisiensi Energi
+                    </td>
+                    <td className="py-4 px-6 text-[#74607B]">
+                      <div className="flex items-center gap-2 text-[#74607B]">
+                        <X className="w-4 h-4 text-rose-500 shrink-0" />
+                        <span>Waktu & stres administrasi sangat tinggi</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 bg-[#FAF3FB]/60 font-bold text-[#522D60]">
+                      <div className="flex items-center gap-2 text-emerald-700">
+                        <Check className="w-4 h-4 shrink-0 text-emerald-600 stroke-[3]" />
+                        <span>Sangat Terjangkau (Mulai Rp 8.250-an / bulan)</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       {/* 4. PRICELIST SECTION (TRANSPARAN & TERJANGKAU) */}
       <section id="harga" className="py-20 bg-gradient-to-b from-[#FAF7FB] to-white border-b border-[#EFE6F2]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
@@ -491,7 +672,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     : 'text-[#74607B] hover:text-[#2A1532]'
                 }`}
               >
-                6 Bulan <span className="text-[10px] bg-amber-400 text-[#2A1532] px-1.5 py-0.2 rounded-full font-extrabold ml-1">Hemat</span>
+                6 Bulan <span className="text-[10px] bg-amber-400 text-[#2A1532] px-1.5 py-0.2 rounded-full font-extrabold ml-1">Hemat s.d Rp 85rb</span>
               </button>
               <button
                 type="button"
@@ -502,7 +683,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     : 'text-[#74607B] hover:text-[#2A1532]'
                 }`}
               >
-                1 Tahun (365 Hari) <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-full font-extrabold ml-1">Paling Hemat</span>
+                1 Tahun (365 Hari) <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-full font-extrabold ml-1">Paling Hemat 57%</span>
               </button>
             </div>
           </div>
@@ -525,9 +706,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl sm:text-4xl font-black text-[#2A1532]">
-                      {pricingCycle === '1_bulan' && 'Rp 9.000'}
-                      {pricingCycle === '6_bulan' && 'Rp 45.000'}
-                      {pricingCycle === '1_tahun' && 'Rp 79.000'}
+                      {pricingCycle === '1_bulan' && 'Rp 19.000'}
+                      {pricingCycle === '6_bulan' && 'Rp 59.000'}
+                      {pricingCycle === '1_tahun' && 'Rp 99.000'}
                     </span>
                     <span className="text-xs text-[#74607B] font-semibold">
                       {pricingCycle === '1_bulan' && '/ bulan'}
@@ -536,7 +717,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-[#74607B] mt-1">
-                    Hanya sekitar Rp 300 per hari untuk kemudahan menyusun RPM
+                    {pricingCycle === '1_bulan' && 'Hanya sekitar Rp 630 per hari untuk kemudahan menyusun RPM'}
+                    {pricingCycle === '6_bulan' && 'Setara Rp 9.800/bulan (Lebih hemat Rp 55.000 dibanding bulanan)'}
+                    {pricingCycle === '1_tahun' && 'Setara Rp 8.250/bulan (Paling hemat 57% / hemat Rp 129.000)'}
                   </p>
                 </div>
 
@@ -573,7 +756,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 href={getWhatsAppOrderUrl(
                   'Standar',
                   pricingCycle === '1_bulan' ? '1 Bulan' : pricingCycle === '6_bulan' ? '6 Bulan' : '1 Tahun',
-                  pricingCycle === '1_bulan' ? 'Rp 9.000' : pricingCycle === '6_bulan' ? 'Rp 45.000' : 'Rp 79.000'
+                  pricingCycle === '1_bulan' ? 'Rp 19.000' : pricingCycle === '6_bulan' ? 'Rp 59.000' : 'Rp 99.000'
                 )}
                 target="_blank"
                 rel="noreferrer"
@@ -605,9 +788,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl sm:text-4xl font-black text-[#2A1532]">
-                      {pricingCycle === '1_bulan' && 'Rp 14.000'}
-                      {pricingCycle === '6_bulan' && 'Rp 69.000'}
-                      {pricingCycle === '1_tahun' && 'Rp 119.000'}
+                      {pricingCycle === '1_bulan' && 'Rp 29.000'}
+                      {pricingCycle === '6_bulan' && 'Rp 89.000'}
+                      {pricingCycle === '1_tahun' && 'Rp 149.000'}
                     </span>
                     <span className="text-xs text-[#74607B] font-semibold">
                       {pricingCycle === '1_bulan' && '/ bulan'}
@@ -616,7 +799,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-[#74607B] mt-1">
-                    Hanya sekitar Rp 400 per hari, lengkap dengan asisten revisi dan lampiran
+                    {pricingCycle === '1_bulan' && 'Hanya sekitar Rp 960 per hari untuk akses penuh seluruh fitur unggulan'}
+                    {pricingCycle === '6_bulan' && 'Setara Rp 14.800/bulan (Lebih hemat Rp 85.000 dibanding bulanan)'}
+                    {pricingCycle === '1_tahun' && 'Setara Rp 12.400/bulan (Paling hemat 57% / hemat Rp 199.000)'}
                   </p>
                 </div>
 
@@ -652,7 +837,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 href={getWhatsAppOrderUrl(
                   'PRO',
                   pricingCycle === '1_bulan' ? '1 Bulan' : pricingCycle === '6_bulan' ? '6 Bulan' : '1 Tahun',
-                  pricingCycle === '1_bulan' ? 'Rp 14.000' : pricingCycle === '6_bulan' ? 'Rp 69.000' : 'Rp 119.000'
+                  pricingCycle === '1_bulan' ? 'Rp 29.000' : pricingCycle === '6_bulan' ? 'Rp 89.000' : 'Rp 149.000'
                 )}
                 target="_blank"
                 rel="noreferrer"

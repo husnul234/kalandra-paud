@@ -41,14 +41,14 @@ export const SubscriptionModal: React.FC<Props> = ({
   // Pricing Matrix
   const prices = {
     standar: {
-      '1_bulan': { total: 'Rp 9.000', perMonth: 'Rp 9.000/bln', note: 'Ditagih per bulan' },
-      '6_bulan': { total: 'Rp 45.000', perMonth: 'Rp 7.500/bln', note: 'Hemat 17% (Rp 45.000 total)' },
-      '1_tahun': { total: 'Rp 79.000', perMonth: 'Rp 6.580/bln', note: 'Hemat 28% (Rp 79.000 total)' },
+      '1_bulan': { total: 'Rp 19.000', perMonth: 'Rp 19.000/bln', note: 'Ditagih per bulan' },
+      '6_bulan': { total: 'Rp 59.000', perMonth: 'Rp 9.800/bln', note: 'Lebih hemat Rp 55.000 (Rp 59.000 total)' },
+      '1_tahun': { total: 'Rp 99.000', perMonth: 'Rp 8.250/bln', note: 'Paling hemat 57% (Rp 99.000 total)' },
     },
     pro: {
-      '1_bulan': { total: 'Rp 14.000', perMonth: 'Rp 14.000/bln', note: 'Ditagih per bulan' },
-      '6_bulan': { total: 'Rp 70.000', perMonth: 'Rp 11.660/bln', note: 'Hemat 17% (Rp 70.000 total)' },
-      '1_tahun': { total: 'Rp 119.000', perMonth: 'Rp 9.910/bln', note: 'Hemat 29% (Rp 119.000 total)' },
+      '1_bulan': { total: 'Rp 29.000', perMonth: 'Rp 29.000/bln', note: 'Ditagih per bulan' },
+      '6_bulan': { total: 'Rp 89.000', perMonth: 'Rp 14.800/bln', note: 'Lebih hemat Rp 85.000 (Rp 89.000 total)' },
+      '1_tahun': { total: 'Rp 149.000', perMonth: 'Rp 12.400/bln', note: 'Paling hemat 57% (Rp 149.000 total)' },
     },
   };
 
@@ -71,7 +71,7 @@ export const SubscriptionModal: React.FC<Props> = ({
       `Mohon dibantu info pembayaran via QRIS / Transfer Bank. Terima kasih!`;
 
     const encoded = encodeURIComponent(message);
-    const waNumber = '62895325634500'; // Default nomor admin
+    const waNumber = '6288228511309'; // Default nomor admin resmi
     window.open(`https://wa.me/${waNumber}?text=${encoded}`, '_blank');
   };
 
@@ -163,7 +163,7 @@ export const SubscriptionModal: React.FC<Props> = ({
               >
                 <span>6 Bulan</span>
                 <span className="ml-1 text-[9px] bg-amber-400 text-slate-900 px-1 py-0.2 rounded-full font-extrabold">
-                  -17%
+                  Hemat s.d 49%
                 </span>
               </button>
               <button
@@ -177,7 +177,7 @@ export const SubscriptionModal: React.FC<Props> = ({
               >
                 <span>1 Tahun</span>
                 <span className="ml-1 text-[9px] bg-emerald-400 text-slate-900 px-1 py-0.2 rounded-full font-extrabold">
-                  Hemat 29%
+                  Hemat 57%
                 </span>
               </button>
             </div>
