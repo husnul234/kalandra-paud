@@ -9,6 +9,7 @@ export const GEMINI_MODEL_CHAIN = [
 ];
 
 export const SYSTEM_INSTRUCTION_RPM_PAUD = `Anda adalah Pakar Kurikulum Pendidikan Anak Usia Dini (PAUD) Kemendikdasmen RI yang menguasai penyusunan Perencanaan Pembelajaran Mendalam (Deep Learning) Fase Fondasi untuk TK Kelompok A (usia 4-5 tahun) dan Kelompok B (usia 5-6 tahun).
+Standar dokumen yang Anda hasilkan harus setara dengan dokumen yang telah LULUS VERIFIKASI PENGAWAS, mencakup: IKTP bergradasi Taksonomi SOLO, Rubrik Asesmen 4 Skala (BB/MB/BSH/BSB), Catatan Keselamatan Anak, dan 4 Lampiran Instrumen Observasi.
 
 TUGAS UTAMA:
 Menyusun dokumen "PERENCANAAN PEMBELAJARAN MENDALAM" 1 Minggu (6 Hari) dalam format JSON terstruktur yang mematuhi regulasi resmi berikut:
@@ -34,11 +35,54 @@ ATURAN ANTI-HALUSINASI & PEDAGOGI PAUD (WAJIB DIPATUHI):
      * Kegiatan 2: Permainan fisik-motorik kasar/halus atau sosial-emosional interaktif (contoh: cermin ajaib, estafet senyum, lompat rintangan tali). Wajib mencantumkan Alat dan bahan serta Cara bermain.
      * Kegiatan 3: Permainan lingkaran (circle game), bahasa & komunikasi, atau pramembaca/pranumerasi kontekstual yang menyenangkan. DILARANG KERAS memberikan tugas dril Lembar Kerja Anak (LKA/LKS) calistung mekanis!
    - Setiap judul kegiatan WAJIB diikuti tanda kurung berisi minimal 1 Prinsip Pembelajaran (berkesadaran / bermakna / menggembirakan) dan 1 Dimensi Profil Lulusan yang relevan.
+   - Jika kegiatan melibatkan gunting, cat, cairan, panas, atau ketinggian: tambahkan catatan_keselamatan sebagai array string dalam objek kegiatan itu.
 6. Kesesuaian Tahap Perkembangan Usia (DAP):
    - Jika Jenjang/Kelas adalah A (4-5 Tahun): Koordinasi motorik halus masih berkembang. Tuliskan eksplisit jika guru telah menyiapkan garis pola dasar pada Pijakan Lingkungan Main, anak menjiplak sederhana, menggunting garis lurus, mengecat, merakit loose parts, dan bermain.
    - Jika Jenjang/Kelas adalah B (5-6 Tahun): Anak dilibatkan sejak membuat pola sederhana, menggunting dengan gunting anak secara mandiri, mengukur dengan satuan tidak baku, dan merakit konstruksi yang lebih menantang.
-7. Return Format:
-   Kembalikan HANYA teks JSON murni (tanpa pembuka markdown \`\`\`json dan tanpa penutup \`\`\`) yang valid dan dapat di-JSON.parse().`;
+7. IKTP Bergradasi Taksonomi SOLO (WAJIB untuk setiap Tujuan Pembelajaran):
+   - Untuk setiap tujuan_pembelajaran, wajib sertakan 1 entri di array iktp_bergradasi yang berisi 4 level deskriptor:
+     * BB (Belum Berkembang / Unistruktural): Anak menunjukkan 1 elemen saja, masih membutuhkan banyak pendampingan.
+     * MB (Mulai Berkembang / Multistruktural): Anak menunjukkan beberapa elemen secara terpisah, dengan panduan sesekali.
+     * BSH (Berkembang Sesuai Harapan / Relasional): Anak menghubungkan elemen secara mandiri, menunjukkan pemahaman utuh.
+     * BSB (Berkembang Sangat Baik / Extended Abstract): Anak mampu mentransfer, mencipta, dan menggeneralisasi ke situasi baru.
+   - Tulis setiap deskriptor sebagai kalimat behavioral yang spesifik dan dapat diobservasi (bukan kata sifat abstrak).
+8. Rubrik Asesmen 4 Skala (WAJIB, minimal 3 kriteria per dokumen):
+   - Setiap rubrik_asesmen berisi: kriteria (singkat, max 8 kata), dan 4 deskriptor BB, MB, BSH, BSB yang dapat diamati.
+   - Tambahkan 1-2 kriteria untuk keterampilan proses (contoh: kerjasama, kreativitas, komunikasi lisan).
+9. Catatan Keselamatan Anak (WAJIB jika ada kegiatan fisik, bahan tajam, atau cairan):
+   - Di field catatan_keselamatan (root level), tulis array string berisi prosedur mitigasi risiko umum (contoh: 'Gunting plastik berujung bulat', 'Guru mendampingi penuh saat pewarna cair').
+   - Di setiap kegiatan yang berisiko, tambahkan juga field catatan_keselamatan lokal.
+10. Lampiran Instrumen Observasi (4 Instrumen Siap Cetak di field lampiran_instrumen):
+    - catatan_anekdot: Panduan format catatan anekdot + contoh isian lengkap.
+    - ceklis_iktp: Panduan ceklis IKTP per anak (kolom header = Tujuan 1..N, baris = nama anak, isi = BB/MB/BSH/BSB).
+    - hasil_karya: Panduan dokumentasi hasil karya + tips penyimpanan portofolio.
+    - foto_berseri: Panduan foto berseri/portofolio visual (jenis foto, teknik, pengarsipan).
+11. Return Format:
+    Kembalikan HANYA teks JSON murni (tanpa pembuka backtick json dan tanpa penutup backtick) yang valid dan dapat di-JSON.parse().`;
+
+export interface IktpBergradasiItem {
+  tujuan_ke: number;
+  tujuan_ringkas: string;
+  solo_bb: string; // Belum Berkembang - Unistruktural
+  solo_mb: string; // Mulai Berkembang - Multistruktural
+  solo_bsh: string; // Berkembang Sesuai Harapan - Relasional
+  solo_bsb: string; // Berkembang Sangat Baik - Extended Abstract
+}
+
+export interface RubrikAsesmenItem {
+  kriteria: string;
+  bb: string;
+  mb: string;
+  bsh: string;
+  bsb: string;
+}
+
+export interface LampiranInstrumen {
+  catatan_anekdot?: string;
+  ceklis_iktp?: string;
+  hasil_karya?: string;
+  foto_berseri?: string;
+}
 
 export interface PromptInputParams {
   guru: string;
@@ -82,7 +126,7 @@ export function assembleDynamicUserPrompt(p: PromptInputParams): string {
     ? `Bahan Loose Parts Utama: ${p.loose_parts_selected.join(', ')}`
     : 'Bahan Loose Parts: kardus, piring kertas, stik es krim, tutup botol, daun kering.';
 
-  return `Susunlah dokumen PERENCANAAN PEMBELAJARAN MENDALAM 1 Minggu secara lengkap dan siap cetak berdasarkan parameter berikut:
+  return `Susunlah dokumen PERENCANAAN PEMBELAJARAN MENDALAM 1 Minggu secara lengkap dan SETARA STANDAR PENGAWAS berdasarkan parameter berikut:
 
 1. IDENTITAS DOKUMEN:
 - Nama Guru: ${p.guru || 'Guru PAUD'}
@@ -110,18 +154,18 @@ ${indListText || '• Menunjukkan rasa percaya diri, berkolaborasi, dan menghasi
 ${loosePartsText}
 ${p.catatan_guru ? `Catatan Konteks Sekolah: ${p.catatan_guru}` : ''}
 
-Wajib kembalikan format JSON sesuai struktur skema:
+Wajib kembalikan format JSON sesuai struktur skema lengkap berikut (SEMUA field wajib diisi, hindari null atau string kosong):
 {
-  "informasi_umum": { ... },
+  "informasi_umum": { "guru": "...", "asal_sekolah": "...", "fase": "...", "jenjang_kelas": "...", "semester": "...", "minggu_ke": "...", "bulan": "...", "alokasi_waktu": "...", "model_pembelajaran": "...", "jumlah_anak": "...", "topik_subtopik": "..." },
   "identifikasi": {
     "peserta_didik": "...",
     "materi_pelajaran": "...",
     "dimensi_profil_lulusan_terpilih": ${JSON.stringify(p.dpl_selected)}
   },
   "desain_pembelajaran": {
-    "capaian_pembelajaran": [ ... salin verbatim ... ],
+    "capaian_pembelajaran": [ "... salin verbatim ..." ],
     "lintas_disiplin_ilmu": "...",
-    "tujuan_pembelajaran": [ ... minimal 3 tujuan ... ],
+    "tujuan_pembelajaran": [ "Tujuan 1 (min 3 tujuan, tiap tujuan 1 string)", "Tujuan 2", "Tujuan 3" ],
     "topik_pembelajaran": "${p.topik_subtopik}",
     "praktik_pedagogis": "...",
     "kemitraan_pembelajaran": { "lingkungan_sekolah": "...", "masyarakat": "...", "lingkungan_luar_sekolah": "..." },
@@ -129,15 +173,15 @@ Wajib kembalikan format JSON sesuai struktur skema:
     "pemanfaatan_digital": { "perencanaan": "...", "pelaksanaan": "...", "asesmen": "...", "tautan_media": "..." }
   },
   "pengalaman_belajar": {
-    "awal": { "judul_tahap": "AWAL (BERKESADARAN, BERMAKNA, MENGGEMBIRAKAN)", "pengantar": "...", "poin_kegiatan": [ ... 5-6 poin ... ] },
+    "awal": { "judul_tahap": "AWAL (BERKESADARAN, BERMAKNA, MENGGEMBIRAKAN)", "pengantar": "...", "poin_kegiatan": [ "...", "...", "...", "...", "..." ] },
     "inti": {
       "pengantar": "...",
       "blok_tahap": [
         {
           "header_tahap": "MEMAHAMI (BERKESADARAN, BERMAKNA)",
           "hari": [
-            { "hari_ke": 1, "kegiatan_list": [ { "nomor": 1, "nama_kegiatan": "...", "label": "...", "alat_dan_bahan": "...", "judul_langkah": "Cara Membuat", "langkah": [...] }, { "nomor": 2, ... }, { "nomor": 3, ... } ] },
-            { "hari_ke": 2, "kegiatan_list": [ ... 3 kegiatan ... ] }
+            { "hari_ke": 1, "kegiatan_list": [ { "nomor": 1, "nama_kegiatan": "...", "label": "...", "alat_dan_bahan": "...", "judul_langkah": "Cara Membuat", "langkah": ["..."], "catatan_keselamatan": ["..."] }, { "nomor": 2, "nama_kegiatan": "...", "label": "...", "alat_dan_bahan": "...", "judul_langkah": "Cara Bermain", "langkah": ["..."] }, { "nomor": 3, "nama_kegiatan": "...", "label": "...", "alat_dan_bahan": "...", "judul_langkah": "Cara Bermain", "langkah": ["..."] } ] },
+            { "hari_ke": 2, "kegiatan_list": [ { "nomor": 1, ... }, { "nomor": 2, ... }, { "nomor": 3, ... } ] }
           ]
         },
         {
@@ -156,14 +200,44 @@ Wajib kembalikan format JSON sesuai struktur skema:
         }
       ]
     },
-    "penutup": { "judul_tahap": "PENUTUP (BERKESADARAN, MENGGEMBIRAKAN)", "pengantar": "...", "poin_kegiatan": [ ... 5-6 poin ... ] }
+    "penutup": { "judul_tahap": "PENUTUP (BERKESADARAN, MENGGEMBIRAKAN)", "pengantar": "...", "poin_kegiatan": [ "...", "...", "...", "...", "..." ] }
   },
   "asesmen_pembelajaran": {
-    "awal": [ ... ],
-    "proses": [ ... ],
-    "akhir": [ ... ]
+    "awal": [ "...", "..." ],
+    "proses": [ "...", "..." ],
+    "akhir": [ "...", "..." ]
+  },
+  "iktp_bergradasi": [
+    {
+      "tujuan_ke": 1,
+      "tujuan_ringkas": "Anak dapat ... (max 10 kata)",
+      "solo_bb": "BB: Anak ... (kalimat behavioral spesifik yang dapat diobservasi, menggunakan kata kerja operasional)",
+      "solo_mb": "MB: Anak ... (kalimat behavioral spesifik)",
+      "solo_bsh": "BSH: Anak ... (kalimat behavioral spesifik)",
+      "solo_bsb": "BSB: Anak ... (kalimat behavioral spesifik, transfer ke situasi baru)"
+    }
+  ],
+  "rubrik_asesmen": [
+    {
+      "kriteria": "Nama Kriteria Singkat (max 8 kata)",
+      "bb": "Deskriptor BB yang dapat diobservasi langsung",
+      "mb": "Deskriptor MB yang dapat diobservasi langsung",
+      "bsh": "Deskriptor BSH yang dapat diobservasi langsung",
+      "bsb": "Deskriptor BSB yang dapat diobservasi langsung"
+    }
+  ],
+  "catatan_keselamatan": [
+    "Prosedur mitigasi risiko 1...",
+    "Prosedur mitigasi risiko 2..."
+  ],
+  "lampiran_instrumen": {
+    "catatan_anekdot": "Panduan + contoh isian catatan anekdot untuk topik ${p.topik_subtopik} ...",
+    "ceklis_iktp": "Panduan ceklis IKTP per anak untuk topik ${p.topik_subtopik} ...",
+    "hasil_karya": "Panduan dokumentasi hasil karya untuk topik ${p.topik_subtopik} ...",
+    "foto_berseri": "Panduan foto berseri/portofolio visual untuk topik ${p.topik_subtopik} ..."
   }
-}`;
+}
+PENTING: Semua deskriptor di iktp_bergradasi dan rubrik_asesmen harus menggunakan kata kerja operasional (menunjukkan, menyebutkan, menghubungkan, merancang, dll.) yang dapat diamati langsung oleh guru tanpa tes tulis. Jumlah entri iktp_bergradasi harus sama dengan jumlah tujuan_pembelajaran.`;
 }
 
 export function stripMarkdownJson(text: string): string {
@@ -217,7 +291,7 @@ export async function executeDirectGeminiRequest(
               },
               {
                 role: 'model',
-                parts: [{ text: 'Siap, saya mengerti instruksi penyusunan RPM PAUD 2025/2026.' }],
+                parts: [{ text: 'Siap, saya mengerti instruksi penyusunan RPM PAUD 2025/2026 standar pengawas, termasuk IKTP SOLO, Rubrik 4 Skala (BB/MB/BSH/BSB), Catatan Keselamatan, dan 4 Lampiran Instrumen Observasi.' }],
               },
               {
                 role: 'user',

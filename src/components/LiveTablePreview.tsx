@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { RpmPaudDocData } from '../lib/docx-engine/docx-paud-builder';
 import { DATA_8_DPL } from '../data/cp_paud_data';
 import { 
@@ -657,7 +657,136 @@ export const LiveTablePreview: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* =========================================================================
+          
+          {/* Tabel 5A: IKTP Bergradasi Taksonomi SOLO */}
+          {(data.iktp_bergradasi && data.iktp_bergradasi.length > 0) && (
+            <div className="mb-6">
+              <div className="bg-[#1E3A8A] text-white px-3 py-2 font-bold text-xs tracking-wider uppercase border border-[#1E3A8A] flex justify-between items-center">
+                <span>5A. IKTP BERGRADASI — TAKSONOMI SOLO</span>
+                <span className="text-[10px] font-normal text-blue-100">Standar Verifikasi Pengawas</span>
+              </div>
+              <div className="border-x border-b border-slate-400 text-[11px] overflow-x-auto">
+                <table className="w-full border-collapse" style={{minWidth: '640px'}}>
+                  <thead>
+                    <tr className="bg-[#F8FAFC]">
+                      <th className="p-2 border-b border-r border-slate-400 text-[#1E3A8A] font-bold text-left w-[22%]">Tujuan</th>
+                      <th className="p-2 border-b border-r border-slate-400 text-[#B91C1C] font-bold text-center bg-[#FEF2F2]">BB</th>
+                      <th className="p-2 border-b border-r border-slate-400 text-[#D97706] font-bold text-center bg-[#FFFBEB]">MB</th>
+                      <th className="p-2 border-b border-r border-slate-400 text-[#15803D] font-bold text-center bg-[#F0FDF4]">BSH</th>
+                      <th className="p-2 border-b border-slate-400 text-[#1D4ED8] font-bold text-center bg-[#EFF6FF]">BSB</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-300">
+                    {data.iktp_bergradasi.map((item, i) => (
+                      <tr key={i}>
+                        <td className="p-2 border-r border-slate-300 font-bold text-[#1E3A8A] align-top bg-[#F8FAFC]">
+                          TP-{item.tujuan_ke}
+                          <span className="block font-normal text-slate-600 mt-0.5 text-[10px]">{item.tujuan_ringkas}</span>
+                        </td>
+                        <td className="p-2 border-r border-slate-300 text-[#7F1D1D] align-top bg-[#FEF2F2] text-[10px] leading-relaxed">{item.solo_bb}</td>
+                        <td className="p-2 border-r border-slate-300 text-[#92400E] align-top bg-[#FFFBEB] text-[10px] leading-relaxed">{item.solo_mb}</td>
+                        <td className="p-2 border-r border-slate-300 text-[#14532D] align-top bg-[#F0FDF4] text-[10px] leading-relaxed">{item.solo_bsh}</td>
+                        <td className="p-2 text-[#1E3A8A] align-top bg-[#EFF6FF] text-[10px] leading-relaxed">{item.solo_bsb}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Tabel 5B: Rubrik Asesmen 4 Skala */}
+          {(data.rubrik_asesmen && data.rubrik_asesmen.length > 0) && (
+            <div className="mb-6">
+              <div className="bg-[#1E3A8A] text-white px-3 py-2 font-bold text-xs tracking-wider uppercase border border-[#1E3A8A] flex justify-between items-center">
+                <span>5B. RUBRIK ASESMEN 4 SKALA (BB / MB / BSH / BSB)</span>
+                <span className="text-[10px] font-normal text-blue-100">Siap Cetak</span>
+              </div>
+              <div className="border-x border-b border-slate-400 text-[11px] overflow-x-auto">
+                <table className="w-full border-collapse" style={{minWidth: '640px'}}>
+                  <thead>
+                    <tr>
+                      <th className="p-2 border-b border-r border-slate-400 text-[#1E3A8A] font-bold text-left bg-[#F8FAFC] w-[22%]">Kriteria</th>
+                      <th className="p-2 border-b border-r border-slate-400 text-[#B91C1C] font-bold text-center bg-[#FEF2F2]">BB</th>
+                      <th className="p-2 border-b border-r border-slate-400 text-[#D97706] font-bold text-center bg-[#FFFBEB]">MB</th>
+                      <th className="p-2 border-b border-r border-slate-400 text-[#15803D] font-bold text-center bg-[#F0FDF4]">BSH</th>
+                      <th className="p-2 border-b border-slate-400 text-[#1D4ED8] font-bold text-center bg-[#EFF6FF]">BSB</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-300">
+                    {data.rubrik_asesmen.map((row, i) => (
+                      <tr key={i}>
+                        <td className="p-2 border-r border-slate-300 font-bold text-[#1E3A8A] align-top bg-[#F8FAFC]">{row.kriteria}</td>
+                        <td className="p-2 border-r border-slate-300 text-[#7F1D1D] align-top bg-[#FEF2F2] text-[10px] leading-relaxed">{row.bb}</td>
+                        <td className="p-2 border-r border-slate-300 text-[#92400E] align-top bg-[#FFFBEB] text-[10px] leading-relaxed">{row.mb}</td>
+                        <td className="p-2 border-r border-slate-300 text-[#14532D] align-top bg-[#F0FDF4] text-[10px] leading-relaxed">{row.bsh}</td>
+                        <td className="p-2 text-[#1E3A8A] align-top bg-[#EFF6FF] text-[10px] leading-relaxed">{row.bsb}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Tabel 6: Catatan Keselamatan Anak */}
+          {(data.catatan_keselamatan && data.catatan_keselamatan.length > 0) && (
+            <div className="mb-6">
+              <div className="bg-[#B91C1C] text-white px-3 py-2 font-bold text-xs tracking-wider uppercase border border-[#B91C1C] flex justify-between items-center">
+                <span>6. CATATAN KESELAMATAN ANAK</span>
+                <span className="text-[10px] font-normal text-red-200">Wajib Dibaca Sebelum Kegiatan</span>
+              </div>
+              <div className="border-x border-b border-slate-400 divide-y divide-slate-300 text-xs bg-[#FEF2F2]">
+                {data.catatan_keselamatan.map((note, i) => (
+                  <div key={i} className="flex items-start gap-2 p-2.5">
+                    <span className="text-[#B91C1C] font-bold shrink-0">&#9888;</span>
+                    <span className="text-[#7F1D1D]">{cleanListText(note)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Lampiran Instrumen Observasi */}
+          {data.lampiran_instrumen && (
+            <div className="mb-8">
+              <div className="bg-[#1E3A8A] text-white px-3 py-2 font-bold text-xs tracking-wider uppercase border border-[#1E3A8A] flex justify-between items-center">
+                <span>LAMPIRAN: 4 INSTRUMEN OBSERVASI SIAP CETAK</span>
+                <span className="text-[10px] font-normal text-blue-100">Di DOCX: Halaman Terpisah</span>
+              </div>
+              <div className="border-x border-b border-slate-400 text-xs divide-y divide-slate-300">
+                {([
+                  { key: 'catatan_anekdot' as const, label: 'L-1 Catatan Anekdot', color: '#D97706', bg: '#FFFBEB' },
+                  { key: 'ceklis_iktp' as const, label: 'L-2 Ceklis IKTP per Anak', color: '#15803D', bg: '#F0FDF4' },
+                  { key: 'hasil_karya' as const, label: 'L-3 Dokumentasi Hasil Karya', color: '#7C3AED', bg: '#F5F3FF' },
+                  { key: 'foto_berseri' as const, label: 'L-4 Foto Berseri / Portofolio', color: '#0369A1', bg: '#F0F9FF' },
+                ]).map((item) => {
+                  const content = data.lampiran_instrumen?.[item.key];
+                  if (!content) return null;
+                  const lines = content.split('\n').filter((l) => l.trim());
+                  return (
+                    <div key={item.key} className="grid grid-cols-1 md:grid-cols-4">
+                      <div className="p-3 md:col-span-1 border-b md:border-b-0 md:border-r border-slate-400 font-bold text-xs" style={{ color: item.color, backgroundColor: item.bg }}>
+                        {item.label}
+                      </div>
+                      <div className="p-3 md:col-span-3 text-slate-700 leading-relaxed space-y-1">
+                        {lines.slice(0, 4).map((line, li) => (
+                          <div key={li} className="flex items-start gap-1.5">
+                            <span className="text-slate-400 shrink-0 font-bold">•</span>
+                            <span className="text-[11px]">{cleanListText(line)}</span>
+                          </div>
+                        ))}
+                        {lines.length > 4 && (
+                          <p className="text-slate-400 italic text-[10px] mt-1">... (selengkapnya di dokumen Word)</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+{/* =========================================================================
               LEMBAR TANDA TANGAN RESMI (Word DOCX Replica)
           ========================================================================= */}
           <div className="pt-4 border-t border-slate-300 text-xs text-slate-900 font-['Calibri',Arial,sans-serif]">

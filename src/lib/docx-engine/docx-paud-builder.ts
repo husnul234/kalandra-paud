@@ -85,6 +85,7 @@ export interface RpmPaudDocData {
             alat_dan_bahan?: string;
             judul_langkah?: string;
             langkah?: string[];
+            catatan_keselamatan?: string[];
           }>;
         }>;
       }>;
@@ -99,6 +100,29 @@ export interface RpmPaudDocData {
     awal?: string[];
     proses?: string[];
     akhir?: string[];
+  };
+  // === Supervisor-grade fields (setara standar pengawas) ===
+  iktp_bergradasi?: Array<{
+    tujuan_ke: number;
+    tujuan_ringkas: string;
+    solo_bb: string;
+    solo_mb: string;
+    solo_bsh: string;
+    solo_bsb: string;
+  }>;
+  rubrik_asesmen?: Array<{
+    kriteria: string;
+    bb: string;
+    mb: string;
+    bsh: string;
+    bsb: string;
+  }>;
+  catatan_keselamatan?: string[];
+  lampiran_instrumen?: {
+    catatan_anekdot?: string;
+    ceklis_iktp?: string;
+    hasil_karya?: string;
+    foto_berseri?: string;
   };
 }
 
@@ -720,6 +744,335 @@ function buildTable4Asesmen(data: RpmPaudDocData): Table {
 }
 
 /**
+ * Build Table 5: IKTP BERGRADASI (Taksonomi SOLO) + RUBRIK ASESMEN 4 SKALA
+ * Ini adalah tabel standar pengawas yang membuktikan kualitas dokumen.
+ */
+function buildTable5IktpRubrik(data: RpmPaudDocData): Table[] {
+  const tables: Table[] = [];
+  const iktp = data.iktp_bergradasi || [];
+  const rubrik = data.rubrik_asesmen || [];
+
+  // === TABEL 5A: IKTP BERGRADASI TAKSONOMI SOLO ===
+  if (iktp.length > 0) {
+    const soloRows: TableRow[] = [
+      // Header tabel
+      new TableRow({
+        tableHeader: true,
+        cantSplit: true,
+        children: [
+          createTableCell(
+            [cellPara('5A. INDIKATOR KETERCAPAIAN TUJUAN PEMBELAJARAN (IKTP) BERGRADASI — TAKSONOMI SOLO', { bold: true, size: 22, color: 'FFFFFF' })],
+            { bgColor: DOCX_COLORS.tableHeaderBg, colSpan: 5 }
+          ),
+        ],
+      }),
+      // Sub-header baris
+      new TableRow({
+        tableHeader: true,
+        cantSplit: true,
+        children: [
+          createTableCell(
+            [cellPara('Tujuan Pembelajaran', { bold: true, color: DOCX_COLORS.primaryNavy, size: 20 })],
+            { widthPercent: 22, bgColor: DOCX_COLORS.subHeaderBg }
+          ),
+          createTableCell(
+            [
+              cellPara('BB', { bold: true, color: 'B91C1C', size: 20, alignment: AlignmentType.CENTER }),
+              cellPara('Belum Berkembang', { italics: true, size: 17, color: DOCX_COLORS.mutedText, alignment: AlignmentType.CENTER }),
+              cellPara('(Unistruktural)', { italics: true, size: 16, color: DOCX_COLORS.mutedText, alignment: AlignmentType.CENTER }),
+            ],
+            { widthPercent: 19, bgColor: 'FEF2F2' }
+          ),
+          createTableCell(
+            [
+              cellPara('MB', { bold: true, color: 'D97706', size: 20, alignment: AlignmentType.CENTER }),
+              cellPara('Mulai Berkembang', { italics: true, size: 17, color: DOCX_COLORS.mutedText, alignment: AlignmentType.CENTER }),
+              cellPara('(Multistruktural)', { italics: true, size: 16, color: DOCX_COLORS.mutedText, alignment: AlignmentType.CENTER }),
+            ],
+            { widthPercent: 19, bgColor: 'FFFBEB' }
+          ),
+          createTableCell(
+            [
+              cellPara('BSH', { bold: true, color: '15803D', size: 20, alignment: AlignmentType.CENTER }),
+              cellPara('Berkembang Sesuai Harapan', { italics: true, size: 17, color: DOCX_COLORS.mutedText, alignment: AlignmentType.CENTER }),
+              cellPara('(Relasional)', { italics: true, size: 16, color: DOCX_COLORS.mutedText, alignment: AlignmentType.CENTER }),
+            ],
+            { widthPercent: 20, bgColor: 'F0FDF4' }
+          ),
+          createTableCell(
+            [
+              cellPara('BSB', { bold: true, color: '1D4ED8', size: 20, alignment: AlignmentType.CENTER }),
+              cellPara('Berkembang Sangat Baik', { italics: true, size: 17, color: DOCX_COLORS.mutedText, alignment: AlignmentType.CENTER }),
+              cellPara('(Extended Abstract)', { italics: true, size: 16, color: DOCX_COLORS.mutedText, alignment: AlignmentType.CENTER }),
+            ],
+            { widthPercent: 20, bgColor: 'EFF6FF' }
+          ),
+        ],
+      }),
+    ];
+
+    // Data rows
+    iktp.forEach((item) => {
+      soloRows.push(
+        new TableRow({
+          cantSplit: true,
+          children: [
+            createTableCell(
+              [
+                cellPara(`TP-${item.tujuan_ke}`, { bold: true, size: 19, color: DOCX_COLORS.primaryNavy }),
+                cellPara(item.tujuan_ringkas || '-', { size: 18, color: DOCX_COLORS.bodyText }),
+              ],
+              { widthPercent: 22, bgColor: DOCX_COLORS.subHeaderBg }
+            ),
+            createTableCell([cellPara(item.solo_bb || '-', { size: 18, color: '7F1D1D' })], { widthPercent: 19 }),
+            createTableCell([cellPara(item.solo_mb || '-', { size: 18, color: '92400E' })], { widthPercent: 19 }),
+            createTableCell([cellPara(item.solo_bsh || '-', { size: 18, color: '14532D' })], { widthPercent: 20 }),
+            createTableCell([cellPara(item.solo_bsb || '-', { size: 18, color: '1E3A8A' })], { widthPercent: 20 }),
+          ],
+        })
+      );
+    });
+
+    tables.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: DOCX_TABLE_BORDERS,
+        rows: soloRows,
+      })
+    );
+  }
+
+  // === TABEL 5B: RUBRIK ASESMEN 4 SKALA ===
+  if (rubrik.length > 0) {
+    const rubrikRows: TableRow[] = [
+      new TableRow({
+        tableHeader: true,
+        cantSplit: true,
+        children: [
+          createTableCell(
+            [cellPara('5B. RUBRIK ASESMEN 4 SKALA (BB / MB / BSH / BSB)', { bold: true, size: 22, color: 'FFFFFF' })],
+            { bgColor: DOCX_COLORS.tableHeaderBg, colSpan: 5 }
+          ),
+        ],
+      }),
+      new TableRow({
+        tableHeader: true,
+        cantSplit: true,
+        children: [
+          createTableCell([cellPara('Kriteria Penilaian', { bold: true, color: DOCX_COLORS.primaryNavy, size: 20 })], { widthPercent: 22, bgColor: DOCX_COLORS.subHeaderBg }),
+          createTableCell([cellPara('BB ★☆☆☆', { bold: true, color: 'B91C1C', size: 20, alignment: AlignmentType.CENTER })], { widthPercent: 19, bgColor: 'FEF2F2' }),
+          createTableCell([cellPara('MB ★★☆☆', { bold: true, color: 'D97706', size: 20, alignment: AlignmentType.CENTER })], { widthPercent: 19, bgColor: 'FFFBEB' }),
+          createTableCell([cellPara('BSH ★★★☆', { bold: true, color: '15803D', size: 20, alignment: AlignmentType.CENTER })], { widthPercent: 20, bgColor: 'F0FDF4' }),
+          createTableCell([cellPara('BSB ★★★★', { bold: true, color: '1D4ED8', size: 20, alignment: AlignmentType.CENTER })], { widthPercent: 20, bgColor: 'EFF6FF' }),
+        ],
+      }),
+    ];
+
+    rubrik.forEach((row) => {
+      rubrikRows.push(
+        new TableRow({
+          cantSplit: true,
+          children: [
+            createTableCell([cellPara(row.kriteria || '-', { bold: true, size: 19, color: DOCX_COLORS.primaryNavy })], { widthPercent: 22, bgColor: DOCX_COLORS.subHeaderBg }),
+            createTableCell([cellPara(row.bb || '-', { size: 18, color: '7F1D1D' })], { widthPercent: 19 }),
+            createTableCell([cellPara(row.mb || '-', { size: 18, color: '92400E' })], { widthPercent: 19 }),
+            createTableCell([cellPara(row.bsh || '-', { size: 18, color: '14532D' })], { widthPercent: 20 }),
+            createTableCell([cellPara(row.bsb || '-', { size: 18, color: '1E3A8A' })], { widthPercent: 20 }),
+          ],
+        })
+      );
+    });
+
+    tables.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: DOCX_TABLE_BORDERS,
+        rows: rubrikRows,
+      })
+    );
+  }
+
+  return tables;
+}
+
+/**
+ * Build Table 6: CATATAN KESELAMATAN ANAK
+ */
+function buildTable6CatatanKeselamatan(data: RpmPaudDocData): Table | null {
+  const notes = data.catatan_keselamatan || [];
+
+  // Also collect inline safety notes from all activities
+  const inlineNotes: string[] = [];
+  (data.pengalaman_belajar?.inti?.blok_tahap || []).forEach((blok) => {
+    (blok.hari || []).forEach((h) => {
+      (h.kegiatan_list || []).forEach((k) => {
+        if (k.catatan_keselamatan && k.catatan_keselamatan.length > 0) {
+          k.catatan_keselamatan.forEach((note) => {
+            const labeled = `[H${h.hari_ke}/K${k.nomor}] ${note}`;
+            if (!inlineNotes.includes(labeled)) inlineNotes.push(labeled);
+          });
+        }
+      });
+    });
+  });
+
+  const allNotes = [...notes, ...inlineNotes];
+  if (allNotes.length === 0) return null;
+
+  const noteParas = allNotes.map((n) => cellBulletPara(n, { size: 20, spaceAfter: 50 }));
+
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: DOCX_TABLE_BORDERS,
+    rows: [
+      new TableRow({
+        tableHeader: true,
+        cantSplit: true,
+        children: [
+          createTableCell(
+            [cellPara('6. CATATAN KESELAMATAN ANAK (Child Safety Notes)', { bold: true, size: 22, color: 'FFFFFF' })],
+            { bgColor: 'B91C1C', colSpan: 2 }
+          ),
+        ],
+      }),
+      new TableRow({
+        cantSplit: true,
+        children: [
+          createTableCell(
+            [
+              cellPara('Prosedur Mitigasi Risiko', { bold: true, color: 'B91C1C' }),
+              cellPara('(Wajib dibaca guru sebelum kegiatan)', { italics: true, size: 18, color: DOCX_COLORS.mutedText }),
+            ],
+            { widthPercent: 28, bgColor: 'FEF2F2' }
+          ),
+          createTableCell(noteParas, { widthPercent: 72 }),
+        ],
+      }),
+    ],
+  });
+}
+
+/**
+ * Build Lampiran Section (New Page): 4 Instrumen Observasi Siap Cetak
+ */
+function buildLampiranInstrumen(data: RpmPaudDocData, info: RpmPaudDocData['informasi_umum']): Paragraph[] {
+  const lamp = data.lampiran_instrumen;
+  if (!lamp) return [];
+
+  const topik = info?.topik_subtopik || 'Topik Pembelajaran';
+  const guru = info?.guru || 'Guru';
+  const sekolah = info?.asal_sekolah || 'Satuan PAUD';
+  const bulan = info?.bulan || 'Bulan';
+
+  const paragraphs: Paragraph[] = [
+    // Page break before lampiran
+    new Paragraph({
+      pageBreakBefore: true,
+      spacing: { after: 120 },
+      children: [
+        new TextRun({
+          text: 'LAMPIRAN INSTRUMEN OBSERVASI',
+          bold: true,
+          size: 28,
+          color: DOCX_COLORS.primaryNavy,
+          font: DOCX_FONTS.primary,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+    }),
+    new Paragraph({
+      spacing: { after: 60 },
+      alignment: AlignmentType.CENTER,
+      children: [
+        new TextRun({
+          text: `Topik: ${topik}  |  Guru: ${guru}  |  Satuan: ${sekolah}  |  Bulan: ${bulan}`,
+          size: 20,
+          italics: true,
+          color: DOCX_COLORS.mutedText,
+          font: DOCX_FONTS.primary,
+        }),
+      ],
+    }),
+    new Paragraph({
+      spacing: { after: 200 },
+      alignment: AlignmentType.CENTER,
+      children: [
+        new TextRun({
+          text: '4 Instrumen berikut dapat dicetak langsung untuk keperluan observasi harian.',
+          size: 19,
+          color: DOCX_COLORS.bodyText,
+          font: DOCX_FONTS.primary,
+        }),
+      ],
+    }),
+  ];
+
+  // Helper to create each lampiran block
+  const makeLampiranBlock = (nomor: string, judul: string, content: string, accentColor: string): Paragraph[] => {
+    const contentLines = content.split('\n').filter((l) => l.trim());
+    const result: Paragraph[] = [
+      new Paragraph({
+        spacing: { before: 120, after: 60 },
+        children: [
+          new TextRun({
+            text: `${nomor}. ${judul.toUpperCase()}`,
+            bold: true,
+            size: 23,
+            color: accentColor,
+            font: DOCX_FONTS.primary,
+          }),
+        ],
+      }),
+    ];
+    contentLines.forEach((line) => {
+      const cleanLine = cleanListText(line);
+      if (cleanLine) {
+        result.push(
+          new Paragraph({
+            bullet: { level: 0 },
+            indent: { left: 280, hanging: 280 },
+            spacing: { after: 50, line: 260 },
+            children: [
+              new TextRun({
+                text: cleanLine,
+                size: 20,
+                color: DOCX_COLORS.bodyText,
+                font: DOCX_FONTS.primary,
+              }),
+            ],
+          })
+        );
+      }
+    });
+    result.push(new Paragraph({ spacing: { after: 180 } }));
+    return result;
+  };
+
+  if (lamp.catatan_anekdot) {
+    paragraphs.push(
+      ...makeLampiranBlock('L-1', 'Catatan Anekdot', lamp.catatan_anekdot, 'D97706')
+    );
+  }
+  if (lamp.ceklis_iktp) {
+    paragraphs.push(
+      ...makeLampiranBlock('L-2', 'Ceklis IKTP per Anak', lamp.ceklis_iktp, '15803D')
+    );
+  }
+  if (lamp.hasil_karya) {
+    paragraphs.push(
+      ...makeLampiranBlock('L-3', 'Dokumentasi Hasil Karya', lamp.hasil_karya, '7C3AED')
+    );
+  }
+  if (lamp.foto_berseri) {
+    paragraphs.push(
+      ...makeLampiranBlock('L-4', 'Panduan Foto Berseri / Portofolio Visual', lamp.foto_berseri, '0369A1')
+    );
+  }
+
+  return paragraphs;
+}
+
+/**
  * Build Signature block Table
  */
 function buildSignatureBlock(config: DocxExportConfig, info: RpmPaudDocData['informasi_umum']): Table {
@@ -959,8 +1312,33 @@ export async function buildRpmPaudDocxBlob(
           buildTable4Asesmen(data),
           new Paragraph({ spacing: { after: 240 } }),
 
-          // 5. Blok Tanda Tangan
+          // 5A & 5B. IKTP Bergradasi + Rubrik Asesmen 4 Skala (supervisor-grade)
+          ...(() => {
+            const iktp5Tables = buildTable5IktpRubrik(data);
+            if (iktp5Tables.length === 0) return [];
+            const items: (Table | Paragraph)[] = [];
+            iktp5Tables.forEach((tbl, i) => {
+              items.push(tbl);
+              if (i < iktp5Tables.length - 1) {
+                items.push(new Paragraph({ spacing: { after: 180 } }));
+              }
+            });
+            items.push(new Paragraph({ spacing: { after: 240 } }));
+            return items;
+          })(),
+
+          // 6. Catatan Keselamatan Anak (only if data present)
+          ...(() => {
+            const safetyTable = buildTable6CatatanKeselamatan(data);
+            if (!safetyTable) return [];
+            return [safetyTable, new Paragraph({ spacing: { after: 240 } })];
+          })(),
+
+          // Tanda Tangan
           ...(config.includeSignatures ? [buildSignatureBlock(config, info)] : []),
+
+          // Lampiran Instrumen Observasi (new page)
+          ...buildLampiranInstrumen(data, info),
         ],
       },
     ],
