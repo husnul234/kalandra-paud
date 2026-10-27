@@ -51,6 +51,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     return `https://wa.me/6288228511309?text=${encodeURIComponent(text)}`;
   };
 
+  // Helper action: Redirects to /app if logged in, otherwise redirects to /login (Wajib Login)
+  const handlePrimaryAction = () => {
+    if (user || profile) {
+      onGoToApp();
+    } else {
+      onGoToAuth();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF7FB] text-[#2A1532] flex flex-col selection:bg-[#522D60] selection:text-white">
       {/* 1. STICKY NAVBAR */}
@@ -102,22 +111,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
-              <>
-                <button
-                  onClick={onGoToAuth}
-                  className="py-1.5 px-3.5 rounded-xl text-xs font-bold text-[#522D60] hover:bg-[#FAF3FB] border border-[#D8C3DD] transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>Masuk</span>
-                </button>
-                <button
-                  onClick={onGoToApp}
-                  className="py-1.5 sm:py-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all cursor-pointer"
-                >
-                  <span>Mulai Sekarang</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </>
+              <button
+                onClick={onGoToAuth}
+                className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Masuk</span>
+              </button>
             )}
           </div>
         </div>
@@ -153,7 +153,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* CTAs */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={onGoToApp}
+              onClick={handlePrimaryAction}
               className="w-full sm:w-auto px-8 py-3.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2.5 shadow-lg shadow-[#522D60]/25 transition-all active:scale-[0.98] cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-[#FFD38B]" />
@@ -911,7 +911,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </p>
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={onGoToApp}
+              onClick={handlePrimaryAction}
               className="w-full sm:w-auto px-8 py-3.5 bg-[#FFD38B] hover:bg-[#ffe0a6] text-[#522D60] rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
             >
               <span>Mulai Buat RPM Sekarang</span>

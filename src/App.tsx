@@ -331,6 +331,29 @@ const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 /**
+ * Route Guard Khusus Pengguna Terdaftar (/app - Wajib Login)
+ */
+const ProtectedUserRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF7FB] flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 border-3 border-[#522D60] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs font-bold text-[#74607B]">Memuat sesi pengguna...</span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+/**
  * Root Application Router
  */
 export const AppRoutes: React.FC = () => {
@@ -379,8 +402,15 @@ export const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* 4. Generator RPM TK Utama */}
-      <Route path="/app" element={<GeneratorWorkspace />} />
+      {/* 4. Generator RPM TK Utama (Wajib Login) */}
+      <Route
+        path="/app"
+        element={
+          <ProtectedUserRoute>
+            <GeneratorWorkspace />
+          </ProtectedUserRoute>
+        }
+      />
 
       {/* Fallback ke Beranda jika URL tidak ditemukan */}
       <Route path="*" element={<Navigate to="/" replace />} />
