@@ -21,21 +21,42 @@ let keyPool: KeyState[] = [];
 let roundRobinIndex = 0;
 let isLoaded = false;
 let lastRequestTimestamp = 0;
+let rpcAvailable = true; // Set to false if missing from DB to avoid spamming 404 in console
 
 /**
  * Loads active keys from Supabase (RPC or Admin pool)
  */
 export async function loadSystemKeyPool(): Promise<string[]> {
   try {
-    // 1. Try secure RPC
-    const { data: rpcKeys, error: rpcError } = await supabase.rpc('get_active_system_api_keys');
-    if (!rpcError && Array.isArray(rpcKeys) && rpcKeys.length > 0) {
-      const keys = rpcKeys.map((r: any) => typeof r === 'string' ? r : r.api_key).filter(Boolean);
-      updatePool(keys);
-      return getAvailableKeys();
+    // 1. Try secure RPC only if not previously confirmed missing
+    if (rpcAvailable) {
+      const { data: rpcKeys, error: rpcError } = await supabase.rpc('get_active_system_api_keys');
+      if (rpcError) {
+        // If RPC function is not found (404 / PGRST202), disable further attempts
+        if (rpcError.code === 'PGRST202' || rpcError.message?.includes('not found') || (rpcError as any)?.status === 404) {
+          rpcAvailable = false;
+        }
+      } else if (Array.isArray(rpcKeys) && rpcKeys.length > 0) {
+        const keys = rpcKeys.map((r: any) => typeof r === 'string' ? r : r.api_key).filter(Boolean);
+        updatePool(keys);
+        return getAvailableKeys();
+      }
     }
 
-    // 2. Try fetching active keys directly if user has privileges or from user_api_keys
+    // 2. Try fetching active keys directly from demo_api_keys or user_api_keys
+    try {
+      const { data: demoKeys } = await supabase
+        .from('demo_api_keys')
+        .select('api_key')
+        .eq('is_active', true);
+
+      if (demoKeys && demoKeys.length > 0) {
+        const keys = demoKeys.map((k: { api_key: string }) => k.api_key).filter(Boolean);
+        updatePool(keys);
+        return getAvailableKeys();
+      }
+    } catch (_) {}
+
     const { data: dbKeys } = await supabase
       .from('user_api_keys')
       .select('api_key')
@@ -48,7 +69,7 @@ export async function loadSystemKeyPool(): Promise<string[]> {
       return getAvailableKeys();
     }
   } catch (err) {
-    console.warn('[GeminiKeyPool] Could not load dynamic keys from DB, using internal pool:', err);
+    console.warn('[GeminiKeyPool] Could not load dynamic keys from DB, using fallback pool:', err);
   }
 
   // 3. Fallback to localStorage BYOK if user previously saved one locally
@@ -65,6 +86,13 @@ export async function loadSystemKeyPool(): Promise<string[]> {
       }
     }
   } catch (e) {}
+
+  // 4. Fallback to environment variable if configured
+  const envKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  if (envKey && typeof envKey === 'string' && envKey.trim().length > 10) {
+    updatePool([envKey.trim()]);
+    return getAvailableKeys();
+  }
 
   return getAvailableKeys();
 }

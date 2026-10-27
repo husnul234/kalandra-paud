@@ -15,9 +15,12 @@ import {
   Edit3,
   MessageSquare,
   Bot,
-  Crown
+  Crown,
+  FileText,
+  Layers
 } from 'lucide-react';
 import { DocumentRevisionChatDrawer } from './chat/DocumentRevisionChatDrawer';
+import { LampiranTrueWysiwygPreview } from './preview/LampiranTrueWysiwygPreview';
 import { useAuth } from '../context/AuthContext';
 
 interface Props {
@@ -50,6 +53,7 @@ export const LiveTablePreview: React.FC<Props> = ({
   const [justSaved, setJustSaved] = useState(false);
   const [isInlineEditActive, setIsInlineEditActive] = useState(false);
   const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
+  const [activeDocView, setActiveDocView] = useState<'rpm' | 'lampiran' | 'semua'>('rpm');
 
   const info = data.informasi_umum || {};
   const selectedDpl = data.identifikasi?.dimensi_profil_lulusan_terpilih || [];
@@ -203,6 +207,60 @@ export const LiveTablePreview: React.FC<Props> = ({
         </div>
       </div>
 
+      {/* DOCUMENT TYPE SELECTOR (TABS) */}
+      <div className="bg-slate-100/95 p-1.5 rounded-2xl border border-slate-200/90 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setActiveDocView('rpm')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeDocView === 'rpm'
+                ? 'bg-white text-[#1E3A8A] shadow-sm border border-slate-200 ring-2 ring-blue-500/20'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+            }`}
+          >
+            <FileText className="w-4 h-4 text-[#1E3A8A]" />
+            <span>Dokumen Utama (RPM 1 Minggu)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveDocView('lampiran')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeDocView === 'lampiran'
+                ? 'bg-white text-[#522D60] shadow-sm border border-slate-200 ring-2 ring-pink-500/20'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+            }`}
+          >
+            <ClipboardList className="w-4 h-4 text-[#80426E]" />
+            <span>4 Lampiran Observasi Siap Cetak</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#FAF3FB] text-[#80426E] border border-[#E8D6EB]">
+              4 Lembar
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveDocView('semua')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeDocView === 'semua'
+                ? 'bg-white text-emerald-800 shadow-sm border border-slate-200 ring-2 ring-emerald-500/20'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+            }`}
+          >
+            <Layers className="w-4 h-4 text-emerald-600" />
+            <span>Lihat Semua (Full Package)</span>
+          </button>
+        </div>
+
+        <div className="hidden lg:flex items-center gap-2 text-xs text-slate-500 pr-2">
+          <Eye className="w-3.5 h-3.5 text-slate-400" />
+          <span>
+            {activeDocView === 'rpm' && 'Menampilkan Lembar Utama RPM'}
+            {activeDocView === 'lampiran' && 'Menampilkan 4 Lembar Instrumen Observasi Lengkap'}
+            {activeDocView === 'semua' && 'Menampilkan Dokumen Utama + 4 Lampiran Bersambung'}
+          </span>
+        </div>
+      </div>
+
       {/* Banner Notifikasi Mode Edit Cepat */}
       {isInlineEditActive && (
         <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between gap-3 animate-fade-in shadow-xs">
@@ -224,15 +282,19 @@ export const LiveTablePreview: React.FC<Props> = ({
 
       {/* 2. OFFICE DESK CANVAS SIMULATOR (SLATE BACKDROP) */}
       <div className="bg-slate-300/80 p-3 sm:p-8 rounded-2xl border border-slate-300 shadow-inner overflow-x-auto flex justify-center">
-        {/* 3. WHITE PAPER SHEET (TRUE WYSIWYG MICROSOFT WORD REPLICA) */}
         <div 
-          contentEditable={isInlineEditActive}
-          suppressContentEditableWarning={true}
           style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
-          className={`w-full max-w-[850px] bg-white shadow-2xl p-6 sm:p-12 md:p-14 border border-slate-300 text-slate-900 font-['Calibri',Arial,sans-serif] text-[13.5px] leading-relaxed transition-transform duration-200 ${
-            isInlineEditActive ? 'ring-4 ring-amber-400/50 outline-hidden' : ''
-          }`}
+          className="w-full max-w-[850px] space-y-10 transition-transform duration-200"
         >
+          {/* 3. WHITE PAPER SHEET (TRUE WYSIWYG MICROSOFT WORD REPLICA) */}
+          {(activeDocView === 'rpm' || activeDocView === 'semua') && (
+            <div 
+              contentEditable={isInlineEditActive}
+              suppressContentEditableWarning={true}
+              className={`w-full bg-white shadow-2xl p-6 sm:p-12 md:p-14 border border-slate-300 text-slate-900 font-['Calibri',Arial,sans-serif] text-[13.5px] leading-relaxed ${
+                isInlineEditActive ? 'ring-4 ring-amber-400/50 outline-hidden' : ''
+              }`}
+            >
           {/* Running Top Header (Subtle gray header like Word) */}
           <div className="text-right text-[11px] italic text-slate-400 border-b border-slate-200 pb-2 mb-6">
             {info.asal_sekolah || 'Satuan PAUD'} — Perencanaan Pembelajaran Mendalam (RPM)
@@ -832,19 +894,30 @@ export const LiveTablePreview: React.FC<Props> = ({
               <div className="bg-[#1E3A8A] text-white px-3.5 py-2 font-bold text-xs tracking-wider uppercase border border-[#1E3A8A] flex flex-wrap justify-between items-center gap-2">
                 <div className="flex items-center gap-2">
                   <span>LAMPIRAN: 4 INSTRUMEN OBSERVASI SIAP CETAK</span>
-                  <span className="text-[10px] font-normal text-blue-100 hidden sm:inline">(Di DOCX: Halaman Terpisah)</span>
+                  <span className="text-[10px] font-normal text-blue-100 hidden sm:inline">(Format Mandiri Siap Print)</span>
                 </div>
-                {onOpenExportLampiran && (
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={onOpenExportLampiran}
-                    className="bg-amber-400 hover:bg-amber-300 text-slate-900 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
-                    title="Unduh 4 Format Dokumen Lampiran Observasi Siap Cetak (.docx)"
+                    onClick={() => setActiveDocView('lampiran')}
+                    className="bg-white hover:bg-blue-50 text-[#1E3A8A] px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                    title="Buka Pratinjau 4 Lembar Lampiran Lengkap"
                   >
-                    <FileDown className="w-3.5 h-3.5" />
-                    <span>Unduh File Lampiran (.docx)</span>
+                    <Eye className="w-3.5 h-3.5 text-[#1E3A8A]" />
+                    <span>Lihat Lembar Lampiran</span>
                   </button>
-                )}
+                  {onOpenExportLampiran && (
+                    <button
+                      type="button"
+                      onClick={onOpenExportLampiran}
+                      className="bg-amber-400 hover:bg-amber-300 text-slate-900 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                      title="Unduh 4 Format Dokumen Lampiran Observasi Siap Cetak (.docx)"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      <span>Unduh File Lampiran (.docx)</span>
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="border-x border-b border-slate-400 text-xs divide-y divide-slate-300">
                 {([
@@ -869,7 +942,14 @@ export const LiveTablePreview: React.FC<Props> = ({
                           </div>
                         ))}
                         {lines.length > 4 && (
-                          <p className="text-slate-400 italic text-[10px] mt-1">... (selengkapnya di dokumen Word)</p>
+                          <button
+                            type="button"
+                            onClick={() => setActiveDocView('lampiran')}
+                            className="text-[#1E3A8A] hover:underline font-bold text-[10px] mt-1 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Buka lembar kerja lengkap di Pratinjau Lampiran...</span>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -878,7 +958,8 @@ export const LiveTablePreview: React.FC<Props> = ({
               </div>
             </div>
           )}
-{/* =========================================================================
+
+          {/* =========================================================================
               LEMBAR TANDA TANGAN RESMI (Word DOCX Replica)
           ========================================================================= */}
           <div className="pt-4 border-t border-slate-300 text-xs text-slate-900 font-['Calibri',Arial,sans-serif]">
@@ -918,6 +999,30 @@ export const LiveTablePreview: React.FC<Props> = ({
             <span>Kalandra — Terstandar Permendikdasmen No. 10/2025</span>
             <span>Dokumen Perencanaan Pembelajaran Mendalam (Fase Fondasi)</span>
           </div>
+            </div>
+          )}
+
+          {/* Separator when viewing all documents */}
+          {activeDocView === 'semua' && (
+            <div className="flex items-center justify-center gap-3 py-3 text-slate-600 font-bold text-xs uppercase tracking-wider print:hidden">
+              <div className="h-px bg-slate-400 flex-1"></div>
+              <span className="bg-white/95 px-4 py-1.5 rounded-full border border-slate-300 shadow-xs flex items-center gap-2 text-slate-700">
+                <ClipboardList className="w-4 h-4 text-[#80426E]" />
+                Bagian II: 4 Lembar Lampiran Observasi Siap Cetak
+              </span>
+              <div className="h-px bg-slate-400 flex-1"></div>
+            </div>
+          )}
+
+          {/* 4. TRUE-WYSIWYG 4 LAMPIRAN OBSERVASI */}
+          {(activeDocView === 'lampiran' || activeDocView === 'semua') && (
+            <LampiranTrueWysiwygPreview
+              data={data}
+              isInlineEditActive={isInlineEditActive}
+              onUpdateData={onUpdateData}
+              onOpenExportLampiran={onOpenExportLampiran}
+            />
+          )}
         </div>
       </div>
 
