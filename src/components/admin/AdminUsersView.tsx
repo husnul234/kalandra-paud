@@ -20,7 +20,10 @@ import {
   Lock,
   Sparkles,
   Dices,
-  Crown
+  Crown,
+  Pencil,
+  MessageCircle,
+  Phone
 } from 'lucide-react';
 import { 
   supabaseAdmin, 
@@ -31,6 +34,8 @@ import {
   adminToggleUserRole 
 } from '../../lib/supabaseAdmin';
 import { BulkAddMembersModal } from './BulkAddMembersModal';
+import { EditUserModal } from './EditUserModal';
+import { WhatsAppActivationModal, WhatsAppUserTarget } from './WhatsAppActivationModal';
 
 export interface UserRow {
   id: string;
@@ -42,6 +47,10 @@ export interface UserRow {
   docs_count: number;
   is_active: boolean;
   created_at: string;
+  phone?: string;
+  tier?: 'standar' | 'pro' | 'free';
+  duration?: '1_bulan' | '6_bulan' | '1_tahun' | 'lifetime';
+  expiry_date?: string;
 }
 
 export const AdminUsersView: React.FC = () => {
@@ -53,11 +62,13 @@ export const AdminUsersView: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Reset Password Dialog state
-  const [isResetOpen, setIsResetOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
-  const [newPassword, setNewPassword] = useState('Kalandra2026!');
-  const [showPassword, setShowPassword] = useState(false);
+  // Edit User Dialog state
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedEditUser, setSelectedEditUser] = useState<UserRow | null>(null);
+
+  // WhatsApp Activation Dialog state
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
+  const [selectedWhatsAppUser, setSelectedWhatsAppUser] = useState<WhatsAppUserTarget | null>(null);
 
   // Create User Dialog state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -99,6 +110,20 @@ export const AdminUsersView: React.FC = () => {
         console.warn('Fetch profiles error:', error);
       }
 
+      // 1.5 Fetch allowed_customers for subscription tier, duration, and whatsapp phone
+      const { data: customers } = await supabaseAdmin
+        .from('allowed_customers')
+        .select('*');
+
+      const customerMap: Record<string, any> = {};
+      if (customers) {
+        customers.forEach((c: any) => {
+          if (c.email) {
+            customerMap[c.email.toLowerCase().trim()] = c;
+          }
+        });
+      }
+
       // 2. Fetch real document counts per user
       const { data: docs } = await supabaseAdmin
         .from('generated_documents')
@@ -113,17 +138,31 @@ export const AdminUsersView: React.FC = () => {
         });
       }
 
-      const mapped: UserRow[] = (profiles || []).map((p: any) => ({
-        id: p.id,
-        email: p.email,
-        full_name: p.full_name || p.email.split('@')[0],
-        role: p.email?.toLowerCase() === 'pakhusnulid@gmail.com' ? 'admin' : (p.role || 'guru'),
-        school_name: (p.schools as any)?.name || 'TK NEGERI PEMBINA 01',
-        assigned_class: p.assigned_class || 'A (4-5 Tahun)',
-        docs_count: docsCountMap[p.id] || 0,
-        is_active: p.is_active ?? true,
-        created_at: p.created_at ? new Date(p.created_at).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
-      }));
+      const mapped: UserRow[] = (profiles || []).map((p: any) => {
+        const cleanEmail = (p.email || '').toLowerCase().trim();
+        const cust = customerMap[cleanEmail] || {};
+
+        let userTier: 'standar' | 'pro' | 'free' = 'pro';
+        const rawTier = (p.tier || cust.account_type || '').toLowerCase();
+        if (rawTier.includes('standar')) userTier = 'standar';
+        else if (rawTier.includes('free') || rawTier.includes('gratis')) userTier = 'free';
+
+        return {
+          id: p.id,
+          email: p.email,
+          full_name: p.full_name || p.email.split('@')[0],
+          role: p.email?.toLowerCase() === 'pakhusnulid@gmail.com' ? 'admin' : (p.role || 'guru'),
+          school_name: p.school_name || (p.schools as any)?.name || cust.school_name || 'TK NEGERI PEMBINA 01',
+          assigned_class: p.assigned_class || 'A (4-5 Tahun)',
+          docs_count: docsCountMap[p.id] || 0,
+          is_active: p.is_active ?? true,
+          created_at: p.created_at ? new Date(p.created_at).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+          phone: p.phone || cust.whatsapp || '',
+          tier: userTier,
+          duration: cust.duration || '1_tahun',
+          expiry_date: cust.subscription_end ? new Date(cust.subscription_end).toISOString().slice(0, 10) : undefined,
+        };
+      });
 
       setUsers(mapped);
     } catch (e) {
@@ -189,29 +228,24 @@ export const AdminUsersView: React.FC = () => {
     }
   };
 
-  const handleOpenReset = (user: UserRow) => {
-    setSelectedUser(user);
-    setNewPassword('Kalandra2026!');
-    setIsResetOpen(true);
+  const handleOpenEdit = (user: UserRow) => {
+    setSelectedEditUser(user);
+    setIsEditOpen(true);
   };
 
-  const handleConfirmReset = async () => {
-    if (!selectedUser) return;
-    if (newPassword.length < 6) {
-      alert('Kata sandi minimal 6 karakter.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await adminResetPassword(selectedUser.email);
-      showToast(`Tautan reset kata sandi aman telah dikirimkan ke email ${selectedUser.email}.`);
-      setIsResetOpen(false);
-    } catch (e: any) {
-      alert(`Gagal mengirim tautan reset kata sandi: ${e.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleOpenWhatsApp = (user: UserRow, customPassword?: string) => {
+    setSelectedWhatsAppUser({
+      id: user.id,
+      fullName: user.full_name,
+      email: user.email,
+      whatsapp: user.phone,
+      schoolName: user.school_name,
+      tier: user.tier,
+      duration: user.duration,
+      expiryDate: user.expiry_date,
+      initialPassword: customPassword,
+    });
+    setIsWhatsAppOpen(true);
   };
 
   const handleDeleteUser = async (userId: string, email: string) => {
@@ -264,6 +298,17 @@ export const AdminUsersView: React.FC = () => {
       await fetchUsers();
       setIsCreateOpen(false);
       showToast(`Pengguna baru ${cleanName} (${cleanEmail}) berhasil didaftarkan sebagai Paket ${newTier.toUpperCase()}!`);
+
+      // Open WhatsApp Activation Modal immediately for easy copy & send
+      setSelectedWhatsAppUser({
+        fullName: cleanName,
+        email: cleanEmail,
+        schoolName: newSchoolName,
+        tier: newTier,
+        duration: newDuration,
+        initialPassword: newInitialPassword,
+      });
+      setIsWhatsAppOpen(true);
 
       // Reset form
       setNewEmail('');
@@ -403,6 +448,7 @@ export const AdminUsersView: React.FC = () => {
             <thead>
               <tr className="bg-[#FAF3FB] border-b border-[#E8D6EB] text-[11px] font-extrabold uppercase tracking-wider text-[#74607B]">
                 <th className="py-3 px-4">Nama Lengkap & Email</th>
+                <th className="py-3 px-4">Paket / Tier</th>
                 <th className="py-3 px-4">Peran (Role)</th>
                 <th className="py-3 px-4">Satuan & Kelompok</th>
                 <th className="py-3 px-4 text-center">Dokumen RPM</th>
@@ -413,7 +459,7 @@ export const AdminUsersView: React.FC = () => {
             <tbody className="divide-y divide-[#EFE6F2] text-xs">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-[#74607B]">
+                  <td colSpan={7} className="py-8 text-center text-[#74607B]">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin text-[#522D60]" />
                       <span>Memuat data pengguna dari basis data Supabase...</span>
@@ -422,7 +468,7 @@ export const AdminUsersView: React.FC = () => {
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-[#74607B]">
+                  <td colSpan={7} className="py-8 text-center text-[#74607B]">
                     Tidak ada pengguna yang cocok dengan kriteria pencarian.
                   </td>
                 </tr>
@@ -442,6 +488,34 @@ export const AdminUsersView: React.FC = () => {
                           )}
                         </div>
                         <div className="text-[11px] text-[#74607B] font-mono">{u.email}</div>
+                        {u.phone && (
+                          <div className="text-[10px] text-emerald-700 flex items-center gap-1 mt-0.5 font-medium">
+                            <Phone className="w-2.5 h-2.5 text-emerald-600" />
+                            <span>{u.phone}</span>
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        {u.tier === 'pro' ? (
+                          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs">
+                            <Crown className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            <span>PRO</span>
+                          </div>
+                        ) : u.tier === 'standar' ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            Standar
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gray-50 text-gray-700 border border-gray-200">
+                            Free
+                          </span>
+                        )}
+                        {u.expiry_date && (
+                          <div className="text-[10px] text-[#74607B] mt-0.5 font-medium">
+                            s.d. {u.expiry_date}
+                          </div>
+                        )}
                       </td>
 
                       <td className="py-3 px-4">
@@ -504,19 +578,30 @@ export const AdminUsersView: React.FC = () => {
 
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* 1. Kirim Info Aktivasi WhatsApp */}
                           <button
-                            onClick={() => handleOpenReset(u)}
-                            title="Atur Ulang Kata Sandi"
-                            className="p-1.5 rounded-lg border border-[#D8C3DD] bg-white text-[#522D60] hover:bg-[#FAF3FB] transition-colors"
+                            onClick={() => handleOpenWhatsApp(u)}
+                            title="Kirim Info Aktivasi ke WhatsApp"
+                            className="p-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
                           >
-                            <KeyRound className="w-3.5 h-3.5" />
+                            <MessageCircle className="w-3.5 h-3.5" />
                           </button>
 
+                          {/* 2. Lihat & Edit Profil / Sandi / Tier */}
+                          <button
+                            onClick={() => handleOpenEdit(u)}
+                            title="Lihat & Edit Pengguna (Tier, Sandi, Lembaga)"
+                            className="p-1.5 rounded-lg border border-[#D8C3DD] bg-white text-[#522D60] hover:bg-[#FAF3FB] hover:border-[#80426E] transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* 3. Hapus Pengguna (Bukan Superadmin) */}
                           {!isSuperadmin && (
                             <button
                               onClick={() => handleDeleteUser(u.id, u.email)}
                               title="Hapus Akun Pengguna"
-                              className="p-1.5 rounded-lg border border-red-100 bg-white text-red-600 hover:bg-red-50 transition-colors"
+                              className="p-1.5 rounded-lg border border-red-100 bg-white text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -702,74 +787,27 @@ export const AdminUsersView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: RESET PASSWORD */}
-      {isResetOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-[#D8C3DD] space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EFE6F2]">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#522D60] text-white flex items-center justify-center">
-                  <KeyRound className="w-4 h-4 text-[#FFD38B]" />
-                </div>
-                <h3 className="font-extrabold text-sm text-[#2A1532]">Atur Ulang Kata Sandi</h3>
-              </div>
-              <button
-                onClick={() => setIsResetOpen(false)}
-                className="p-1 rounded-lg text-[#74607B] hover:bg-[#FAF3FB]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      {/* MODAL: VIEW & EDIT USER */}
+      <EditUserModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        user={selectedEditUser}
+        onSuccess={() => {
+          fetchUsers();
+          showToast('Data pengguna berhasil diperbarui!');
+        }}
+      />
 
-            <div className="space-y-3">
-              <p className="text-xs text-[#74607B]">
-                Masukkan kata sandi baru untuk <span className="font-bold text-[#2A1532]">{selectedUser.full_name}</span> ({selectedUser.email}):
-              </p>
-
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 text-xs rounded-xl border border-[#CBB4D1] font-mono text-[#2A1532]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-[#74607B] hover:text-[#522D60]"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EFE6F2]">
-                <button
-                  type="button"
-                  onClick={() => setIsResetOpen(false)}
-                  className="py-2 px-4 rounded-xl text-xs font-bold text-[#74607B] hover:bg-[#FAF3FB]"
-                >
-                  Batal
-                </button>
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={handleConfirmReset}
-                  className="py-2 px-4 rounded-xl text-xs font-extrabold text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Menyimpan...</span>
-                    </>
-                  ) : (
-                    <span>Simpan Kata Sandi</span>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* MODAL: WHATSAPP ACTIVATION */}
+      <WhatsAppActivationModal
+        isOpen={isWhatsAppOpen}
+        onClose={() => setIsWhatsAppOpen(false)}
+        user={selectedWhatsAppUser}
+        onNumberSaved={(savedPhone) => {
+          fetchUsers();
+          showToast(`Nomor WhatsApp (${savedPhone}) berhasil disimpan.`);
+        }}
+      />
 
       {/* MODAL: BULK ADD MEMBERS */}
       <BulkAddMembersModal

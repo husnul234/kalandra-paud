@@ -149,3 +149,87 @@ export async function adminToggleUserRole(userId: string, newRole: 'admin' | 'gu
     throw new Error(error.message);
   }
 }
+
+export interface UpdateUserInput {
+  userId: string;
+  email: string;
+  full_name: string;
+  role: 'admin' | 'guru';
+  tier?: 'standar' | 'pro' | 'free';
+  duration?: '1_bulan' | '6_bulan' | '1_tahun' | 'lifetime';
+  expiryDate?: string;
+  school_name?: string;
+  assigned_class?: string;
+  phone?: string;
+  is_active: boolean;
+  new_password?: string;
+}
+
+/**
+ * Comprehensive user update (Profile, Allowed Customers, and Auth Password)
+ */
+export async function adminUpdateUser(input: UpdateUserInput) {
+  const cleanEmail = input.email.trim().toLowerCase();
+  const cleanName = input.full_name.trim();
+
+  // 1. Update profiles table
+  const profileUpdates: any = {
+    full_name: cleanName,
+    role: input.role,
+    assigned_class: input.assigned_class || '',
+    phone: input.phone || '',
+    is_active: input.is_active,
+    tier: input.tier || 'pro',
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update(profileUpdates)
+    .eq('id', input.userId);
+
+  if (profileError) {
+    throw new Error(`Gagal memperbarui profil: ${profileError.message}`);
+  }
+
+  // 2. Sync allowed_customers
+  try {
+    const custUpdates: any = {
+      full_name: cleanName,
+      whatsapp: input.phone || '',
+      school_name: input.school_name || 'Satuan PAUD',
+      is_active: input.is_active,
+      subscription_tier: input.tier || 'pro',
+      account_type: input.duration === 'lifetime' ? 'lifetime' : input.duration === '1_tahun' ? 'annual' : 'lite',
+    };
+
+    if (input.expiryDate) {
+      custUpdates.subscription_end = input.expiryDate;
+    }
+
+    await supabase
+      .from('allowed_customers')
+      .update(custUpdates)
+      .eq('email', cleanEmail);
+  } catch (custErr) {
+    console.warn('[adminUpdateUser] allowed_customers sync note:', custErr);
+  }
+
+  // 3. Update password if provided
+  if (input.new_password && input.new_password.trim().length >= 6) {
+    try {
+      const { error: authErr } = await supabase.auth.admin.updateUserById(input.userId, {
+        password: input.new_password.trim(),
+      });
+      if (authErr) {
+        // Fallback: send password reset email if client admin auth lacks service role
+        console.warn('admin.updateUserById notice, falling back to reset email:', authErr.message);
+        await adminResetPassword(cleanEmail);
+      }
+    } catch (authE) {
+      console.warn('Password update notice:', authE);
+    }
+  }
+
+  return true;
+}
