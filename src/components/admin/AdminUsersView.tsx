@@ -792,9 +792,9 @@ export const AdminUsersView: React.FC = () => {
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         user={selectedEditUser}
-        onSuccess={() => {
+        onSuccess={(notice) => {
           fetchUsers();
-          showToast('Data pengguna berhasil diperbarui!');
+          showToast(notice || 'Data pengguna berhasil diperbarui!');
         }}
       />
 

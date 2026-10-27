@@ -172,16 +172,18 @@ export async function adminUpdateUser(input: UpdateUserInput) {
   const cleanEmail = input.email.trim().toLowerCase();
   const cleanName = input.full_name.trim();
 
-  // 1. Update profiles table
+  // 1. Update profiles table (only columns that exist in profiles schema)
   const profileUpdates: any = {
     full_name: cleanName,
     role: input.role,
     assigned_class: input.assigned_class || '',
-    phone: input.phone || '',
     is_active: input.is_active,
-    tier: input.tier || 'pro',
     updated_at: new Date().toISOString(),
   };
+
+  if (input.phone !== undefined) {
+    profileUpdates.phone = input.phone;
+  }
 
   const { error: profileError } = await supabase
     .from('profiles')
@@ -189,18 +191,37 @@ export async function adminUpdateUser(input: UpdateUserInput) {
     .eq('id', input.userId);
 
   if (profileError) {
-    throw new Error(`Gagal memperbarui profil: ${profileError.message}`);
+    // If schema cache lacks an optional column like phone or assigned_class, retry with minimal core fields
+    if (profileError.message?.includes('column') && profileError.message?.includes('schema cache')) {
+      console.warn('Retrying profile update with minimal fields due to:', profileError.message);
+      const minimalUpdates = {
+        full_name: cleanName,
+        role: input.role,
+        is_active: input.is_active,
+        updated_at: new Date().toISOString(),
+      };
+      const { error: retryErr } = await supabase
+        .from('profiles')
+        .update(minimalUpdates)
+        .eq('id', input.userId);
+      if (retryErr) {
+        throw new Error(`Gagal memperbarui profil: ${retryErr.message}`);
+      }
+    } else {
+      throw new Error(`Gagal memperbarui profil: ${profileError.message}`);
+    }
   }
 
-  // 2. Sync allowed_customers
+  // 2. Sync allowed_customers (licensing & tier whitelist)
   try {
     const custUpdates: any = {
       full_name: cleanName,
       whatsapp: input.phone || '',
       school_name: input.school_name || 'Satuan PAUD',
       is_active: input.is_active,
-      subscription_tier: input.tier || 'pro',
       account_type: input.duration === 'lifetime' ? 'lifetime' : input.duration === '1_tahun' ? 'annual' : 'lite',
+      notes: `Tier: ${(input.tier || 'pro').toUpperCase()} | Durasi: ${input.duration || '1_tahun'}`,
+      updated_at: new Date().toISOString(),
     };
 
     if (input.expiryDate) {
@@ -216,20 +237,68 @@ export async function adminUpdateUser(input: UpdateUserInput) {
   }
 
   // 3. Update password if provided
+  let passwordResult = { updated: false, method: 'none', message: '' };
+
   if (input.new_password && input.new_password.trim().length >= 6) {
+    const pass = input.new_password.trim();
+    let updatedDirectly = false;
+
+    // A. Attempt RPC admin_update_user_password (if migration 08 has been run)
     try {
-      const { error: authErr } = await supabase.auth.admin.updateUserById(input.userId, {
-        password: input.new_password.trim(),
+      const { data: rpcData, error: rpcError } = await supabase.rpc('admin_update_user_password', {
+        target_user_id: input.userId,
+        new_plain_password: pass,
       });
-      if (authErr) {
-        // Fallback: send password reset email if client admin auth lacks service role
-        console.warn('admin.updateUserById notice, falling back to reset email:', authErr.message);
-        await adminResetPassword(cleanEmail);
+
+      if (!rpcError && rpcData) {
+        updatedDirectly = true;
+        passwordResult = {
+          updated: true,
+          method: 'direct',
+          message: 'Kata sandi berhasil diubah langsung di basis data.',
+        };
       }
-    } catch (authE) {
-      console.warn('Password update notice:', authE);
+    } catch (e) {
+      console.warn('RPC admin_update_user_password note:', e);
+    }
+
+    // B. Attempt supabase.auth.admin.updateUserById (works if service role or server admin enabled)
+    if (!updatedDirectly) {
+      try {
+        const { error: authErr } = await supabase.auth.admin.updateUserById(input.userId, {
+          password: pass,
+        });
+        if (!authErr) {
+          updatedDirectly = true;
+          passwordResult = {
+            updated: true,
+            method: 'direct',
+            message: 'Kata sandi berhasil diperbarui langsung.',
+          };
+        }
+      } catch (authE) {
+        console.warn('Direct auth update note:', authE);
+      }
+    }
+
+    // C. Fallback: Send password reset link to user email
+    if (!updatedDirectly) {
+      try {
+        await adminResetPassword(cleanEmail);
+        passwordResult = {
+          updated: true,
+          method: 'email',
+          message: `Tautan atur ulang kata sandi telah dikirimkan ke email ${cleanEmail}.`,
+        };
+      } catch (emailErr: any) {
+        passwordResult = {
+          updated: false,
+          method: 'failed',
+          message: `Gagal mengirim tautan reset kata sandi: ${emailErr.message}`,
+        };
+      }
     }
   }
 
-  return true;
+  return { success: true, passwordResult };
 }

@@ -26,7 +26,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   user: UserRow | null;
-  onSuccess: () => void;
+  onSuccess: (notice?: string) => void;
 }
 
 export const EditUserModal: React.FC<Props> = ({
@@ -118,7 +118,7 @@ export const EditUserModal: React.FC<Props> = ({
     setErrorMessage(null);
 
     try {
-      await adminUpdateUser({
+      const res = await adminUpdateUser({
         userId: user.id,
         email: user.email,
         full_name: fullName.trim(),
@@ -133,7 +133,12 @@ export const EditUserModal: React.FC<Props> = ({
         new_password: newPassword.trim() || undefined,
       });
 
-      onSuccess();
+      let notice = 'Data akun pengguna berhasil diperbarui!';
+      if (res?.passwordResult?.updated) {
+        notice = `Data profil diperbarui! ${res.passwordResult.message}`;
+      }
+
+      onSuccess(notice);
       onClose();
     } catch (err: any) {
       console.error('Update user error:', err);
