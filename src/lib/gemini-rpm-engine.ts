@@ -390,3 +390,46 @@ export async function testGeminiApiKey(apiKey: string): Promise<{ success: boole
   }
   return { success: false, error: 'Tidak ada model yang kompatibel untuk kunci ini.' };
 }
+
+export interface AiRekomendasiResult {
+  dpl_codes: string[];
+  subelemen_codes: string[];
+  loose_parts: string[];
+  alasan_singkat: string;
+}
+
+/**
+ * Fast AI Recommender for DPL, CP Sub-elements, and Loose Parts based on Topic
+ */
+export async function requestAiRekomendasiTopik(
+  apiKeys: string[],
+  topik: string,
+  jenjangKelas: string
+): Promise<AiRekomendasiResult> {
+  const prompt = `Anda adalah Pakar Kurikulum PAUD Kemendikdasmen RI.
+Topik Pembelajaran: "${topik}"
+Jenjang Kelas: "${jenjangKelas}"
+
+Tugas Anda:
+Berdasarkan Permendikdasmen No. 10/2025 dan Keputusan Kepala BSKAP No. 046/H/KR/2025, rekomendasikan:
+1. dpl_codes: 3 sampai 5 kode Dimensi Profil Lulusan yang paling esensial dan relevan (pilihan yang valid HANYA: DPL1, DPL2, DPL3, DPL4, DPL5, DPL6, DPL7, DPL8).
+2. subelemen_codes: 3 sampai 4 kode subelemen Capaian Pembelajaran PAUD yang paling selaras (pilihan yang valid HANYA: NABP-1, NABP-2, NABP-3, NABP-4, JD-1, JD-2, JD-3, JD-4, JD-5, STEAM-1, STEAM-2, STEAM-3, STEAM-4, STEAM-5).
+3. loose_parts: 4 sampai 6 bahan material lepas (loose parts) konkret yang murah, mudah dicari di lingkungan PAUD, kontekstual dengan topik, dan aman untuk anak usia ${jenjangKelas}.
+4. alasan_singkat: 1-2 kalimat alasan pedagogis ringkas mengapa kombinasi ini cocok.
+
+Kembalikan HANYA teks JSON murni (tanpa tanda kutip markdown backtick json):
+{
+  "dpl_codes": ["DPL1", "DPL7"],
+  "subelemen_codes": ["NABP-2", "JD-5"],
+  "loose_parts": ["Kardus bekas", "Botol semprot bekas", "Spons busa"],
+  "alasan_singkat": "Menguatkan kemandirian merawat diri dan eksplorasi bahan kebersihan."
+}`;
+
+  const res = await executeDirectGeminiRequest(
+    apiKeys,
+    'Anda adalah asisten cerdas kurikulum PAUD Kemendikdasmen RI yang memberikan rekomendasi pemetaan kurikulum yang akurat dan ringkas dalam format JSON.',
+    prompt
+  );
+
+  return res.data as AiRekomendasiResult;
+}

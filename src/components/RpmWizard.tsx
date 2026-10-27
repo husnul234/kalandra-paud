@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useGeminiKeys } from '../hooks/useGeminiKeys';
 import { DATA_8_DPL, MASTER_CP_PAUD, REKOMENDASI_LOOSE_PARTS, SubelemenCP } from '../data/cp_paud_data';
 import { invokeGenerateWithRetry } from '../lib/invokeWithRetry';
-import { assembleDynamicUserPrompt } from '../lib/gemini-rpm-engine';
+import { assembleDynamicUserPrompt, requestAiRekomendasiTopik } from '../lib/gemini-rpm-engine';
 import { RpmPaudDocData } from '../lib/docx-engine/docx-paud-builder';
 import { LiveProgressIndicator } from './LiveProgressIndicator';
 import { 
@@ -18,7 +18,8 @@ import {
   AlertCircle, 
   ShieldCheck, 
   CheckCircle2, 
-  HelpCircle 
+  HelpCircle,
+  Loader2 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -72,6 +73,70 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
   const [usedModel, setUsedModel] = useState('gemini-3.6-flash');
   const [usedKeyMasked, setUsedKeyMasked] = useState('');
   const [generationError, setGenerationError] = useState<string | null>(null);
+
+  // AI Recommendation State (Topik -> DPL, CP & Loose Parts)
+  const [isRecommending, setIsRecommending] = useState(false);
+  const [aiRecommendationNote, setAiRecommendationNote] = useState<string | null>(null);
+  const [recommendError, setRecommendError] = useState<string | null>(null);
+
+  const handleRequestAiRecommendation = async () => {
+    if (!topikSubtopik.trim()) {
+      setRecommendError('Silakan ketikkan topik pembelajaran terlebih dahulu.');
+      return;
+    }
+
+    if (activeKeys.length === 0) {
+      onOpenKeyModal();
+      return;
+    }
+
+    setRecommendError(null);
+    setIsRecommending(true);
+    try {
+      const res = await requestAiRekomendasiTopik(activeKeys, topikSubtopik, jenjangKelas);
+
+      // 1. Map DPL
+      if (res.dpl_codes && res.dpl_codes.length > 0) {
+        setDplSelected(res.dpl_codes);
+      }
+
+      // 2. Map Subelemen CP
+      if (res.subelemen_codes && res.subelemen_codes.length > 0) {
+        const matchedSubs: SubelemenCP[] = [];
+        MASTER_CP_PAUD.forEach((el) => {
+          el.subelemen.forEach((sub) => {
+            if (res.subelemen_codes.includes(sub.kode)) {
+              matchedSubs.push(sub);
+            }
+          });
+        });
+        if (matchedSubs.length > 0) {
+          setSelectedSubElements(matchedSubs);
+        }
+      }
+
+      // 3. Map Loose Parts
+      if (res.loose_parts && res.loose_parts.length > 0) {
+        setSelectedLooseParts(res.loose_parts);
+      }
+
+      setAiRecommendationNote(
+        res.alasan_singkat ||
+          'Rekomendasi DPL, CP verbatim, dan bahan loose parts berhasil diterapkan ke Langkah 2 & 3!'
+      );
+
+      confetti({
+        particleCount: 60,
+        spread: 60,
+        origin: { y: 0.7 },
+      });
+    } catch (err: any) {
+      console.error('AI Recommendation error:', err);
+      setRecommendError(err.message || 'Gagal memanggil rekomendasi AI.');
+    } finally {
+      setIsRecommending(false);
+    }
+  };
 
   // Toggle DPL selection
   const toggleDpl = (kode: string) => {
@@ -334,10 +399,89 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
               <input
                 type="text"
                 value={topikSubtopik}
-                onChange={(e) => setTopikSubtopik(e.target.value)}
+                onChange={(e) => {
+                  setTopikSubtopik(e.target.value);
+                  setAiRecommendationNote(null);
+                  setRecommendError(null);
+                }}
                 placeholder="Contoh: Identitas / Diriku (Aku Istimewa: Ayo Kita Berkenalan)"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-blue-950 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-blue-950 focus:ring-2 focus:ring-[#522D60] focus:outline-none"
               />
+
+              {/* Rekomendasi AI Smart Assistant Card */}
+              <div className="mt-3 bg-gradient-to-r from-[#FAF3FB] to-[#F3E8F5] p-3.5 rounded-2xl border border-[#522D60]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-start sm:items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#522D60] text-pink-300 flex items-center justify-center shrink-0 shadow-xs">
+                    <Sparkles className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-[#2A1532] flex items-center gap-1.5">
+                      Rekomendasi AI Otomatis
+                      <span className="text-[10px] bg-[#522D60] text-white px-1.5 py-0.2 rounded-full font-bold">Smart</span>
+                    </div>
+                    <div className="text-[11px] text-[#74607B] leading-tight mt-0.5">
+                      Pilihkan DPL, Capaian Pembelajaran verbatim, dan Loose Parts yang paling cocok untuk topik ini.
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleRequestAiRecommendation}
+                  disabled={isRecommending || !topikSubtopik.trim()}
+                  className="px-4 py-2 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 shrink-0 cursor-pointer"
+                >
+                  {isRecommending ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-pink-300" />
+                      <span>Menganalisis...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-pink-300" />
+                      <span>Rekomendasikan AI</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Status Banner Rekomendasi Sukses */}
+              {aiRecommendationNote && (
+                <div className="mt-2.5 p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900 flex items-start gap-3 animate-fade-in shadow-2xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-emerald-950">Rekomendasi Berhasil Diterapkan!</span>
+                      <span className="text-[10px] bg-emerald-200/70 text-emerald-800 px-2 py-0.2 rounded-full font-bold">Langkah 2 & 3 Terisi</span>
+                    </div>
+                    <p className="text-[11px] text-emerald-800 leading-relaxed italic">
+                      "{aiRecommendationNote}"
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                      <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-lg text-[10px] font-bold border border-emerald-200">
+                        ✓ {dplSelected.length} DPL Terpilih
+                      </span>
+                      <span className="px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-lg text-[10px] font-bold border border-blue-200">
+                        ✓ {selectedSubElements.length} Subelemen CP
+                      </span>
+                      <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-lg text-[10px] font-bold border border-amber-200">
+                        ✓ {selectedLooseParts.length} Bahan Loose Parts
+                      </span>
+                      <span className="text-[10px] text-slate-500 italic">
+                        (Anda tetap bebas mengubahnya di Langkah 2 & 3)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Banner */}
+              {recommendError && (
+                <div className="mt-2.5 p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 flex items-center gap-2 animate-fade-in">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>{recommendError}</span>
+                </div>
+              )}
             </div>
           </div>
 

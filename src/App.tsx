@@ -11,6 +11,7 @@ import { AuthPage } from './components/auth/AuthPage';
 import { ApiKeyManagerModal } from './components/ApiKeyManagerModal';
 import { ExportDocxModal } from './components/ExportDocxModal';
 import { ProfileModal } from './components/ProfileModal';
+import { SubscriptionModal } from './components/subscription/SubscriptionModal';
 import { supabase } from './lib/supabaseClient';
 import { SAMPLE_RPM_PAUD } from './data/default_sample_rpm';
 import { RpmPaudDocData } from './lib/docx-engine/docx-paud-builder';
@@ -27,7 +28,9 @@ const GeneratorWorkspace: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'wizard' | 'preview' | 'history' | 'admin'>('wizard');
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportDocType, setExportDocType] = useState<'rpm' | 'lampiran'>('rpm');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [currentDoc, setCurrentDoc] = useState<RpmPaudDocData>(SAMPLE_RPM_PAUD);
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -112,6 +115,7 @@ const GeneratorWorkspace: React.FC = () => {
         onOpenKeyModal={() => setIsKeyModalOpen(true)}
         onOpenAuth={() => navigate('/login')}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
+        onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
         onGoToLanding={() => navigate('/')}
       />
 
@@ -136,7 +140,14 @@ const GeneratorWorkspace: React.FC = () => {
           <LiveTablePreview
             data={currentDoc}
             onUpdateData={(updated) => setCurrentDoc(updated)}
-            onOpenExportModal={() => setIsExportModalOpen(true)}
+            onOpenExportModal={() => {
+              setExportDocType('rpm');
+              setIsExportModalOpen(true);
+            }}
+            onOpenExportLampiran={() => {
+              setExportDocType('lampiran');
+              setIsExportModalOpen(true);
+            }}
             onSaveDocument={() => saveDocToStorage(currentDoc)}
             isSaving={isSaving}
           />
@@ -150,6 +161,7 @@ const GeneratorWorkspace: React.FC = () => {
             }}
             onOpenExportModalWithData={(docData) => {
               setCurrentDoc(docData);
+              setExportDocType('rpm');
               setIsExportModalOpen(true);
             }}
             onNewDocClick={() => setActiveTab('wizard')}
@@ -182,6 +194,7 @@ const GeneratorWorkspace: React.FC = () => {
         onClose={() => setIsExportModalOpen(false)}
         documentData={currentDoc}
         schoolName={profile?.school_name}
+        initialDocType={exportDocType}
       />
 
       {/* Profile Guru & Satuan PAUD Modal */}
@@ -191,6 +204,12 @@ const GeneratorWorkspace: React.FC = () => {
         onProfileUpdated={() => {
           showToast('Profil Guru & Satuan PAUD berhasil diperbarui!');
         }}
+      />
+
+      {/* Subscription Pricing Modal */}
+      <SubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setIsSubscriptionModalOpen(false)}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { RpmPaudDocData } from '../lib/docx-engine/docx-paud-builder';
 import { DATA_8_DPL } from '../data/cp_paud_data';
 import { 
@@ -10,13 +10,15 @@ import {
   FileCheck,
   Eye,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  ClipboardList
 } from 'lucide-react';
 
 interface Props {
   data: RpmPaudDocData;
   onUpdateData: (newData: RpmPaudDocData) => void;
   onOpenExportModal: () => void;
+  onOpenExportLampiran?: () => void;
   onSaveDocument?: () => void;
   isSaving?: boolean;
 }
@@ -32,6 +34,7 @@ const cleanListText = (text?: string): string => {
 export const LiveTablePreview: React.FC<Props> = ({
   data,
   onOpenExportModal,
+  onOpenExportLampiran,
   onSaveDocument,
   isSaving = false,
 }) => {
@@ -56,7 +59,7 @@ export const LiveTablePreview: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       {/* 1. TOP ACTION TOOLBAR (Sticky when scrolling) */}
-      <div className="sticky top-16 sm:top-[72px] z-30 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-md flex flex-wrap items-center justify-between gap-3 transition-all">
+      <div className="sticky top-16 sm:top-[72px] z-30 bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-md flex flex-wrap items-center justify-between gap-3 transition-all">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E3A8A] flex items-center justify-center font-bold border border-blue-200 shrink-0">
             <FileCheck className="w-5 h-5 text-[#1E3A8A]" />
@@ -77,7 +80,7 @@ export const LiveTablePreview: React.FC<Props> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
           {/* Zoom controls */}
           <div className="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
             <button
@@ -106,7 +109,7 @@ export const LiveTablePreview: React.FC<Props> = ({
               type="button"
               onClick={handleSaveClick}
               disabled={isSaving}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+              className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
                 justSaved
                   ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
                   : 'border border-slate-300 hover:bg-slate-50 text-slate-700'
@@ -115,12 +118,12 @@ export const LiveTablePreview: React.FC<Props> = ({
               {justSaved ? (
                 <>
                   <CheckCircle className="w-4 h-4 text-emerald-600" />
-                  <span>Tersimpan di Riwayat!</span>
+                  <span className="hidden sm:inline">Tersimpan!</span>
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 text-slate-600" />
-                  <span>{isSaving ? 'Menyimpan...' : 'Simpan ke Riwayat'}</span>
+                  <span className="hidden sm:inline">{isSaving ? 'Menyimpan...' : 'Simpan'}</span>
                 </>
               )}
             </button>
@@ -129,20 +132,34 @@ export const LiveTablePreview: React.FC<Props> = ({
           <button
             type="button"
             onClick={handlePrint}
-            className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
             title="Cetak Langsung Lembar Dokumen"
           >
             <Printer className="w-4 h-4 text-slate-600" />
             <span className="hidden sm:inline">Cetak</span>
           </button>
 
+          {/* Tombol Unduh Lampiran Terpisah */}
+          {onOpenExportLampiran && (
+            <button
+              type="button"
+              onClick={onOpenExportLampiran}
+              className="px-3.5 py-2 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98]"
+              title="Unduh 4 Dokumen Lampiran Observasi Siap Cetak Terpisah"
+            >
+              <ClipboardList className="w-4 h-4 text-pink-300" />
+              <span>Unduh Lampiran (.docx)</span>
+            </button>
+          )}
+
+          {/* Tombol Ekspor Word Utama */}
           <button
             type="button"
             onClick={onOpenExportModal}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
           >
             <FileDown className="w-4 h-4" />
-            <span>Ekspor Word (.docx)</span>
+            <span>Ekspor RPM (.docx)</span>
           </button>
         </div>
       </div>
@@ -750,9 +767,22 @@ export const LiveTablePreview: React.FC<Props> = ({
           {/* Lampiran Instrumen Observasi */}
           {data.lampiran_instrumen && (
             <div className="mb-8">
-              <div className="bg-[#1E3A8A] text-white px-3 py-2 font-bold text-xs tracking-wider uppercase border border-[#1E3A8A] flex justify-between items-center">
-                <span>LAMPIRAN: 4 INSTRUMEN OBSERVASI SIAP CETAK</span>
-                <span className="text-[10px] font-normal text-blue-100">Di DOCX: Halaman Terpisah</span>
+              <div className="bg-[#1E3A8A] text-white px-3.5 py-2 font-bold text-xs tracking-wider uppercase border border-[#1E3A8A] flex flex-wrap justify-between items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <span>LAMPIRAN: 4 INSTRUMEN OBSERVASI SIAP CETAK</span>
+                  <span className="text-[10px] font-normal text-blue-100 hidden sm:inline">(Di DOCX: Halaman Terpisah)</span>
+                </div>
+                {onOpenExportLampiran && (
+                  <button
+                    type="button"
+                    onClick={onOpenExportLampiran}
+                    className="bg-amber-400 hover:bg-amber-300 text-slate-900 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                    title="Unduh 4 Format Dokumen Lampiran Observasi Siap Cetak (.docx)"
+                  >
+                    <FileDown className="w-3.5 h-3.5" />
+                    <span>Unduh File Lampiran (.docx)</span>
+                  </button>
+                )}
               </div>
               <div className="border-x border-b border-slate-400 text-xs divide-y divide-slate-300">
                 {([
