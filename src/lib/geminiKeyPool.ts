@@ -72,7 +72,21 @@ export async function loadSystemKeyPool(): Promise<string[]> {
     console.warn('[GeminiKeyPool] Could not load dynamic keys from DB, using fallback pool:', err);
   }
 
-  // 3. Fallback to localStorage BYOK if user previously saved one locally
+  // 3. Fallback to localStorage (Admin system pool or user BYOK)
+  try {
+    const rawDemo = localStorage.getItem('kalandra_system_demo_keys');
+    if (rawDemo) {
+      const parsed = JSON.parse(rawDemo);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const active = parsed.filter((k: any) => k.is_active && k.api_key).map((k: any) => k.api_key);
+        if (active.length > 0) {
+          updatePool(active);
+          return getAvailableKeys();
+        }
+      }
+    }
+  } catch (e) {}
+
   try {
     const raw = localStorage.getItem('kalandra_byok_gemini_keys');
     if (raw) {

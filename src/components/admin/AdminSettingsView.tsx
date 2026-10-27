@@ -44,8 +44,21 @@ const DEFAULT_DEMO_KEYS: DemoKeyRecord[] = [
   },
 ];
 
+const LOCAL_STORAGE_KEY = 'kalandra_system_demo_keys';
+
 export const AdminSettingsView: React.FC = () => {
-  const [demoKeys, setDemoKeys] = useState<DemoKeyRecord[]>(DEFAULT_DEMO_KEYS);
+  const [demoKeys, setDemoKeys] = useState<DemoKeyRecord[]>(() => {
+    try {
+      const local = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (_) {}
+    return DEFAULT_DEMO_KEYS;
+  });
   const [newKey, setNewKey] = useState('');
   const [newLabel, setNewLabel] = useState('');
   const [showKeyIndex, setShowKeyIndex] = useState<{ [id: string]: boolean }>({});
@@ -58,6 +71,15 @@ export const AdminSettingsView: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const syncAndSave = (keys: DemoKeyRecord[]) => {
+    setDemoKeys(keys);
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(keys));
+    } catch (e) {
+      console.warn('localStorage save warning:', e);
+    }
+  };
+
   const fetchKeys = async () => {
     try {
       const { data, error } = await supabase
@@ -66,10 +88,36 @@ export const AdminSettingsView: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        setDemoKeys(data);
+        const mapped: DemoKeyRecord[] = data.map((d: any) => ({
+          id: d.id,
+          api_key: d.api_key,
+          label: d.label || 'Gemini Key Pool',
+          is_active: d.is_active ?? true,
+          created_at: d.created_at ? d.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
+        }));
+        syncAndSave(mapped);
+      } else {
+        const local = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (local) {
+          try {
+            const parsed = JSON.parse(local);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setDemoKeys(parsed);
+            }
+          } catch (_) {}
+        }
       }
     } catch (e) {
       console.warn('Demo keys fetch warning:', e);
+      const local = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (local) {
+        try {
+          const parsed = JSON.parse(local);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setDemoKeys(parsed);
+          }
+        } catch (_) {}
+      }
     }
   };
 
@@ -77,44 +125,94 @@ export const AdminSettingsView: React.FC = () => {
     fetchKeys();
   }, []);
 
-  const handleAddKey = (e: React.FormEvent) => {
+  const handleAddKey = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newKey.trim()) return;
+    const cleanKey = newKey.trim();
+    if (!cleanKey) return;
 
+    if (demoKeys.some(k => k.api_key === cleanKey)) {
+      showToast('⚠️ Kunci API ini sudah terdaftar dalam pool.');
+      return;
+    }
+
+    const tempId = `k-${Date.now()}`;
     const newRecord: DemoKeyRecord = {
-      id: `k-${Date.now()}`,
-      api_key: newKey.trim(),
+      id: tempId,
+      api_key: cleanKey,
       label: newLabel.trim() || `Gemini Pool #${demoKeys.length + 1}`,
       is_active: true,
       created_at: new Date().toISOString().slice(0, 10),
     };
 
-    setDemoKeys([newRecord, ...demoKeys]);
+    const updated = [newRecord, ...demoKeys];
+    syncAndSave(updated);
     setNewKey('');
     setNewLabel('');
     showToast('Kunci API cadangan sistem berhasil ditambahkan.');
+
+    // Asynchronously sync to Supabase demo_api_keys table
+    try {
+      const { data, error } = await supabase.from('demo_api_keys').insert({
+        api_key: newRecord.api_key,
+        label: newRecord.label,
+        is_active: newRecord.is_active,
+      }).select().single();
+
+      if (!error && data) {
+        const synced = updated.map(k => k.id === tempId ? { ...k, id: data.id } : k);
+        syncAndSave(synced);
+      }
+    } catch (err) {
+      console.warn('demo_api_keys remote insert warning:', err);
+    }
   };
 
-  const handleToggleKeyStatus = (id: string) => {
-    setDemoKeys((prev) =>
-      prev.map((k) => (k.id === id ? { ...k, is_active: !k.is_active } : k))
+  const handleToggleKeyStatus = async (id: string) => {
+    const target = demoKeys.find(k => k.id === id);
+    if (!target) return;
+    const nextStatus = !target.is_active;
+
+    const updated = demoKeys.map((k) =>
+      k.id === id ? { ...k, is_active: nextStatus } : k
     );
-    showToast('Status kunci API berhasil diperbarui.');
+    syncAndSave(updated);
+
+    try {
+      await supabase.from('demo_api_keys').update({ is_active: nextStatus }).eq('id', id);
+    } catch (_) {}
+
+    showToast(`Status kunci API berhasil ${nextStatus ? 'diaktifkan' : 'dinonaktifkan'}.`);
   };
 
-  const handleDeleteKey = (id: string) => {
+  const handleDeleteKey = async (id: string) => {
     if (confirm('Hapus kunci API ini dari pool cadangan?')) {
-      setDemoKeys((prev) => prev.filter((k) => k.id !== id));
+      const updated = demoKeys.filter((k) => k.id !== id);
+      syncAndSave(updated);
+
+      try {
+        await supabase.from('demo_api_keys').delete().eq('id', id);
+      } catch (_) {}
+
       showToast('Kunci API telah dihapus dari pool.');
     }
   };
 
-  const handleTestKey = (id: string) => {
+  const handleTestKey = async (id: string, apiKey: string) => {
     setIsTesting(id);
-    setTimeout(() => {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      if (res.ok) {
+        showToast('✅ Kunci API Valid & Aktif (Koneksi Google Gemini Berhasil)!');
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        const errMsg = errJson?.error?.message || `HTTP ${res.status}`;
+        showToast(`❌ Uji Gagal: ${errMsg.slice(0, 60)}`);
+      }
+    } catch (err: any) {
+      showToast(`⚠️ Gagal menghubungi server Google: ${err.message || 'Network error'}`);
+    } finally {
       setIsTesting(null);
-      showToast('✅ Kunci API Valid & Aktif (Koneksi Gemini Berhasil)!');
-    }, 1000);
+    }
   };
 
   const toggleShowKey = (id: string) => {
@@ -240,9 +338,9 @@ export const AdminSettingsView: React.FC = () => {
 
                 <div className="flex items-center gap-2 self-end sm:self-auto">
                   <button
-                    onClick={() => handleTestKey(k.id)}
+                    onClick={() => handleTestKey(k.id, k.api_key)}
                     disabled={isTesting === k.id}
-                    className="py-1.5 px-3 rounded-lg border border-[#D8C3DD] text-[11px] font-bold text-[#522D60] hover:bg-[#FAF3FB] transition-colors flex items-center gap-1"
+                    className="py-1.5 px-3 rounded-lg border border-[#D8C3DD] text-[11px] font-bold text-[#522D60] hover:bg-[#FAF3FB] transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <RefreshCw className={`w-3 h-3 ${isTesting === k.id ? 'animate-spin' : ''}`} />
                     <span>Uji Koneksi</span>
