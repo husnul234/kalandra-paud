@@ -1,9 +1,19 @@
-import { supabase } from './supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+import { supabase, supabaseUrl, supabaseAnonKey } from './supabaseClient';
 
 // Export the authenticated client. For admin operations on tables (profiles, schools, generated_documents),
 // the user's JWT already grants full admin privileges via Supabase RLS (is_admin() = true).
-// NO service_role master key is ever exposed or bundled into the client.
 export const supabaseAdmin = supabase;
+
+// Isolated auth client for registering new users without replacing or hijacking the admin's active session
+const isolatedAuthClient = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+    storageKey: 'kalandra_temp_signup_session',
+  },
+});
 
 export interface CreateUserInput {
   email: string;
@@ -32,8 +42,8 @@ export async function adminCreateUser(input: CreateUserInput) {
   const daysToAdd = duration === '1_bulan' ? 30 : duration === '6_bulan' ? 180 : 365;
   const expiresAt = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
 
-  // Register user via Supabase Auth
-  const { data: authData, error: authError } = await supabase.auth.signUp({
+  // Register user via isolated client so current admin session is NOT hijacked
+  const { data: authData, error: authError } = await isolatedAuthClient.auth.signUp({
     email: cleanEmail,
     password: input.password,
     options: {
@@ -67,7 +77,7 @@ export async function adminCreateUser(input: CreateUserInput) {
     .limit(1);
   const schoolId = schools?.[0]?.id;
 
-  // 1. Sync Profile
+  // 1. Sync Profile (with avatar_url fallback for school_name)
   const { error: profileError } = await supabase
     .from('profiles')
     .upsert({
@@ -77,6 +87,7 @@ export async function adminCreateUser(input: CreateUserInput) {
       role: input.role,
       school_id: schoolId || null,
       assigned_class: input.assigned_class || '',
+      avatar_url: input.school_name || 'Satuan PAUD',
       is_active: true,
       updated_at: new Date().toISOString(),
     });
