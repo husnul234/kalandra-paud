@@ -42,9 +42,14 @@ export async function adminCreateUser(input: CreateUserInput) {
         role: input.role,
         tier,
         school_name: input.school_name || 'TK NEGERI PEMBINA 01',
+        needs_password_change: true,
       },
     },
   });
+
+  try {
+    localStorage.setItem(`kalandra_pwd_change_needed_${cleanEmail}`, 'true');
+  } catch (_) {}
 
   if (authError) {
     throw new Error(authError.message);
@@ -161,7 +166,7 @@ export interface UpdateUserInput {
   school_name?: string;
   assigned_class?: string;
   phone?: string;
-  is_active: boolean;
+  is_active?: boolean;
   new_password?: string;
 }
 
@@ -177,9 +182,12 @@ export async function adminUpdateUser(input: UpdateUserInput) {
     full_name: cleanName,
     role: input.role,
     assigned_class: input.assigned_class || '',
-    is_active: input.is_active,
     updated_at: new Date().toISOString(),
   };
+
+  if (input.is_active !== undefined) {
+    profileUpdates.is_active = input.is_active;
+  }
 
   if (input.phone !== undefined) {
     profileUpdates.phone = input.phone;
@@ -242,6 +250,11 @@ export async function adminUpdateUser(input: UpdateUserInput) {
   if (input.new_password && input.new_password.trim().length >= 6) {
     const pass = input.new_password.trim();
     let updatedDirectly = false;
+
+    try {
+      localStorage.setItem(`kalandra_pwd_change_needed_${cleanEmail}`, 'true');
+      sessionStorage.removeItem(`kalandra_pwd_skipped_${input.userId}`);
+    } catch (_) {}
 
     // A. Attempt RPC admin_update_user_password (if migration 08 has been run)
     try {

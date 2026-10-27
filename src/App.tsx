@@ -12,6 +12,7 @@ import { ApiKeyManagerModal } from './components/ApiKeyManagerModal';
 import { ExportDocxModal } from './components/ExportDocxModal';
 import { ProfileModal } from './components/ProfileModal';
 import { SubscriptionModal } from './components/subscription/SubscriptionModal';
+import { FirstLoginPasswordModal } from './components/auth/FirstLoginPasswordModal';
 import { supabase } from './lib/supabaseClient';
 import { SAMPLE_RPM_PAUD } from './data/default_sample_rpm';
 import { RpmPaudDocData } from './lib/docx-engine/docx-paud-builder';
@@ -31,9 +32,27 @@ const GeneratorWorkspace: React.FC = () => {
   const [exportDocType, setExportDocType] = useState<'rpm' | 'lampiran'>('rpm');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [isFirstLoginPwdOpen, setIsFirstLoginPwdOpen] = useState(false);
   const [currentDoc, setCurrentDoc] = useState<RpmPaudDocData>(SAMPLE_RPM_PAUD);
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (user) {
+      const email = user.email?.toLowerCase().trim() || '';
+      if (email === 'pakhusnulid@gmail.com') return;
+
+      const skipKey = `kalandra_pwd_skipped_${email}`;
+      if (sessionStorage.getItem(skipKey) === 'true') return;
+
+      const metaFlag = (user.user_metadata as any)?.needs_password_change;
+      const localFlag = localStorage.getItem(`kalandra_pwd_change_needed_${email}`) === 'true';
+
+      if (metaFlag === true || localFlag) {
+        setIsFirstLoginPwdOpen(true);
+      }
+    }
+  }, [user]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -211,6 +230,15 @@ const GeneratorWorkspace: React.FC = () => {
       <SubscriptionModal
         isOpen={isSubscriptionModalOpen}
         onClose={() => setIsSubscriptionModalOpen(false)}
+      />
+
+      {/* First-Login Change Temporary Password Modal */}
+      <FirstLoginPasswordModal
+        isOpen={isFirstLoginPwdOpen}
+        onClose={() => setIsFirstLoginPwdOpen(false)}
+        userEmail={user?.email}
+        userName={profile?.full_name || (user?.user_metadata as any)?.full_name}
+        onSuccessToast={showToast}
       />
     </div>
   );

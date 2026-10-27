@@ -9,9 +9,13 @@ import {
   Phone, 
   Crown, 
   MessageSquare, 
-  CheckCircle2 
+  CheckCircle2,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import { adminUpdateUser } from '../../lib/supabaseAdmin';
 
 export interface WhatsAppUserTarget {
   id?: string;
@@ -40,6 +44,8 @@ export const WhatsAppActivationModal: React.FC<Props> = ({
 }) => {
   const [selectedPackage, setSelectedPackage] = useState<string>('Paket Pro (Tahunan)');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [tempPassword, setTempPassword] = useState<string>('Kalandra#2026');
+  const [showPassword, setShowPassword] = useState<boolean>(true);
   const [saveNumberToData, setSaveNumberToData] = useState<boolean>(true);
   const [activePreset, setActivePreset] = useState<'lengkap' | 'singkat' | 'reminder'>('lengkap');
   const [messageBody, setMessageBody] = useState<string>('');
@@ -48,6 +54,7 @@ export const WhatsAppActivationModal: React.FC<Props> = ({
   useEffect(() => {
     if (user) {
       setPhoneNumber(user.whatsapp || '');
+      setTempPassword(user.initialPassword || 'Kalandra#2026');
 
       // Determine initial package label
       let pkg = 'Paket Pro (Tahunan)';
@@ -64,14 +71,23 @@ export const WhatsAppActivationModal: React.FC<Props> = ({
     }
   }, [user]);
 
+  const handleGenerateRandomPassword = () => {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let rand = '';
+    for (let i = 0; i < 4; i++) {
+      rand += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const newPwd = `Kalandra#${rand}`;
+    setTempPassword(newPwd);
+  };
+
   // Generate text based on preset
-  const generateMessage = (preset: 'lengkap' | 'singkat' | 'reminder', pkg: string) => {
+  const generateMessage = (preset: 'lengkap' | 'singkat' | 'reminder', pkg: string, pwd?: string) => {
     if (!user) return '';
 
     const name = user.fullName || 'Bunda/Bapak Guru';
     const email = user.email || '';
-    const school = user.schoolName || 'Satuan PAUD';
-    const password = user.initialPassword ? user.initialPassword : 'Gunakan kata sandi yang telah Anda buat saat pendaftaran';
+    const activePwd = (pwd ? pwd.trim() : '') || tempPassword || user.initialPassword || 'Kalandra#2026';
     
     // Formulate expiry
     let expiry = user.expiryDate;
@@ -81,7 +97,7 @@ export const WhatsAppActivationModal: React.FC<Props> = ({
       expiry = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
-    const appUrl = `${window.location.origin}/auth`;
+    const appUrl = `${window.location.origin}/login`;
 
     if (preset === 'singkat') {
       return `Halo Kak ${name}, akun Anda untuk aplikasi *Kalandra — RPM TK Fase Fondasi* sudah aktif ya! 🎉
@@ -89,13 +105,13 @@ export const WhatsAppActivationModal: React.FC<Props> = ({
 📋 *Rincian Akun:*
 • *Paket Langganan:* ${pkg}
 • *Email Terdaftar:* ${email}
-• *Kata Sandi:* ${password}
+• *Kata Sandi Sementara:* ${activePwd}
 • *Masa Aktif:* s.d. ${expiry}
 
 👉 *Langkah Masuk (Login):*
 1. Silakan login ke: ${appUrl}
-2. Masukkan email terdaftar dan kata sandi di atas.
-3. Klik tombol *Masuk ke Akun*.
+2. Masukkan email terdaftar dan kata sandi sementara di atas.
+3. Anda dapat langsung membuat kata sandi baru pribadi Anda setelah masuk (dapat juga dilewati).
 
 Jika ada kendala saat login atau butuh bantuan lainnya, silakan langsung balas pesan ini ya Kak. Selamat mencoba! 🙏✨`;
     }
@@ -106,8 +122,8 @@ Jika ada kendala saat login atau butuh bantuan lainnya, silakan langsung balas p
 📋 *Akun Kalandra:*
 • *Email:* ${email}
 • *Paket:* ${pkg}
+• *Kata Sandi Sementara:* ${activePwd}
 • *Masa Aktif:* s.d. ${expiry}
-• *Lembaga:* ${school}
 
 Tautan login: ${appUrl}
 
@@ -120,14 +136,13 @@ Seluruh pembuatan RPM 1 Minggu + 4 Lampiran Observasi Siap Cetak kini telah otom
 📋 *Rincian Akun:*
 • *Paket Langganan:* ${pkg}
 • *Email Terdaftar:* ${email}
-• *Kata Sandi:* ${password}
+• *Kata Sandi Sementara:* ${activePwd}
 • *Masa Aktif:* ${expiry}
-• *Lembaga:* ${school}
 
 👉 *Langkah Masuk (Login):*
 1. Silakan login ke: ${appUrl}
-2. Masukkan email terdaftar di atas.
-3. Masukkan kata sandi (atau buat kata sandi baru jika baru pertama kali login).
+2. Masukkan email terdaftar dan kata sandi sementara di atas.
+3. Setelah masuk, Anda akan langsung diberikan pilihan untuk membuat kata sandi baru pribadi Anda (bisa dilewati jika ingin tetap memakai sandi sementara).
 4. Klik tombol *Masuk ke Akun*.
 
 ✨ *Fitur yang Siap Anda Nikmati:*
@@ -139,12 +154,12 @@ Seluruh pembuatan RPM 1 Minggu + 4 Lampiran Observasi Siap Cetak kini telah otom
 Jika ada kendala saat login atau butuh bantuan lainnya, silakan langsung balas pesan ini ya Kak. Selamat mencoba & semoga bermanfaat untuk kelancaran administrasi mengajar! 🙏✨`;
   };
 
-  // Sync message when preset or package changes
+  // Sync message when preset, package, or password changes
   useEffect(() => {
     if (user) {
-      setMessageBody(generateMessage(activePreset, selectedPackage));
+      setMessageBody(generateMessage(activePreset, selectedPackage, tempPassword));
     }
-  }, [user, activePreset, selectedPackage]);
+  }, [user, activePreset, selectedPackage, tempPassword]);
 
   if (!isOpen || !user) return null;
 
@@ -155,6 +170,23 @@ Jika ada kendala saat login atau butuh bantuan lainnya, silakan langsung balas p
   };
 
   const handleSendWhatsApp = async () => {
+    // 0. If admin customized the temporary password, sync to user account in DB
+    const cleanPwd = tempPassword.trim();
+    if (user.id && cleanPwd.length >= 6 && cleanPwd !== user.initialPassword) {
+      try {
+        await adminUpdateUser({
+          userId: user.id,
+          email: user.email,
+          full_name: user.fullName,
+          role: 'guru',
+          new_password: cleanPwd,
+        });
+        localStorage.setItem(`kalandra_pwd_change_needed_${user.email.toLowerCase()}`, 'true');
+      } catch (e) {
+        console.warn('Sync temp password warning:', e);
+      }
+    }
+
     // 1. Save phone number if checked
     const cleanPhone = phoneNumber.replace(/\D/g, '');
     if (saveNumberToData && user.id && cleanPhone) {
@@ -271,6 +303,43 @@ Jika ada kendala saat login atau butuh bantuan lainnya, silakan langsung balas p
                 </label>
               </div>
             </div>
+
+            {/* Temporary Password Input */}
+            <div className="pt-2 border-t border-[#EFE6F2]">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-[#2A1532] flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-[#80426E]" />
+                  <span>Kata Sandi Sementara (Diberikan ke Pengguna):</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGenerateRandomPassword}
+                  className="text-[11px] font-bold text-[#80426E] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <span>Acak Sandi</span>
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={tempPassword}
+                  onChange={(e) => setTempPassword(e.target.value)}
+                  placeholder="Contoh: Kalandra#2026"
+                  className="w-full px-3 py-2 pr-10 text-xs font-mono rounded-xl border border-[#CBB4D1] focus:ring-2 focus:ring-[#522D60] text-[#2A1532] bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-[#74607B] hover:text-[#522D60] cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+              <p className="text-[10px] text-[#74607B] mt-1">
+                Kata sandi ini tercantum otomatis di pesan WA. Guru akan diberikan dialog ganti sandi saat login pertama (bisa dilewati).
+              </p>
+            </div>
           </div>
 
           {/* Preset Buttons Bar */}
@@ -314,7 +383,7 @@ Jika ada kendala saat login atau butuh bantuan lainnya, silakan langsung balas p
 
             <button
               type="button"
-              onClick={() => setMessageBody(generateMessage(activePreset, selectedPackage))}
+              onClick={() => setMessageBody(generateMessage(activePreset, selectedPackage, tempPassword))}
               className="text-xs font-bold text-[#80426E] hover:text-[#522D60] flex items-center gap-1 hover:underline cursor-pointer"
               title="Kembalikan teks sesuai template"
             >

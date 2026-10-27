@@ -792,9 +792,12 @@ export const AdminUsersView: React.FC = () => {
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         user={selectedEditUser}
-        onSuccess={(notice) => {
+        onSuccess={(notice, updatedPassword) => {
           fetchUsers();
           showToast(notice || 'Data pengguna berhasil diperbarui!');
+          if (updatedPassword && selectedEditUser) {
+            handleOpenWhatsApp({ ...selectedEditUser }, updatedPassword);
+          }
         }}
       />
 
