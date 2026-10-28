@@ -395,14 +395,15 @@ export const AdminUsersView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <button
             onClick={fetchUsers}
             disabled={isLoading}
             className="p-2 rounded-xl border border-[#D8C3DD] bg-white text-[#522D60] hover:bg-[#FAF3FB] transition-colors flex items-center gap-1.5 text-xs font-bold"
+            title="Segarkan data pengguna"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Segarkan</span>
+            <span className="hidden sm:inline">Segarkan</span>
           </button>
           <button
             onClick={() => {
@@ -410,17 +411,19 @@ export const AdminUsersView: React.FC = () => {
               handleGenerateRandomPassword();
               setIsCreateOpen(true);
             }}
-            className="py-2 px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+            className="py-2 px-3 sm:px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Tambah Pengguna</span>
+            <span className="hidden xs:inline">Tambah Pengguna</span>
+            <span className="xs:hidden">Tambah</span>
           </button>
           <button
             onClick={() => setIsBulkOpen(true)}
-            className="py-2 px-3.5 rounded-xl text-[#522D60] bg-[#FAF3FB] hover:bg-[#F3E8F5] border border-[#522D60]/30 shadow-2xs flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
+            className="py-2 px-3 sm:px-3.5 rounded-xl text-[#522D60] bg-[#FAF3FB] hover:bg-[#F3E8F5] border border-[#522D60]/30 shadow-2xs flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
           >
             <Users className="w-4 h-4 text-[#522D60]" />
-            <span>Tambah Massal</span>
+            <span className="hidden xs:inline">Tambah Massal</span>
+            <span className="xs:hidden">Massal</span>
           </button>
         </div>
       </div>
@@ -440,9 +443,9 @@ export const AdminUsersView: React.FC = () => {
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
           {/* Role Filter */}
-          <div className="flex items-center bg-[#FAF3FB] p-0.5 rounded-xl border border-[#E8D6EB]">
+          <div className="flex items-center bg-[#FAF3FB] p-0.5 rounded-xl border border-[#E8D6EB] shrink-0">
             {(['all', 'admin', 'guru'] as const).map((r) => (
               <button
                 key={r}

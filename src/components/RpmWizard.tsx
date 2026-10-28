@@ -361,6 +361,17 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
             );
           })}
         </div>
+
+        {/* Mobile active step title indicator */}
+        <div className="sm:hidden text-center mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-center gap-1.5 text-xs font-bold text-[#522D60]">
+          <span>Langkah {currentStep} dari 4:</span>
+          <span className="text-[#80426E]">
+            {currentStep === 1 && 'Identitas Kelas & Topik'}
+            {currentStep === 2 && 'Target 8 DPL Profil Lulusan'}
+            {currentStep === 3 && 'Capaian & Loose Parts'}
+            {currentStep === 4 && 'Eksekusi AI 18 Kegiatan'}
+          </span>
+        </div>
       </div>
 
       {/* STEP 1: IDENTITAS DOKUMEN */}
@@ -569,9 +580,11 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
-              className="px-6 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+              className="w-full sm:w-auto px-6 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
-              Lanjut ke Target 8 DPL <ChevronRight className="w-4 h-4" />
+              <span className="hidden sm:inline">Lanjut ke Target 8 DPL</span>
+              <span className="sm:hidden">Lanjut ke Langkah 2 (DPL)</span>
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -641,20 +654,22 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
             })}
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 gap-2">
             <button
               type="button"
               onClick={() => setCurrentStep(1)}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5"
+              className="px-3.5 sm:px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
             >
               <ChevronLeft className="w-4 h-4" /> Kembali
             </button>
             <button
               type="button"
               onClick={() => setCurrentStep(3)}
-              className="px-6 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+              className="px-4 sm:px-6 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
-              Lanjut ke Capaian & Loose Parts <ChevronRight className="w-4 h-4" />
+              <span className="hidden sm:inline">Lanjut ke Capaian & Loose Parts</span>
+              <span className="sm:hidden">Lanjut (Langkah 3)</span>
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -809,20 +824,22 @@ export const RpmWizard: React.FC<Props> = ({ onDocumentGenerated, onOpenKeyModal
             ></textarea>
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 gap-2">
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
-              className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5"
+              className="px-3.5 sm:px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0"
             >
               <ChevronLeft className="w-4 h-4" /> Kembali
             </button>
             <button
               type="button"
               onClick={() => setCurrentStep(4)}
-              className="px-6 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+              className="px-4 sm:px-6 py-2.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
-              Lanjut ke Ringkasan & Eksekusi <ChevronRight className="w-4 h-4" />
+              <span className="hidden sm:inline">Lanjut ke Ringkasan & Eksekusi</span>
+              <span className="sm:hidden">Lanjut (Langkah 4)</span>
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>

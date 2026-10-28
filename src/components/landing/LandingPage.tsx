@@ -27,9 +27,12 @@ import {
   Smartphone,
   ExternalLink,
   X,
+  Menu,
+  Laptop,
   TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { PwaInstallModal } from '../pwa/PwaInstallModal';
 
 interface LandingPageProps {
   onGoToApp: () => void;
@@ -44,6 +47,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const { user, profile, isAdmin } = useAuth();
   const [pricingCycle, setPricingCycle] = useState<'1_bulan' | '6_bulan' | '1_tahun'>('1_tahun');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isPwaModalOpen, setIsPwaModalOpen] = useState(false);
 
   // WhatsApp order link generator
   const getWhatsAppOrderUrl = (tier: 'Standar' | 'PRO', periodLabel: string, price: string) => {
@@ -81,10 +86,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-[#74607B]">
+          <nav className="hidden md:flex items-center gap-5 lg:gap-6 text-xs font-bold text-[#74607B]">
             <a href="#fitur" className="hover:text-[#522D60] transition-colors">Fitur Unggulan</a>
             <a href="#lampiran" className="hover:text-[#522D60] transition-colors">4 Lampiran Observasi</a>
             <a href="#asisten" className="hover:text-[#522D60] transition-colors">Revisi AI Chat</a>
+            <a href="#aplikasi-pwa" className="hover:text-[#522D60] transition-colors flex items-center gap-1 font-extrabold text-[#522D60]">
+              <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Aplikasi HP</span>
+              <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full font-black">PWA</span>
+            </a>
             <a href="#perbandingan" className="hover:text-[#522D60] transition-colors">Perbandingan</a>
             <a href="#harga" className="hover:text-[#522D60] transition-colors">Daftar Harga</a>
             <a href="#faq" className="hover:text-[#522D60] transition-colors">Tanya Jawab</a>
@@ -105,22 +115,126 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {user || profile ? (
               <button
                 onClick={onGoToApp}
-                className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all cursor-pointer"
+                className="py-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all cursor-pointer"
               >
-                <span>Buka Generator RPM</span>
+                <span className="hidden xs:inline">Buka Generator RPM</span>
+                <span className="xs:hidden">Generator</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
               <button
                 onClick={onGoToAuth}
-                className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all cursor-pointer"
+                className="py-2 px-3.5 sm:px-4 rounded-xl text-xs font-bold text-white bg-[#522D60] hover:bg-[#693774] shadow-md shadow-[#522D60]/20 flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span>Masuk</span>
               </button>
             )}
+
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-xl text-[#2A1532] hover:bg-[#FAF3FB] transition-colors"
+              aria-label="Menu navigasi landing page"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5 text-[#522D60]" /> : <Menu className="w-5 h-5 text-[#522D60]" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-[#EFE6F2] bg-white px-4 pt-3 pb-5 space-y-1 shadow-xl animate-fade-in">
+            <div className="text-[10px] font-black tracking-widest uppercase text-[#80426E] px-3 py-1">
+              Navigasi Halaman
+            </div>
+            <a
+              href="#fitur"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-[#2A1532] hover:bg-[#FAF3FB] hover:text-[#522D60] transition-colors"
+            >
+              <Sparkles className="w-4 h-4 text-[#80426E]" />
+              <span>Fitur Unggulan</span>
+            </a>
+            <a
+              href="#lampiran"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-[#2A1532] hover:bg-[#FAF3FB] hover:text-[#522D60] transition-colors"
+            >
+              <ClipboardList className="w-4 h-4 text-[#80426E]" />
+              <span>4 Lampiran Observasi Siap Cetak</span>
+            </a>
+            <a
+              href="#asisten"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-[#2A1532] hover:bg-[#FAF3FB] hover:text-[#522D60] transition-colors"
+            >
+              <Bot className="w-4 h-4 text-[#80426E]" />
+              <span>Revisi AI Chat Eksklusif</span>
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setIsPwaModalOpen(true);
+              }}
+              className="w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 transition-colors border border-emerald-200"
+            >
+              <div className="flex items-center gap-2.5">
+                <Smartphone className="w-4 h-4 text-emerald-600" />
+                <span>Pasang Kalandra di HP</span>
+              </div>
+              <span className="text-[9px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                Install
+              </span>
+            </button>
+            <a
+              href="#perbandingan"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-[#2A1532] hover:bg-[#FAF3FB] hover:text-[#522D60] transition-colors"
+            >
+              <Layers className="w-4 h-4 text-[#80426E]" />
+              <span>Perbandingan Standar</span>
+            </a>
+            <a
+              href="#harga"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-[#2A1532] hover:bg-[#FAF3FB] hover:text-[#522D60] transition-colors"
+            >
+              <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
+              <span>Daftar Harga & Paket</span>
+            </a>
+            <a
+              href="#faq"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-[#2A1532] hover:bg-[#FAF3FB] hover:text-[#522D60] transition-colors"
+            >
+              <HelpCircle className="w-4 h-4 text-[#74607B]" />
+              <span>Tanya Jawab (FAQ)</span>
+            </a>
+
+            {isAdmin && (
+              <button
+                onClick={() => { setMobileMenuOpen(false); onGoToAdmin(); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-[#522D60] bg-[#FAF3FB] hover:bg-[#F3E8F5] transition-colors mt-2"
+              >
+                <ShieldCheck className="w-4 h-4 text-[#522D60]" />
+                <span>Buka Panel Admin</span>
+              </button>
+            )}
+
+            <div className="pt-2 border-t border-[#EFE6F2] mt-2">
+              <button
+                onClick={() => { setMobileMenuOpen(false); handlePrimaryAction(); }}
+                className="w-full py-2.5 px-4 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#FFD38B]" />
+                <span>{user || profile ? 'Buka Generator RPM' : 'Masuk ke Platform'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* 2. HERO SECTION */}
@@ -132,9 +246,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-6">
           {/* Tag Pill */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#E8D6EB] shadow-xs text-xs font-bold text-[#80426E] animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#E8D6EB] shadow-xs text-xs font-bold text-[#80426E] animate-fade-in flex-wrap justify-center">
             <span className="w-2 h-2 rounded-full bg-[#522D60] animate-pulse" />
-            <span>Terstandar Pengawas PAUD 2025/2026 — Lolos Verifikasi Resmi</span>
+            <span>Terstandar Pengawas PAUD 2025/2026</span>
+            <span className="text-[#D8C3DD]">•</span>
+            <span className="text-emerald-700 font-extrabold flex items-center gap-1">
+              <Smartphone className="w-3.5 h-3.5" />
+              100% Responsif & Siap Pasang di Layar HP (Android & iOS)
+            </span>
           </div>
 
           {/* Headline */}
@@ -154,18 +273,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={handlePrimaryAction}
-              className="w-full sm:w-auto px-8 py-3.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2.5 shadow-lg shadow-[#522D60]/25 transition-all active:scale-[0.98] cursor-pointer"
+              className="w-full sm:w-auto px-7 py-3.5 bg-[#522D60] hover:bg-[#693774] text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2.5 shadow-lg shadow-[#522D60]/25 transition-all active:scale-[0.98] cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-[#FFD38B]" />
               <span>Mulai Susun RPM Sekarang</span>
               <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPwaModalOpen(true)}
+              className="w-full sm:w-auto px-6 py-3.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+            >
+              <Smartphone className="w-4 h-4 text-emerald-700" />
+              <span>Pasang di HP (Android & iOS)</span>
             </button>
             <a
               href="#harga"
               className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-[#FAF3FB] text-[#522D60] border border-[#D8C3DD] rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
             >
               <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
-              <span>Lihat Pilihan Paket (Mulai Rp 9.000)</span>
+              <span>Lihat Paket (Rp 9rb-an)</span>
             </a>
           </div>
 
@@ -451,6 +578,143 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 3.4. PWA MOBILE APP SECTION (100% RESPONSIF DI HP & SIAP PASANG) */}
+      <section id="aplikasi-pwa" className="py-20 bg-gradient-to-b from-[#FAF7FB] via-white to-[#FAF7FB] border-b border-[#EFE6F2] relative overflow-hidden">
+        {/* Ambient glow */}
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-[#522D60]/5 rounded-full blur-3xl -z-10" />
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl -z-10" />
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
+          
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black uppercase tracking-wider">
+              <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Progressive Web App (PWA) 2026</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#2A1532] tracking-tight">
+              100% Responsif di Layar HP &amp; Pasang Layaknya{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#522D60] to-emerald-700">
+                Aplikasi Native Android / iOS
+              </span>
+            </h2>
+            <p className="text-xs sm:text-base text-[#74607B] leading-relaxed">
+              Tak perlu lagi membuka laptop hanya untuk menyusun perencanaan kelas atau mengecek rubrik asesmen. Pasang Kalandra langsung ke layar utama ponsel Bunda &amp; Bapak Guru tanpa repot unduh file puluhan megabyte dari toko aplikasi.
+            </p>
+          </div>
+
+          {/* 4 Feature Pillars Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            
+            {/* Card 1 */}
+            <div className="bg-white p-6 rounded-3xl border border-[#E8D6EB] shadow-xs hover:border-[#522D60]/40 hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-2xs">
+                  <Smartphone className="w-6 h-6 text-emerald-600" />
+                </div>
+                <h3 className="text-base font-extrabold text-[#2A1532]">
+                  Layar Penuh (Standalone)
+                </h3>
+                <p className="text-xs text-[#74607B] leading-relaxed">
+                  Bebas dari bilah navigasi dan URL browser yang mengganggu. Tampilan bersih dan lega serasa membuka aplikasi native Android atau iOS sesungguhnya.
+                </p>
+              </div>
+              <div className="text-[11px] font-bold text-emerald-700 flex items-center gap-1.5 pt-2 border-t border-[#EFE6F2]">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Zero Browser Clutter</span>
+              </div>
+            </div>
+
+            {/* Card 2 */}
+            <div className="bg-white p-6 rounded-3xl border border-[#E8D6EB] shadow-xs hover:border-[#522D60]/40 hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#FAF3FB] text-[#522D60] flex items-center justify-center border border-[#E8D6EB] shadow-2xs">
+                  <Zap className="w-6 h-6 text-[#80426E]" />
+                </div>
+                <h3 className="text-base font-extrabold text-[#2A1532]">
+                  Ramah Sentuhan Jari
+                </h3>
+                <p className="text-xs text-[#74607B] leading-relaxed">
+                  Navigasi geser (drawer) halus, tombol besar nyaman dipencet, serta tabel observasi yang responsif dan mudah digeser horizontal di layar 320px–480px.
+                </p>
+              </div>
+              <div className="text-[11px] font-bold text-[#522D60] flex items-center gap-1.5 pt-2 border-t border-[#EFE6F2]">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Mobile Ergonomics</span>
+              </div>
+            </div>
+
+            {/* Card 3 */}
+            <div className="bg-white p-6 rounded-3xl border border-[#E8D6EB] shadow-xs hover:border-[#522D60]/40 hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200 shadow-2xs">
+                  <Sparkles className="w-6 h-6 text-amber-600" />
+                </div>
+                <h3 className="text-base font-extrabold text-[#2A1532]">
+                  Super Ringan (~2 MB)
+                </h3>
+                <p className="text-xs text-[#74607B] leading-relaxed">
+                  Tidak memakan memori HP Anda hingga ratusan MB seperti aplikasi Play Store. Cepat dimuat, hemat kuota internet, dan bekerja cepat di segala tipe gadget.
+                </p>
+              </div>
+              <div className="text-[11px] font-bold text-amber-800 flex items-center gap-1.5 pt-2 border-t border-[#EFE6F2]">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Hemat Memori &amp; Kuota</span>
+              </div>
+            </div>
+
+            {/* Card 4 */}
+            <div className="bg-white p-6 rounded-3xl border border-[#E8D6EB] shadow-xs hover:border-[#522D60]/40 hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-700 flex items-center justify-center border border-sky-200 shadow-2xs">
+                  <Laptop className="w-6 h-6 text-sky-600" />
+                </div>
+                <h3 className="text-base font-extrabold text-[#2A1532]">
+                  1 Ketukan di Home Screen
+                </h3>
+                <p className="text-xs text-[#74607B] leading-relaxed">
+                  Ikon resmi Kalandra akan muncul berdampingan dengan aplikasi favorit Anda. Buka kapan saja dalam 1 detik untuk menyusun kurikulum atau mengecek asesmen.
+                </p>
+              </div>
+              <div className="text-[11px] font-bold text-sky-800 flex items-center gap-1.5 pt-2 border-t border-[#EFE6F2]">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Android, iOS &amp; Laptop</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Interactive Install Banner */}
+          <div className="p-6 sm:p-8 bg-gradient-to-r from-[#2A1532] via-[#522D60] to-[#80426E] text-white rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 text-center md:text-left">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-xs text-amber-300 text-xs font-bold border border-white/20">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Instalasi 1 Langkah Mudah</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black">
+                Pasang Kalandra ke Layar HP Anda Sekarang
+              </h3>
+              <p className="text-xs sm:text-sm text-pink-100 max-w-xl">
+                Buka Kalandra layaknya aplikasi native tanpa login berulang. Mendukung Android (Chrome/Edge), iPhone (Safari Add to Home Screen), dan Windows/Mac.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setIsPwaModalOpen(true)}
+                className="w-full sm:w-auto px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/20 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Pasang Aplikasi Sekarang</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -894,6 +1158,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Paket Standar diperuntukkan bagi guru yang hanya membutuhkan dokumen utama RPM dengan kuota 15 dokumen/bulan. Paket PRO membuka seluruh fitur lanjutan: 4 Lampiran Observasi Siap Cetak (Anekdot, Ceklis SOLO, Hasil Karya, Foto Berseri), Rekomendasi AI DPL & Loose Parts, Asisten Revisi AI via Chat (Mode Plan & Action), dan kuota 40 dokumen/bulan.
             </p>
           </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-xs">
+            <h4 className="text-sm font-bold text-[#2A1532] flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Apakah Kalandra bisa dipasang di layar HP Android atau iPhone saya?</span>
+            </h4>
+            <p className="text-xs text-[#74607B] mt-1.5 leading-relaxed">
+              Ya, 100% bisa! Kalandra telah mengadopsi standar Progressive Web App (PWA) modern. Bunda dan Bapak Guru dapat memasang Kalandra langsung ke layar utama (Home Screen) smartphone Android, iPhone/iPad (iOS), maupun Laptop tanpa perlu mengunduh aplikasi berukuran puluhan megabyte dari toko aplikasi. Aplikasi langsung terbuka secara layar penuh (fullscreen standalone) tanpa bilah URL browser.
+            </p>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-xs">
+            <h4 className="text-sm font-bold text-[#2A1532] flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Bagaimana cara memasang aplikasi Kalandra di HP saya?</span>
+            </h4>
+            <p className="text-xs text-[#74607B] mt-1.5 leading-relaxed">
+              Sangat praktis! Cukup klik tombol <strong>"Pasang di HP"</strong> di menu navigasi atau tombol di halaman ini:
+              <br />
+              • <strong>Di HP Android (Chrome/Edge):</strong> Klik tombol "Pasang Sekarang" pada kotak dialog yang muncul, lalu pilih 'Install'.
+              <br />
+              • <strong>Di iPhone/iPad (Safari):</strong> Ketuk tombol <em>Share</em> (ikon kotak dengan panah ke atas di bilah bawah browser Safari), lalu gulir ke bawah dan pilih <strong>"Add to Home Screen"</strong> (Tambah ke Layar Utama). Selesai!
+            </p>
+          </div>
         </div>
       </section>
 
@@ -942,6 +1230,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </p>
         </div>
       </footer>
+
+      {/* PWA Install Modal Guide */}
+      <PwaInstallModal
+        isOpen={isPwaModalOpen}
+        onClose={() => setIsPwaModalOpen(false)}
+      />
     </div>
   );
 };

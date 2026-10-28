@@ -16,8 +16,10 @@ import {
   AlertTriangle,
   LogIn,
   Home,
-  Crown
+  Crown,
+  Smartphone
 } from 'lucide-react';
+import { PwaInstallModal } from './pwa/PwaInstallModal';
 
 interface Props {
   activeTab: 'wizard' | 'preview' | 'history' | 'admin';
@@ -42,6 +44,7 @@ export const Topbar: React.FC<Props> = ({
   const { activeKeys } = useGeminiKeys(user?.id);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isPwaModalOpen, setIsPwaModalOpen] = useState(false);
 
   const keyCount = activeKeys.length;
 
@@ -141,12 +144,12 @@ export const Topbar: React.FC<Props> = ({
           </nav>
 
           {/* Right Action Icons: Subscription Pill, BYOK Keys Pill & Profile */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Subscription Pill */}
             {onOpenSubscriptionModal && (
               <button
                 onClick={onOpenSubscriptionModal}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border bg-gradient-to-r from-[#FAF3FB] to-[#F3E8F5] text-[#522D60] border-[#E8D6EB] hover:border-[#522D60]/40 shadow-2xs cursor-pointer"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-full text-xs font-bold transition-all border bg-gradient-to-r from-[#FAF3FB] to-[#F3E8F5] text-[#522D60] border-[#E8D6EB] hover:border-[#522D60]/40 shadow-2xs cursor-pointer shrink-0"
                 title="Buka Pilihan Paket Langganan Standar & Pro"
               >
                 <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />
@@ -257,6 +260,16 @@ export const Topbar: React.FC<Props> = ({
                           <KeyRound className="w-4 h-4 text-[#74607B]" /> Kelola API Key BYOK (Admin)
                         </button>
                       )}
+
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          setIsPwaModalOpen(true);
+                        }}
+                        className="w-full px-4 py-2 text-left text-xs text-emerald-800 hover:bg-emerald-50 flex items-center gap-2 font-bold transition-colors cursor-pointer"
+                      >
+                        <Smartphone className="w-4 h-4 text-emerald-600" /> Pasang di Layar HP (PWA)
+                      </button>
                     </div>
 
                     <div className="border-t border-slate-100 pt-1">
@@ -305,75 +318,174 @@ export const Topbar: React.FC<Props> = ({
 
       {/* Mobile Drawer Navigation */}
       {showMobileMenu && (
-        <div className="md:hidden border-t border-[#EFE6F2] bg-white px-4 pt-2 pb-4 space-y-1">
+        <div className="md:hidden border-t border-[#EFE6F2] bg-white px-4 pt-3 pb-5 space-y-2 shadow-xl animate-fade-in max-h-[85vh] overflow-y-auto">
+          {/* User Profile Summary Card (Mobile) */}
+          {user || profile ? (
+            <div className="p-3 bg-[#FAF3FB] rounded-2xl border border-[#E8D6EB] space-y-2 mb-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#522D60] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  {profile?.full_name?.charAt(0) || 'U'}
+                </div>
+                <div className="overflow-hidden min-w-0 flex-1">
+                  <div className="text-xs font-bold text-[#2A1532] truncate">
+                    {profile?.full_name || 'Guru PAUD'}
+                  </div>
+                  <div className="text-[11px] text-[#74607B] truncate">
+                    {user?.email || profile?.email}
+                  </div>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase shrink-0 ${
+                  isAdmin ? 'bg-[#522D60] text-white' : 'bg-[#80426E] text-white'
+                }`}>
+                  {isAdmin ? 'ADMIN' : 'GURU'}
+                </span>
+              </div>
+
+              {/* School & Tier Badges */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[#E8D6EB]/60">
+                <button
+                  onClick={() => { setShowMobileMenu(false); if (onOpenProfileModal) onOpenProfileModal(); }}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#80426E] bg-white px-2 py-0.5 rounded-lg border border-[#E8D6EB] truncate max-w-full"
+                >
+                  <Building2 className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{profile?.school_name || 'Satuan PAUD'}</span>
+                </button>
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                  <Crown className="w-3 h-3 text-amber-500 fill-amber-400" />
+                  {profile?.tier === 'standar' ? 'Standar' : 'Pro'}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="text-[10px] font-black tracking-widest uppercase text-[#80426E] px-2 py-0.5">
+            Menu Utama
+          </div>
+
           {onGoToLanding && (
             <button
               onClick={() => { onGoToLanding(); setShowMobileMenu(false); }}
-              className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 text-[#2A1532] hover:bg-[#FAF3FB]"
+              className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2.5 text-[#2A1532] hover:bg-[#FAF3FB] transition-colors"
             >
-              <Home className="w-4 h-4 text-[#80426E]" /> Beranda
+              <Home className="w-4 h-4 text-[#80426E]" />
+              <span>Beranda</span>
             </button>
           )}
           <button
             onClick={() => { setActiveTab('wizard'); setShowMobileMenu(false); }}
-            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 ${
-              activeTab === 'wizard' ? 'bg-[#FAF3FB] text-[#522D60] font-bold' : 'text-[#2A1532]'
+            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2.5 transition-colors ${
+              activeTab === 'wizard' ? 'bg-[#FAF3FB] text-[#522D60] font-bold shadow-2xs' : 'text-[#2A1532] hover:bg-[#FAF3FB]'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-[#80426E]" /> Penyusun RPM (Wizard)
+            <Sparkles className="w-4 h-4 text-[#80426E]" />
+            <span>Penyusun RPM (Wizard)</span>
           </button>
           <button
             onClick={() => { setActiveTab('preview'); setShowMobileMenu(false); }}
-            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 ${
-              activeTab === 'preview' ? 'bg-[#FAF3FB] text-[#522D60] font-bold' : 'text-[#2A1532]'
+            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2.5 transition-colors ${
+              activeTab === 'preview' ? 'bg-[#FAF3FB] text-[#522D60] font-bold shadow-2xs' : 'text-[#2A1532] hover:bg-[#FAF3FB]'
             }`}
           >
-            <FileText className="w-4 h-4 text-[#80426E]" /> Pratinjau Dokumen & Edit
+            <FileText className="w-4 h-4 text-[#80426E]" />
+            <span>Pratinjau Dokumen & Edit</span>
           </button>
           <button
             onClick={() => { setActiveTab('history'); setShowMobileMenu(false); }}
-            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 ${
-              activeTab === 'history' ? 'bg-[#FAF3FB] text-[#522D60] font-bold' : 'text-[#2A1532]'
+            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2.5 transition-colors ${
+              activeTab === 'history' ? 'bg-[#FAF3FB] text-[#522D60] font-bold shadow-2xs' : 'text-[#2A1532] hover:bg-[#FAF3FB]'
             }`}
           >
-            <LayoutDashboard className="w-4 h-4 text-[#74607B]" /> Riwayat Dokumen
+            <LayoutDashboard className="w-4 h-4 text-[#74607B]" />
+            <span>Riwayat Dokumen</span>
           </button>
-          {onOpenSubscriptionModal && (
+
+          <div className="pt-2 border-t border-[#EFE6F2] space-y-1">
+            {/* PWA Install in Mobile Drawer */}
             <button
-              onClick={() => { onOpenSubscriptionModal(); setShowMobileMenu(false); }}
-              className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 text-[#522D60] bg-gradient-to-r from-[#FAF3FB] to-[#F3E8F5] border border-[#522D60]/20"
+              onClick={() => {
+                setShowMobileMenu(false);
+                setIsPwaModalOpen(true);
+              }}
+              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
             >
-              <Crown className="w-4 h-4 text-amber-500 fill-amber-400" /> Paket Langganan Standar & Pro
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-emerald-700" />
+                <span>Pasang Kalandra di Layar HP</span>
+              </div>
+              <span className="text-[9px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                PWA
+              </span>
             </button>
-          )}
-          {user && onOpenProfileModal && (
-            <button
-              onClick={() => { onOpenProfileModal(); setShowMobileMenu(false); }}
-              className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 text-[#2A1532] hover:bg-[#FAF3FB]"
-            >
-              <User className="w-4 h-4 text-[#80426E]" /> Profil Guru & Satuan PAUD
-            </button>
-          )}
-          {isAdmin && (
-            <button
-              onClick={() => { setActiveTab('admin'); setShowMobileMenu(false); }}
-              className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 ${
-                activeTab === 'admin' ? 'bg-[#522D60] text-white' : 'text-[#522D60]'
-              }`}
-            >
-              <Shield className="w-4 h-4" /> Panel Admin Platform
-            </button>
-          )}
-          {!user && (
-            <button
-              onClick={() => { onOpenAuth(); setShowMobileMenu(false); }}
-              className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-[#522D60] flex items-center gap-2"
-            >
-              <LogIn className="w-4 h-4" /> Masuk ke Akun
-            </button>
-          )}
+
+            {onOpenSubscriptionModal && (
+              <button
+                onClick={() => { onOpenSubscriptionModal(); setShowMobileMenu(false); }}
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2.5 text-[#522D60] bg-gradient-to-r from-[#FAF3FB] to-[#F3E8F5] border border-[#522D60]/20"
+              >
+                <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
+                <span>Paket Langganan Standar & Pro</span>
+              </button>
+            )}
+
+            {user && onOpenProfileModal && (
+              <button
+                onClick={() => { onOpenProfileModal(); setShowMobileMenu(false); }}
+                className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2.5 text-[#2A1532] hover:bg-[#FAF3FB] transition-colors"
+              >
+                <User className="w-4 h-4 text-[#80426E]" />
+                <span>Profil Guru & Satuan PAUD</span>
+              </button>
+            )}
+
+            {isAdmin && (
+              <>
+                <button
+                  onClick={() => { setActiveTab('admin'); setShowMobileMenu(false); }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2.5 transition-colors ${
+                    activeTab === 'admin' ? 'bg-[#522D60] text-white' : 'text-[#522D60] hover:bg-[#FAF3FB]'
+                  }`}
+                >
+                  <Shield className="w-4 h-4" />
+                  <span>Panel Admin Platform</span>
+                </button>
+                <button
+                  onClick={() => { onOpenKeyModal(); setShowMobileMenu(false); }}
+                  className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2.5 text-[#2A1532] hover:bg-[#FAF3FB] transition-colors"
+                >
+                  <KeyRound className="w-4 h-4 text-[#74607B]" />
+                  <span>Kelola API Key BYOK (Admin)</span>
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-[#EFE6F2]">
+            {!user ? (
+              <button
+                onClick={() => { onOpenAuth(); setShowMobileMenu(false); }}
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold text-white bg-[#522D60] hover:bg-[#693774] flex items-center justify-center gap-2 shadow-xs transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Masuk ke Akun</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => { setShowMobileMenu(false); signOut(); }}
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 border border-red-200/60 transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-red-600" />
+                <span>Keluar Akun</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
+
+      {/* PWA Install Modal */}
+      <PwaInstallModal
+        isOpen={isPwaModalOpen}
+        onClose={() => setIsPwaModalOpen(false)}
+      />
     </header>
   );
 };

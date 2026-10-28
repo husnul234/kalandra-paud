@@ -73,20 +73,20 @@ export const LiveTablePreview: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       {/* 1. TOP ACTION TOOLBAR (Sticky when scrolling) */}
-      <div className="sticky top-16 sm:top-[72px] z-30 bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-md flex flex-wrap items-center justify-between gap-3 transition-all">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E3A8A] flex items-center justify-center font-bold border border-blue-200 shrink-0">
-            <FileCheck className="w-5 h-5 text-[#1E3A8A]" />
+      <div className="sticky top-16 sm:top-[72px] z-30 bg-white/95 backdrop-blur-md p-2.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-md flex items-center justify-between gap-2 sm:gap-3 transition-all flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-[#1E3A8A] flex items-center justify-center font-bold border border-blue-200 shrink-0">
+            <FileCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#1E3A8A]" />
           </div>
           <div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+            <h2 className="text-xs sm:text-base font-bold text-slate-900 leading-tight">
               Pratinjau Dokumen
             </h2>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
           {/* Zoom controls */}
           <div className="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
             <button
@@ -115,11 +115,12 @@ export const LiveTablePreview: React.FC<Props> = ({
               type="button"
               onClick={handleSaveClick}
               disabled={isSaving}
-              className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+              className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
                 justSaved
                   ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
                   : 'border border-slate-300 hover:bg-slate-50 text-slate-700'
               }`}
+              title="Simpan dokumen ke riwayat"
             >
               {justSaved ? (
                 <>
@@ -138,7 +139,7 @@ export const LiveTablePreview: React.FC<Props> = ({
           <button
             type="button"
             onClick={handlePrint}
-            className="px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
             title="Cetak Langsung Lembar Dokumen"
           >
             <Printer className="w-4 h-4 text-slate-600" />
@@ -149,7 +150,7 @@ export const LiveTablePreview: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => setIsInlineEditActive(!isInlineEditActive)}
-            className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+            className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
               isInlineEditActive
                 ? 'bg-amber-500 text-white border border-amber-600 shadow-md ring-2 ring-amber-300'
                 : 'border border-slate-300 hover:bg-slate-50 text-slate-700'
@@ -164,11 +165,12 @@ export const LiveTablePreview: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => setIsChatDrawerOpen(true)}
-            className="px-3.5 py-2 bg-gradient-to-r from-[#522D60] to-[#80426E] hover:from-[#693774] hover:to-[#964E81] text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98] border border-amber-400/40 cursor-pointer"
+            className="px-2.5 sm:px-3.5 py-2 bg-gradient-to-r from-[#522D60] to-[#80426E] hover:from-[#693774] hover:to-[#964E81] text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98] border border-amber-400/40 cursor-pointer"
             title="Buka asisten revisi dokumen berbasis AI Chat (Mode Plan & Action)"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-            <span>Revisi via Chat</span>
+            <span className="hidden sm:inline">Revisi via Chat</span>
+            <span className="sm:hidden">Revisi</span>
             <span className="text-[10px] bg-amber-400 text-[#2A1532] px-1.5 py-0.2 rounded-full font-black">
               PRO
             </span>
@@ -179,11 +181,12 @@ export const LiveTablePreview: React.FC<Props> = ({
             <button
               type="button"
               onClick={onOpenExportLampiran}
-              className="px-3.5 py-2 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98]"
+              className="px-2.5 sm:px-3.5 py-2 bg-[#522D60] hover:bg-[#693774] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98]"
               title="Unduh 4 Dokumen Lampiran Observasi Siap Cetak Terpisah"
             >
               <ClipboardList className="w-4 h-4 text-pink-300" />
-              <span>Unduh Lampiran (.docx)</span>
+              <span className="hidden sm:inline">Unduh Lampiran (.docx)</span>
+              <span className="sm:hidden">Lampiran</span>
             </button>
           )}
 
@@ -191,55 +194,59 @@ export const LiveTablePreview: React.FC<Props> = ({
           <button
             type="button"
             onClick={onOpenExportModal}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-[0.98]"
+            className="px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-xs transition-all active:scale-[0.98]"
           >
             <FileDown className="w-4 h-4" />
-            <span>Ekspor RPM (.docx)</span>
+            <span className="hidden sm:inline">Ekspor RPM (.docx)</span>
+            <span className="sm:hidden">Ekspor RPM</span>
           </button>
         </div>
       </div>
 
       {/* DOCUMENT TYPE SELECTOR (TABS) */}
-      <div className="bg-slate-100/95 p-1.5 rounded-2xl border border-slate-200/90 flex flex-wrap items-center justify-between gap-2 shadow-xs">
-        <div className="flex items-center gap-1.5 flex-wrap">
+      <div className="bg-slate-100/95 p-1 sm:p-1.5 rounded-2xl border border-slate-200/90 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 shadow-xs">
+        <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setActiveDocView('rpm')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`flex-1 sm:flex-initial px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               activeDocView === 'rpm'
                 ? 'bg-white text-[#1E3A8A] shadow-sm border border-slate-200 ring-2 ring-blue-500/20'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
-            <FileText className="w-4 h-4 text-[#1E3A8A]" />
-            <span>Dokumen Utama (RPM 1 Minggu)</span>
+            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#1E3A8A]" />
+            <span className="hidden sm:inline">Dokumen Utama (RPM 1 Minggu)</span>
+            <span className="sm:hidden">Dokumen RPM</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveDocView('lampiran')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`flex-1 sm:flex-initial px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               activeDocView === 'lampiran'
                 ? 'bg-white text-[#522D60] shadow-sm border border-slate-200 ring-2 ring-pink-500/20'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
-            <ClipboardList className="w-4 h-4 text-[#80426E]" />
-            <span>4 Lampiran Observasi Siap Cetak</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#FAF3FB] text-[#80426E] border border-[#E8D6EB]">
+            <ClipboardList className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#80426E]" />
+            <span className="hidden sm:inline">4 Lampiran Observasi Siap Cetak</span>
+            <span className="sm:hidden">4 Lampiran</span>
+            <span className="hidden sm:inline px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[#FAF3FB] text-[#80426E] border border-[#E8D6EB]">
               4 Lembar
             </span>
           </button>
           <button
             type="button"
             onClick={() => setActiveDocView('semua')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`flex-1 sm:flex-initial px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               activeDocView === 'semua'
                 ? 'bg-white text-emerald-800 shadow-sm border border-slate-200 ring-2 ring-emerald-500/20'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
-            <Layers className="w-4 h-4 text-emerald-600" />
-            <span>Lihat Semua (Full Package)</span>
+            <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+            <span className="hidden sm:inline">Lihat Semua (Full Package)</span>
+            <span className="sm:hidden">Semua</span>
           </button>
         </div>
 

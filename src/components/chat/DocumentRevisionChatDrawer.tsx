@@ -293,36 +293,36 @@ export const DocumentRevisionChatDrawer: React.FC<Props> = ({
 
       {/* Mode & Section Control Bar */}
       <div className="p-3 bg-[#FAF3FB] border-b border-[#EFE6F2] space-y-2.5">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           {/* Plan vs Action Toggle */}
-          <div className="flex items-center bg-white p-0.5 rounded-xl border border-[#D8C3DD] shadow-2xs">
+          <div className="flex items-center bg-white p-0.5 rounded-xl border border-[#D8C3DD] shadow-2xs w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setChatMode('plan')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                 chatMode === 'plan'
                   ? 'bg-[#522D60] text-white shadow-xs'
                   : 'text-[#74607B] hover:text-[#2A1532]'
               }`}
             >
-              <span>📋 Mode Plan (Tinjau Dulu)</span>
+              <span>📋 <span className="sm:hidden">Plan</span><span className="hidden sm:inline">Mode Plan (Tinjau Dulu)</span></span>
             </button>
             <button
               type="button"
               onClick={() => setChatMode('action')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                 chatMode === 'action'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-[#74607B] hover:text-[#2A1532]'
               }`}
             >
-              <span>⚡ Mode Action (Langsung)</span>
+              <span>⚡ <span className="sm:hidden">Action</span><span className="hidden sm:inline">Mode Action (Langsung)</span></span>
             </button>
           </div>
 
           {/* Ticket Counter */}
-          <div className="flex items-center gap-1 text-[11px] font-bold text-[#522D60] bg-white px-2.5 py-1 rounded-xl border border-[#D8C3DD]">
-            <span>Tiket:</span>
+          <div className="flex items-center justify-between sm:justify-start gap-1 text-[11px] font-bold text-[#522D60] bg-white px-2.5 py-1 rounded-xl border border-[#D8C3DD] shrink-0">
+            <span>Tiket Revisi:</span>
             <span className="font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md font-extrabold">
               {ticketsRemaining}/10
             </span>

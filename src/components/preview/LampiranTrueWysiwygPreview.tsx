@@ -70,7 +70,7 @@ export const LampiranTrueWysiwygPreview: React.FC<Props> = ({
             <button
               type="button"
               onClick={onOpenExportLampiran}
-              className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-extrabold flex items-center gap-1 shadow-xs transition-colors ml-2 cursor-pointer"
+              className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-extrabold flex items-center gap-1 shadow-xs transition-colors sm:ml-2 cursor-pointer"
             >
               <FileDown className="w-3.5 h-3.5" />
               <span>Unduh DOCX Siap Print</span>

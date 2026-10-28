@@ -144,7 +144,7 @@ export const SubscriptionModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => setPeriod('1_bulan')}
-                className={`py-2 px-3 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
                   period === '1_bulan'
                     ? 'bg-[#522D60] text-white shadow-xs'
                     : 'text-[#74607B] hover:text-[#522D60] hover:bg-white/60'
@@ -155,29 +155,31 @@ export const SubscriptionModal: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={() => setPeriod('6_bulan')}
-                className={`py-2 px-3 sm:px-4 rounded-xl text-xs font-bold transition-all relative cursor-pointer ${
+                className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-bold transition-all relative cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 ${
                   period === '6_bulan'
                     ? 'bg-[#522D60] text-white shadow-xs'
                     : 'text-[#74607B] hover:text-[#522D60] hover:bg-white/60'
                 }`}
               >
                 <span>6 Bulan</span>
-                <span className="ml-1 text-[9px] bg-amber-400 text-slate-900 px-1 py-0.2 rounded-full font-extrabold">
-                  Hemat s.d 49%
+                <span className="text-[9px] bg-amber-400 text-slate-900 px-1.5 py-0.2 rounded-full font-extrabold whitespace-nowrap">
+                  <span className="sm:hidden">-49%</span>
+                  <span className="hidden sm:inline">Hemat 49%</span>
                 </span>
               </button>
               <button
                 type="button"
                 onClick={() => setPeriod('1_tahun')}
-                className={`py-2 px-3 sm:px-4 rounded-xl text-xs font-bold transition-all relative cursor-pointer ${
+                className={`py-2 px-2 sm:px-4 rounded-xl text-xs font-bold transition-all relative cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 ${
                   period === '1_tahun'
                     ? 'bg-[#522D60] text-white shadow-xs'
                     : 'text-[#74607B] hover:text-[#522D60] hover:bg-white/60'
                 }`}
               >
                 <span>1 Tahun</span>
-                <span className="ml-1 text-[9px] bg-emerald-400 text-slate-900 px-1 py-0.2 rounded-full font-extrabold">
-                  Hemat 57%
+                <span className="text-[9px] bg-emerald-400 text-slate-900 px-1.5 py-0.2 rounded-full font-extrabold whitespace-nowrap">
+                  <span className="sm:hidden">-57%</span>
+                  <span className="hidden sm:inline">Hemat 57%</span>
                 </span>
               </button>
             </div>

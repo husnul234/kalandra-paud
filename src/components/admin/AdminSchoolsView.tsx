@@ -230,21 +230,23 @@ export const AdminSchoolsView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <button
             onClick={fetchSchools}
             disabled={isLoading}
             className="p-2 rounded-xl border border-[#D8C3DD] bg-white text-[#522D60] hover:bg-[#FAF3FB] transition-colors flex items-center gap-1.5 text-xs font-bold"
+            title="Segarkan data satuan TK"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Segarkan</span>
+            <span className="hidden sm:inline">Segarkan</span>
           </button>
           <button
             onClick={handleOpenAdd}
-            className="py-2 px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors"
+            className="py-2 px-3 sm:px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Tambah Satuan TK</span>
+            <span className="hidden xs:inline">Tambah Satuan TK</span>
+            <span className="xs:hidden">Tambah</span>
           </button>
         </div>
       </div>

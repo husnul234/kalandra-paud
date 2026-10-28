@@ -1,0 +1,56 @@
+{
+  "id": "/",
+  "name": "Kalandra — Generator RPM TK Fase Fondasi",
+  "short_name": "Kalandra PAUD",
+  "description": "Generator Perencanaan Pembelajaran Mendalam (RPM) TK Fase Fondasi 1 Minggu berstandar Permendikdasmen No. 10/2025 dengan Ekspor DOCX Siap Cetak.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FAF7FB",
+  "theme_color": "#522D60",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "shortcuts": [
+    {
+      "name": "Penyusun RPM",
+      "short_name": "Penyusun",
+      "description": "Buka penyusun perencanaan pembelajaran TK",
+      "url": "/app"
+    },
+    {
+      "name": "Riwayat RPM",
+      "short_name": "Riwayat",
+      "description": "Lihat dokumen RPM tersimpan",
+      "url": "/app"
+    }
+  ]
+}

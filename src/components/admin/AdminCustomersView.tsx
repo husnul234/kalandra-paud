@@ -325,21 +325,23 @@ export const AdminCustomersView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <button
             onClick={fetchCustomers}
             disabled={isLoading}
             className="p-2 rounded-xl border border-[#D8C3DD] bg-white text-[#522D60] hover:bg-[#FAF3FB] transition-colors flex items-center gap-1.5 text-xs font-bold"
+            title="Segarkan data pelanggan"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Segarkan</span>
+            <span className="hidden sm:inline">Segarkan</span>
           </button>
           <button
             onClick={() => setIsAddOpen(true)}
-            className="py-2 px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors"
+            className="py-2 px-3 sm:px-3.5 rounded-xl text-white bg-[#522D60] hover:bg-[#693774] shadow-sm flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Tambah Guru / Lisensi Baru</span>
+            <span className="hidden xs:inline">Tambah Guru / Lisensi Baru</span>
+            <span className="xs:hidden">Tambah Guru</span>
           </button>
         </div>
       </div>
@@ -359,7 +361,7 @@ export const AdminCustomersView: React.FC = () => {
         </div>
 
         {/* Filter Badges */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           {[
             { id: 'all', label: 'Semua' },
             { id: 'annual', label: '1 Tahun' },
@@ -370,7 +372,7 @@ export const AdminCustomersView: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setPackageFilter(item.id as any)}
-              className={`py-1 px-3 rounded-xl text-xs font-bold transition-all ${
+              className={`py-1 px-3 rounded-xl text-xs font-bold transition-all shrink-0 ${
                 packageFilter === item.id
                   ? 'bg-[#522D60] text-white shadow-xs'
                   : 'text-[#74607B] hover:text-[#522D60] hover:bg-[#FAF3FB]'
