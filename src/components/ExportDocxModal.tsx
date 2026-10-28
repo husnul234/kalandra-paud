@@ -6,24 +6,25 @@ import {
   FileDown, 
   X, 
   Check, 
-  Settings2, 
-  Printer, 
   Building2, 
   UserCheck, 
   Loader2,
   FileText,
   ClipboardList,
+  Layers,
   Sparkles
 } from 'lucide-react';
 import { buildRpmPaudDocxBlob, RpmPaudDocData, DocxExportConfig } from '../lib/docx-engine/docx-paud-builder';
 import { buildRpmLampiranDocxBlob } from '../lib/docx-engine/docx-lampiran-builder';
+
+export type ExportDocType = 'full' | 'rpm' | 'lampiran';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   documentData: RpmPaudDocData;
   schoolName?: string;
-  initialDocType?: 'rpm' | 'lampiran';
+  initialDocType?: ExportDocType;
 }
 
 export const ExportDocxModal: React.FC<Props> = ({
@@ -31,11 +32,11 @@ export const ExportDocxModal: React.FC<Props> = ({
   onClose,
   documentData,
   schoolName,
-  initialDocType = 'rpm',
+  initialDocType = 'full',
 }) => {
   const { profile } = useAuth();
 
-  const [docType, setDocType] = useState<'rpm' | 'lampiran'>(initialDocType);
+  const [docType, setDocType] = useState<ExportDocType>(initialDocType);
   const [pageSize, setPageSize] = useState<'A4' | 'F4_FOLIO'>('A4');
   const [includeSignatures, setIncludeSignatures] = useState(true);
   const [city, setCity] = useState(profile?.city || 'Jakarta');
@@ -50,7 +51,7 @@ export const ExportDocxModal: React.FC<Props> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setDocType(initialDocType);
+      setDocType(initialDocType || 'full');
       if (profile?.city) setCity(profile.city);
       if (profile?.principal_name) setPrincipalName(profile.principal_name);
       if (profile?.principal_nip) setPrincipalNip(profile.principal_nip);
@@ -97,8 +98,11 @@ export const ExportDocxModal: React.FC<Props> = ({
       if (docType === 'lampiran') {
         blob = await buildRpmLampiranDocxBlob(finalDocData, config);
         fileName = `Lampiran_Observasi_Kelas_${safeTopic}.docx`;
+      } else if (docType === 'full') {
+        blob = await buildRpmPaudDocxBlob(finalDocData, { ...config, includeLampiran: true });
+        fileName = `Paket_Lengkap_RPM_dan_Lampiran_${safeTopic}.docx`;
       } else {
-        blob = await buildRpmPaudDocxBlob(finalDocData, config);
+        blob = await buildRpmPaudDocxBlob(finalDocData, { ...config, includeLampiran: false });
         fileName = `RPM_1_Minggu_${safeTopic}.docx`;
       }
 
@@ -132,15 +136,35 @@ export const ExportDocxModal: React.FC<Props> = ({
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
-              docType === 'lampiran' ? 'bg-[#FAF3FB] text-[#522D60]' : 'bg-emerald-100 text-emerald-800'
+              docType === 'full'
+                ? 'bg-purple-100 text-purple-800'
+                : docType === 'lampiran'
+                ? 'bg-[#FAF3FB] text-[#522D60]'
+                : 'bg-emerald-100 text-emerald-800'
             }`}>
-              {docType === 'lampiran' ? <ClipboardList className="w-5 h-5 text-[#522D60]" /> : <FileDown className="w-5 h-5 text-emerald-700" />}
+              {docType === 'full' ? (
+                <Layers className="w-5 h-5 text-purple-700" />
+              ) : docType === 'lampiran' ? (
+                <ClipboardList className="w-5 h-5 text-[#522D60]" />
+              ) : (
+                <FileText className="w-5 h-5 text-emerald-700" />
+              )}
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                {docType === 'lampiran' ? 'Unduh 4 Lampiran Observasi Kelas (.docx)' : 'Ekspor Perencanaan RPM Utama (.docx)'}
+                {docType === 'full'
+                  ? 'Ekspor Paket Lengkap: RPM + 4 Lampiran (.docx)'
+                  : docType === 'lampiran'
+                  ? 'Unduh 4 Lampiran Observasi Kelas (.docx)'
+                  : 'Ekspor Dokumen RPM Utama (.docx)'}
               </h2>
-              <p className="text-xs text-slate-500">Standar margin 3-2.5-2-2.5 cm, cantSplit & tblHeader</p>
+              <p className="text-xs text-slate-500">
+                {docType === 'full'
+                  ? 'Dokumen RPM bersambung 4 instrumen observasi siap cetak (True-WYSIWYG)'
+                  : docType === 'lampiran'
+                  ? 'Catatan Anekdot, Matriks SOLO, Hasil Karya, & Foto Berseri Siap Cetak'
+                  : 'Standar margin 3-2.5-2-2.5 cm, cantSplit & tblHeader'}
+              </p>
             </div>
           </div>
           <button
@@ -156,35 +180,69 @@ export const ExportDocxModal: React.FC<Props> = ({
           {/* Document Type Selector Segmented Control */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-              Jenis Dokumen yang Diekspor
+              Pilihan Format Dokumen yang Diekspor
             </label>
-            <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+              {/* Opsi 1: Paket Lengkap (Rekomendasi) */}
+              <button
+                type="button"
+                onClick={() => setDocType('full')}
+                className={`py-2.5 px-2.5 rounded-xl text-left transition-all relative flex flex-col justify-between ${
+                  docType === 'full'
+                    ? 'bg-white text-purple-950 shadow-sm border border-purple-200 ring-2 ring-purple-300 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-purple-600 shrink-0" />
+                    <span className="text-xs font-bold">Paket Lengkap</span>
+                  </div>
+                  <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded-full font-extrabold uppercase">
+                    Rekomendasi
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500 font-normal">
+                  RPM + 4 Lampiran True-WYSIWYG (1 File)
+                </p>
+              </button>
+
+              {/* Opsi 2: RPM Utama Saja */}
               <button
                 type="button"
                 onClick={() => setDocType('rpm')}
-                className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`py-2.5 px-2.5 rounded-xl text-left transition-all flex flex-col justify-between ${
                   docType === 'rpm'
-                    ? 'bg-white text-emerald-800 shadow-xs border border-emerald-200 ring-1 ring-emerald-300'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-emerald-950 shadow-sm border border-emerald-200 ring-2 ring-emerald-300 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
-                <FileText className="w-4 h-4 text-emerald-600" />
-                <span>Dokumen RPM Utama</span>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="text-xs font-bold">RPM Utama</span>
+                </div>
+                <p className="text-[10px] text-slate-500 font-normal">
+                  Hanya Perencanaan Pembelajaran 6 Hari
+                </p>
               </button>
+
+              {/* Opsi 3: 4 Lampiran Saja */}
               <button
                 type="button"
                 onClick={() => setDocType('lampiran')}
-                className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`py-2.5 px-2.5 rounded-xl text-left transition-all flex flex-col justify-between ${
                   docType === 'lampiran'
-                    ? 'bg-white text-[#522D60] shadow-xs border border-[#522D60]/20 ring-1 ring-[#522D60]/30'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-[#522D60] shadow-sm border border-[#522D60]/20 ring-2 ring-[#522D60]/30 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
-                <ClipboardList className="w-4 h-4 text-[#522D60]" />
-                <span className="flex items-center gap-1">
-                  4 Lampiran Instrumen
-                  <span className="text-[10px] bg-[#FAF3FB] text-[#522D60] px-1.5 py-0.2 rounded-full font-bold">Siap Cetak</span>
-                </span>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <ClipboardList className="w-4 h-4 text-[#522D60] shrink-0" />
+                  <span className="text-xs font-bold">4 Lampiran</span>
+                </div>
+                <p className="text-[10px] text-slate-500 font-normal">
+                  Hanya Instrumen Asesmen & Observasi
+                </p>
               </button>
             </div>
           </div>
@@ -309,7 +367,7 @@ export const ExportDocxModal: React.FC<Props> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold"
+            className="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold cursor-pointer"
           >
             Batal
           </button>
@@ -317,12 +375,20 @@ export const ExportDocxModal: React.FC<Props> = ({
             type="button"
             onClick={handleExport}
             disabled={isExporting}
-            className={`px-6 py-2.5 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 ${
-              docType === 'lampiran' ? 'bg-[#522D60] hover:bg-[#693774]' : 'bg-emerald-600 hover:bg-emerald-700'
+            className={`px-6 py-2.5 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer ${
+              docType === 'full'
+                ? 'bg-purple-700 hover:bg-purple-800 ring-1 ring-purple-600 shadow-purple-200'
+                : docType === 'lampiran'
+                ? 'bg-[#522D60] hover:bg-[#693774]'
+                : 'bg-emerald-600 hover:bg-emerald-700'
             }`}
           >
             {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-            {docType === 'lampiran' ? 'Unduh 4 Lampiran (.docx)' : 'Unduh Dokumen RPM (.docx)'}
+            {docType === 'full'
+              ? 'Unduh Paket Lengkap RPM + Lampiran (.docx)'
+              : docType === 'lampiran'
+              ? 'Unduh 4 Lampiran (.docx)'
+              : 'Unduh Dokumen RPM Utama (.docx)'}
           </button>
         </div>
       </div>

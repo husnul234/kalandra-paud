@@ -23,6 +23,7 @@ import {
   createDocumentFooter,
   createDocumentHeader,
 } from './docx-styles';
+import { buildLampiranDocxElements } from './docx-lampiran-builder';
 
 export interface RpmPaudDocData {
   informasi_umum: {
@@ -135,6 +136,7 @@ export interface DocxExportConfig {
   teacherNip?: string;
   documentDate?: string;
   city?: string;
+  includeLampiran?: boolean;
 }
 
 const ALL_8_DPL = [
@@ -1383,8 +1385,10 @@ export async function buildRpmPaudDocxBlob(
           // Tanda Tangan
           ...(config.includeSignatures ? [buildSignatureBlock(config, info)] : []),
 
-          // Lampiran Instrumen Observasi (new page)
-          ...buildLampiranInstrumen(data, info),
+          // Lampiran Instrumen Observasi (4 Lembar True-WYSIWYG Standar Resmi Pengawas)
+          ...(config.includeLampiran
+            ? buildLampiranDocxElements(data, config, { startWithPageBreak: true })
+            : []),
         ],
       },
     ],

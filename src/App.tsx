@@ -9,7 +9,7 @@ import { DocumentHistory } from './components/DocumentHistory';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { AuthPage } from './components/auth/AuthPage';
 import { ApiKeyManagerModal } from './components/ApiKeyManagerModal';
-import { ExportDocxModal } from './components/ExportDocxModal';
+import { ExportDocxModal, ExportDocType } from './components/ExportDocxModal';
 import { ProfileModal } from './components/ProfileModal';
 import { SubscriptionModal } from './components/subscription/SubscriptionModal';
 import { FirstLoginPasswordModal } from './components/auth/FirstLoginPasswordModal';
@@ -29,7 +29,7 @@ const GeneratorWorkspace: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'wizard' | 'preview' | 'history' | 'admin'>('wizard');
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [exportDocType, setExportDocType] = useState<'rpm' | 'lampiran'>('rpm');
+  const [exportDocType, setExportDocType] = useState<ExportDocType>('full');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [isFirstLoginPwdOpen, setIsFirstLoginPwdOpen] = useState(false);
@@ -187,7 +187,7 @@ const GeneratorWorkspace: React.FC = () => {
             data={currentDoc}
             onUpdateData={(updated) => setCurrentDoc(updated)}
             onOpenExportModal={() => {
-              setExportDocType('rpm');
+              setExportDocType('full');
               setIsExportModalOpen(true);
             }}
             onOpenExportLampiran={() => {
@@ -207,7 +207,7 @@ const GeneratorWorkspace: React.FC = () => {
             }}
             onOpenExportModalWithData={(docData) => {
               setCurrentDoc(docData);
-              setExportDocType('rpm');
+              setExportDocType('full');
               setIsExportModalOpen(true);
             }}
             onNewDocClick={() => setActiveTab('wizard')}
