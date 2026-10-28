@@ -215,6 +215,50 @@ function cleanListText(text: string): string {
 }
 
 /**
+ * Clean and deduplicate activity title and DPL label so we never get duplicate labels like (DPL6) (DPL6)
+ */
+export function cleanActivityTitleAndLabel(
+  rawTitle: string,
+  rawLabel?: string
+): { cleanTitle: string; displayLabel?: string } {
+  let title = (rawTitle || '').trim();
+  let label = (rawLabel || '').trim();
+
+  // If title already ends with parentheses like (Berkesadaran, DPL6) or (DPL6)
+  const parenMatch = title.match(/\(([^)]+)\)\s*$/);
+  if (parenMatch) {
+    const insideParens = parenMatch[1].trim();
+    if (!label || insideParens.toLowerCase().includes(label.toLowerCase()) || label.toLowerCase().includes(insideParens.toLowerCase())) {
+      label = insideParens;
+      title = title.replace(/\(([^)]+)\)\s*$/, '').trim();
+    } else {
+      title = title.replace(/\(([^)]+)\)\s*$/, '').trim();
+      label = `${insideParens}, ${label}`;
+    }
+  }
+
+  // Remove trailing colon or dash from title
+  title = title.replace(/[:\-–—]+$/, '').trim();
+
+  // Deduplicate tokens in label (e.g. "DPL6, DPL6" -> "DPL6")
+  if (label) {
+    const parts = label.split(',').map((p) => p.trim()).filter(Boolean);
+    const seen = new Set<string>();
+    const uniqueParts: string[] = [];
+    for (const p of parts) {
+      const lower = p.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        uniqueParts.push(p);
+      }
+    }
+    label = uniqueParts.join(', ');
+  }
+
+  return { cleanTitle: title, displayLabel: label || undefined };
+}
+
+/**
  * Native Word Automatic Bullet Paragraph with hanging indent
  */
 function cellBulletPara(
@@ -607,21 +651,23 @@ function buildTable3PengalamanBelajar(data: RpmPaudDocData): Table {
       const kegParas: Paragraph[] = [];
 
       (h.kegiatan_list || []).forEach((k) => {
+        const { cleanTitle, displayLabel } = cleanActivityTitleAndLabel(k.nama_kegiatan, k.label);
+
         kegParas.push(
           new Paragraph({
             spacing: { before: 80, after: 30, line: 240 },
             children: [
               new TextRun({
-                text: `Kegiatan ${k.nomor} : ${k.nama_kegiatan} `,
+                text: `Kegiatan ${k.nomor} : ${cleanTitle} `,
                 bold: true,
                 size: 21,
                 color: DOCX_COLORS.darkText,
                 font: DOCX_FONTS.primary,
               }),
-              ...(k.label
+              ...(displayLabel
                 ? [
                     new TextRun({
-                      text: `(${k.label})`,
+                      text: `(${displayLabel})`,
                       italics: true,
                       size: 19,
                       color: DOCX_COLORS.accentAmber,

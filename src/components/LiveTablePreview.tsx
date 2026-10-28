@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RpmPaudDocData } from '../lib/docx-engine/docx-paud-builder';
+import { RpmPaudDocData, cleanActivityTitleAndLabel } from '../lib/docx-engine/docx-paud-builder';
 import { DATA_8_DPL } from '../data/cp_paud_data';
 import { 
   FileDown, 
@@ -651,12 +651,14 @@ export const LiveTablePreview: React.FC<Props> = ({
                         HARI KE-{h.hari_ke}
                       </div>
                       <div className="p-3 md:col-span-3 space-y-3.5">
-                        {(h.kegiatan_list || []).map((k) => (
-                          <div key={k.nomor} className="space-y-1.5">
-                            <div className="font-bold text-slate-900 text-xs">
-                              Kegiatan {k.nomor} : {k.nama_kegiatan}{' '}
-                              {k.label && <span className="font-normal italic text-[#D97706]">({k.label})</span>}
-                            </div>
+                        {(h.kegiatan_list || []).map((k) => {
+                          const { cleanTitle, displayLabel } = cleanActivityTitleAndLabel(k.nama_kegiatan, k.label);
+                          return (
+                            <div key={k.nomor} className="space-y-1.5">
+                              <div className="font-bold text-slate-900 text-xs">
+                                Kegiatan {k.nomor} : {cleanTitle}{' '}
+                                {displayLabel && <span className="font-normal italic text-[#D97706]">({displayLabel})</span>}
+                              </div>
                             {k.alat_dan_bahan && (
                               <div className="flex items-start gap-2 text-xs text-slate-800 leading-relaxed">
                                 <span className="text-slate-600 font-bold text-sm leading-none pt-0.5 shrink-0 select-none">•</span>
@@ -679,7 +681,8 @@ export const LiveTablePreview: React.FC<Props> = ({
                               </div>
                             )}
                           </div>
-                        ))}
+                        );
+                      })}
                       </div>
                     </div>
                   ))}

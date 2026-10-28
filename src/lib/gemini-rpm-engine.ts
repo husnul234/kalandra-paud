@@ -31,12 +31,23 @@ ATURAN ANTI-HALUSINASI & PEDAGOGI PAUD (WAJIB DIPATUHI):
    - Tahap 1: MEMAHAMI (BERKESADARAN, BERMAKNA) -> Hari 1 dan Hari 2. Fokus pada pengenalan konsep dasar secara konkret, cerita, pengamatan panca indra, dan eksplorasi awal tentang topik.
    - Tahap 2: MENGAPLIKASI (BERKESADARAN, BERMAKNA, MENGGEMBIRAKAN) -> Hari 3 dan Hari 4. Fokus pada penerapan konsep melalui eksperimen sains/seni sederhana, merakit konstruksi loose parts/balok, dan permainan kolaboratif beraturan.
    - Tahap 3: MEREFLEKSI (BERKESADARAN, BERMAKNA) -> Hari 5 dan Hari 6. Fokus pada permainan pemecahan masalah (sebab-akibat), unjuk karya/presentasi sederhana di depan teman, menyampaikan alasan atas pilihannya, dan refleksi pengalaman belajar.
-5. Struktur 3 Kegiatan Bermain per Hari (Total 18 Kegiatan Seminggu):
+5. Struktur 3 Kegiatan Bermain per Hari (Total 18 Kegiatan Seminggu) & KEKAYAAN REDAKSI PEDAGOGIS:
    - Setiap hari WAJIB memuat tepat 3 Kegiatan yang seimbang (Olah Pikir, Olah Hati, Olah Rasa, Olah Raga):
-     * Kegiatan 1: Eksplorasi karya seni / konstruksi / sains-rekayasa konkret menggunakan bahan lepasan (loose parts: kardus bekas, piring kertas, stik es krim, daun kering, dll.). Wajib mencantumkan Alat dan bahan serta langkah Cara Membuat yang jelas.
-     * Kegiatan 2: Permainan fisik-motorik kasar/halus atau sosial-emosional interaktif (contoh: cermin ajaib, estafet senyum, lompat rintangan tali). Wajib mencantumkan Alat dan bahan serta Cara bermain.
-     * Kegiatan 3: Permainan lingkaran (circle game), bahasa & komunikasi, atau pramembaca/pranumerasi kontekstual yang menyenangkan. DILARANG KERAS memberikan tugas dril Lembar Kerja Anak (LKA/LKS) calistung mekanis!
-   - Setiap judul kegiatan WAJIB diikuti tanda kurung berisi minimal 1 Prinsip Pembelajaran (berkesadaran / bermakna / menggembirakan) dan 1 Dimensi Profil Lulusan yang relevan.
+     * Kegiatan 1: Eksplorasi karya seni / konstruksi / sains-rekayasa konkret menggunakan bahan lepasan (loose parts: kardus bekas, piring kertas, stik es krim, daun kering, dll.). Wajib judul_langkah: "Cara Membuat".
+     * Kegiatan 2: Permainan fisik-motorik kasar/halus atau sosial-emosional interaktif (contoh: cermin ajaib, estafet senyum, lompat rintangan tali). Wajib judul_langkah: "Cara Bermain".
+     * Kegiatan 3: Permainan lingkaran (circle game), bahasa & komunikasi, atau pramembaca/pranumerasi kontekstual yang menyenangkan. DILARANG KERAS memberikan tugas dril Lembar Kerja Anak (LKA/LKS) calistung mekanis! Wajib judul_langkah: "Cara Bermain".
+   - STANDAR KEKAYAAN REDAKSI LANGKAH (WAJIB & TIDAK BOLEH SINGKAT):
+     * SETIAP KEGIATAN WAJIB MEMILIKI MINIMAL 3 HINGGA 4 LANGKAH DESKRIPTIF (DILARANG KERAS HANYA 1 ATAU 2 POIN SINGKAT!).
+     * Pola alur 4 langkah per kegiatan wajib terstruktur pedagogis PAUD:
+       1. Pijakan Awal / Peran Guru: Penyiapan lingkungan main, pemodelan cara bermain/membuat, pertanyaan pemantik, atau dongeng interaktif (contoh: "Guru menyiapkan pola dasar dan wadah aneka loose parts di atas meja main...").
+       2. Aksi Eksplorasi Mandiri Anak: Anak mengamati, memilih bahan, meraba tekstur, atau menjiplak bentuk (contoh: "Anak memilih bahan loose parts yang disukainya dari keranjang secara mandiri...").
+       3. Kreasi & Interaksi Bermakna: Aksi inti merakit karya, mempraktikkan gerakan bergiliran, atau bermain kolaboratif (contoh: "Anak merekatkan stik es krim untuk gagang dan menempelkan kancing untuk mata boneka...").
+       4. Komunikasi / Refleksi / Berbagi: Anak menceritakan karyanya, mengekspresikan perasaannya, atau membereskan media bersama (contoh: "Secara bergantian, anak menceritakan siapa anggota keluarga yang dibuatnya kepada teman dengan bangga.").
+   - STANDAR ALAT & BAHAN (LOOSE PARTS KAYA & KONKRET):
+     * Wajib mencantumkan minimal 4 sampai 6 material konkret yang variatif, murah, aman, dan kontekstual dengan topik (contoh: "Kertas karton pola oval, lem kertas aman anak, stik es krim, potongan kain perca, kancing baju bekas, spidol warna"). DILARANG HANYA MENULIS 1 ATAU 2 BAHAN SINGKAT!
+   - PENAMAAN KEGIATAN & LABEL:
+     * Field nama_kegiatan HANYA berisi nama kegiatan yang deskriptif menarik (contoh: "Membuat Kolase Wajah Anggota Keluarga dari Loose Parts"). DILARANG menaruh tanda kurung label DPL di dalam nama_kegiatan agar tidak terduplikasi di dokumen cetak!
+     * Field label HANYA berisi prinsip belajar dan kode Dimensi Profil Lulusan (contoh: "berkesadaran, kreativitas, DPL4").
    - Jika kegiatan melibatkan gunting, cat, cairan, panas, atau ketinggian: tambahkan catatan_keselamatan sebagai array string dalam objek kegiatan itu.
 6. Kesesuaian Tahap Perkembangan Usia (DAP):
    - Jika Jenjang/Kelas adalah KB (3-4 Tahun) / Usia 3-4 Tahun: Tahap sensori-motorik dan eksplorasi konkret. Rancang kegiatan yang sangat aman (DILARANG gunting tajam atau partikel kecil berisiko tersedak), gunakan loose parts berukuran besar (kardus, daun besar, mangkok plastik, wadah bertutup, playdough buatan sendiri), fokus pada stimulasi motorik kasar, eksplorasi indera (meraba tekstur, warna, bunyi), meniru gerakan hewan/lagu, serta pendampingan intensif penuh oleh guru.
@@ -183,22 +194,66 @@ Wajib kembalikan format JSON sesuai struktur skema lengkap berikut (SEMUA field 
         {
           "header_tahap": "MEMAHAMI (BERKESADARAN, BERMAKNA)",
           "hari": [
-            { "hari_ke": 1, "kegiatan_list": [ { "nomor": 1, "nama_kegiatan": "...", "label": "...", "alat_dan_bahan": "...", "judul_langkah": "Cara Membuat", "langkah": ["..."], "catatan_keselamatan": ["..."] }, { "nomor": 2, "nama_kegiatan": "...", "label": "...", "alat_dan_bahan": "...", "judul_langkah": "Cara Bermain", "langkah": ["..."] }, { "nomor": 3, "nama_kegiatan": "...", "label": "...", "alat_dan_bahan": "...", "judul_langkah": "Cara Bermain", "langkah": ["..."] } ] },
-            { "hari_ke": 2, "kegiatan_list": [ { "nomor": 1, ... }, { "nomor": 2, ... }, { "nomor": 3, ... } ] }
+            {
+              "hari_ke": 1,
+              "kegiatan_list": [
+                {
+                  "nomor": 1,
+                  "nama_kegiatan": "Membuat Boneka Jari Keluargaku dari Loose Parts",
+                  "label": "berkesadaran, kreativitas, DPL4",
+                  "alat_dan_bahan": "Kertas karton pola jari, stik es krim kayu, kancing baju bekas, kain perca, lem fox aman anak, spidol warna",
+                  "judul_langkah": "Cara Membuat",
+                  "langkah": [
+                    "Guru menyiapkan potongan karton pola jari dan wadah aneka loose parts di meja main.",
+                    "Anak memilih material loose parts yang disukainya lalu menjiplak bentuk jemari dengan bimbingan guru.",
+                    "Anak merekatkan stik es krim untuk gagang dan menempelkan kancing serta kain perca membentuk karakter anggota keluarga.",
+                    "Secara bergantian, anak menceritakan tokoh anggota keluarga yang dibuatnya kepada teman dengan bangga."
+                  ],
+                  "catatan_keselamatan": ["Pengawasan guru saat penggunaan gunting anak dan lem"]
+                },
+                {
+                  "nomor": 2,
+                  "nama_kegiatan": "Lingkaran Gulir Bola Nama Teman",
+                  "label": "menggembirakan, kolaborasi, DPL2",
+                  "alat_dan_bahan": "Bola karet empuk warna-warni bertekstur, karpet lingkaran, musik instrumental ceria",
+                  "judul_langkah": "Cara Bermain",
+                  "langkah": [
+                    "Guru mengajak anak duduk melingkar di atas karpet dan memodelkan cara menggelindingkan bola dengan santun.",
+                    "Anak menerima bola dengan kedua tangan sambil tersenyum ramah kepada teman di sampingnya.",
+                    "Anak menyebutkan nama panggilannya dengan lantang dan ceria saat memegang bola.",
+                    "Anak menggelindingkan bola secara lembut ke teman lain yang belum mendapat giliran."
+                  ]
+                },
+                {
+                  "nomor": 3,
+                  "nama_kegiatan": "Tepuk dan Lagu Nama Istimewa",
+                  "label": "bermakna, komunikasi, DPL8",
+                  "alat_dan_bahan": "Rebana mini kayu, kartu nama bergambar anak, papan flanel",
+                  "judul_langkah": "Cara Bermain",
+                  "langkah": [
+                    "Guru membunyikan ketukan berirama riang menggunakan rebana mini di depan lingkaran anak.",
+                    "Anak mengikuti irama tepukan 2 ketukan sambil menyebutkan kata sapaan ramah bersama guru.",
+                    "Anak menunjukkan kartu namanya saat namanya disebut dalam bait lagu berirama gembira.",
+                    "Seluruh anak bertepuk tangan memberikan apresiasi hangat kepada setiap teman yang tampil."
+                  ]
+                }
+              ]
+            },
+            { "hari_ke": 2, "kegiatan_list": [ ... 3 kegiatan serupa: masing-masing WAJIB 3-4 LANGKAH DESKRIPTIF dan 4-6 BAHAN KONKRET ... ] }
           ]
         },
         {
           "header_tahap": "MENGAPLIKASI (BERKESADARAN, BERMAKNA, MENGGEMBIRAKAN)",
           "hari": [
-            { "hari_ke": 3, "kegiatan_list": [ ... 3 kegiatan ... ] },
-            { "hari_ke": 4, "kegiatan_list": [ ... 3 kegiatan ... ] }
+            { "hari_ke": 3, "kegiatan_list": [ ... 3 kegiatan serupa: masing-masing WAJIB 3-4 LANGKAH DESKRIPTIF dan 4-6 BAHAN KONKRET ... ] },
+            { "hari_ke": 4, "kegiatan_list": [ ... 3 kegiatan serupa: masing-masing WAJIB 3-4 LANGKAH DESKRIPTIF dan 4-6 BAHAN KONKRET ... ] }
           ]
         },
         {
           "header_tahap": "MEREFLEKSI (BERKESADARAN, BERMAKNA)",
           "hari": [
-            { "hari_ke": 5, "kegiatan_list": [ ... 3 kegiatan ... ] },
-            { "hari_ke": 6, "kegiatan_list": [ ... 3 kegiatan ... ] }
+            { "hari_ke": 5, "kegiatan_list": [ ... 3 kegiatan serupa: masing-masing WAJIB 3-4 LANGKAH DESKRIPTIF dan 4-6 BAHAN KONKRET ... ] },
+            { "hari_ke": 6, "kegiatan_list": [ ... 3 kegiatan serupa: masing-masing WAJIB 3-4 LANGKAH DESKRIPTIF dan 4-6 BAHAN KONKRET ... ] }
           ]
         }
       ]
@@ -240,7 +295,12 @@ Wajib kembalikan format JSON sesuai struktur skema lengkap berikut (SEMUA field 
     "foto_berseri": "Panduan foto berseri/portofolio visual untuk topik ${p.topik_subtopik} ..."
   }
 }
-PENTING: Semua deskriptor di iktp_bergradasi dan rubrik_asesmen harus menggunakan kata kerja operasional (menunjukkan, menyebutkan, menghubungkan, merancang, dll.) yang dapat diamati langsung oleh guru tanpa tes tulis. Jumlah entri iktp_bergradasi harus sama dengan jumlah tujuan_pembelajaran.`;
+PENTING:
+- PADA 18 KEGIATAN INTI: SETIAP KEGIATAN WAJIB MEMILIKI MINIMAL 3 SAMPAI 4 LANGKAH DESKRIPTIF (DILARANG KERAS HANYA 1 ATAU 2 POIN SINGKAT!).
+- Pola 4 langkah per kegiatan wajib: (1) Pijakan Guru -> (2) Aksi Eksplorasi Anak -> (3) Kreasi Loose Parts / Interaksi Inti -> (4) Refleksi / Berbagi / Komunikasi.
+- Alat dan bahan wajib kaya: sebutkan minimal 4-6 media loose parts konkret per kegiatan.
+- nama_kegiatan HANYA nama kegiatan yang menarik (DILARANG menaruh tanda kurung label DPL di nama_kegiatan, letakkan hanya di field "label").
+- Semua deskriptor di iktp_bergradasi dan rubrik_asesmen harus menggunakan kata kerja operasional (menunjukkan, menyebutkan, menghubungkan, merancang, dll.) yang dapat diamati langsung oleh guru tanpa tes tulis. Jumlah entri iktp_bergradasi harus sama dengan jumlah tujuan_pembelajaran.`;
 }
 
 export function stripMarkdownJson(text: string): string {
