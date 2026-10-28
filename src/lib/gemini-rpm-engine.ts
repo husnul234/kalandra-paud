@@ -319,9 +319,16 @@ import {
   markKeyRateLimited, 
   acquireConcurrencySlot 
 } from './geminiKeyPool';
+import {
+  executeDattioRpmRequest,
+  testDattioApiKey,
+  requestDattioAiRekomendasiTopik,
+  executeDattioPartitionedDocumentEdit,
+  getDattioApiKey,
+} from './dattio-client';
 
 /**
- * Direct Gemini API invocation with multi-key pool rotation and model fallback chain
+ * Direct Gemini / Dattio AI invocation with multi-key pool rotation and model fallback chain
  */
 export async function executeDirectGeminiRequest(
   apiKeys: string[],
@@ -344,6 +351,35 @@ export async function executeDirectGeminiRequest(
   for (let kIdx = 0; kIdx < activePool.length; kIdx++) {
     const key = activePool[kIdx];
     const keyShort = `...${key.slice(-4)}`;
+
+    // Route to Dattio AI (OpenAI Compatible Protocol) if key starts with sk-
+    if (key.startsWith('sk-')) {
+      if (onStatusUpdate) {
+        onStatusUpdate({
+          message: 'Menghubungkan ke Dattio AI Enterprise Pool (glm-5.2)...',
+          keyMasked: keyShort,
+          model: 'glm-5.2',
+        });
+      }
+      try {
+        const dattioRes = await executeDattioRpmRequest({
+          systemPrompt,
+          userPrompt,
+          apiKey: key,
+          onStatusUpdate,
+        });
+        return {
+          success: true,
+          data: dattioRes.data,
+          usedModel: dattioRes.usedModel,
+          usedKeyMasked: dattioRes.usedKeyMasked,
+        };
+      } catch (dattioErr: any) {
+        console.warn(`[Engine] Dattio key ${keyShort} error, failover ke pool berikutnya:`, dattioErr);
+        lastError = dattioErr.message || 'Dattio AI request failed';
+        continue;
+      }
+    }
 
     for (const model of GEMINI_MODEL_CHAIN) {
       if (onStatusUpdate) {
@@ -438,9 +474,18 @@ export async function executeDirectGeminiRequest(
 }
 
 /**
- * Ping test a single API key
+ * Ping test a single API key (auto-detects Gemini vs Dattio sk- key)
  */
 export async function testGeminiApiKey(apiKey: string): Promise<{ success: boolean; model?: string; error?: string }> {
+  if (apiKey.trim().startsWith('sk-')) {
+    const dattioRes = await testDattioApiKey(apiKey.trim());
+    return {
+      success: dattioRes.success,
+      model: dattioRes.model,
+      error: dattioRes.error,
+    };
+  }
+
   for (const model of GEMINI_MODEL_CHAIN) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -478,12 +523,22 @@ export interface AiRekomendasiResult {
 
 /**
  * Fast AI Recommender for DPL, CP Sub-elements, and Loose Parts based on Topic
+ * Prioritizes Dattio AI (deepseek-v4-flash) with seamless fallback to Gemini
  */
 export async function requestAiRekomendasiTopik(
   apiKeys: string[],
   topik: string,
   jenjangKelas: string
 ): Promise<AiRekomendasiResult> {
+  const dattioKey = apiKeys.find((k) => k && k.startsWith('sk-')) || getDattioApiKey();
+  if (dattioKey) {
+    try {
+      return await requestDattioAiRekomendasiTopik(topik, jenjangKelas, dattioKey);
+    } catch (dattioErr) {
+      console.warn('[AI Rekomendasi] Dattio error, fallback ke Gemini:', dattioErr);
+    }
+  }
+
   const prompt = `Anda adalah Pakar Kurikulum PAUD Kemendikdasmen RI.
 Topik Pembelajaran: "${topik}"
 Jenjang Kelas: "${jenjangKelas}"
@@ -534,6 +589,15 @@ export async function executePartitionedDocumentEdit(
   apiKeys: string[],
   request: PartitionedRevisionRequest
 ): Promise<PartitionedRevisionResponse> {
+  const dattioKey = apiKeys.find((k) => k && k.startsWith('sk-')) || getDattioApiKey();
+  if (dattioKey) {
+    try {
+      return await executeDattioPartitionedDocumentEdit(request, dattioKey);
+    } catch (dattioErr) {
+      console.warn('[Partitioned Edit] Dattio error, fallback ke Gemini:', dattioErr);
+    }
+  }
+
   const systemPrompt = `Anda adalah Asisten Editor RPM PAUD Kemendikdasmen RI.
 Tugas Anda merevisi HANYA satu bagian spesifik dari dokumen pembelajaran TK berdasarkan instruksi guru.
 PENTING:

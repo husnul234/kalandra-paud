@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { testGeminiApiKey } from '../lib/gemini-rpm-engine';
+import { getDattioApiKey } from '../lib/dattio-client';
 
 export interface UserApiKey {
   id: string;
@@ -39,7 +40,7 @@ export function useGeminiKeys(userId?: string) {
           .from('user_api_keys')
           .select('*')
           .eq('user_id', userId)
-          .eq('provider', 'gemini')
+          .in('provider', ['gemini', 'openai'])
           .order('created_at', { ascending: true });
 
         if (!error && data && data.length > 0) {
@@ -66,6 +67,15 @@ export function useGeminiKeys(userId?: string) {
 
     // Also fetch system admin keys pool from demo_api_keys or localStorage
     let sysPool: string[] = [];
+
+    // 1. Dattio AI Primary Enterprise Key
+    try {
+      const dattioKey = getDattioApiKey();
+      if (dattioKey && dattioKey.startsWith('sk-')) {
+        sysPool.push(dattioKey);
+      }
+    } catch (_) {}
+
     try {
       const { data: demoData, error: demoErr } = await supabase
         .from('demo_api_keys')
@@ -73,25 +83,28 @@ export function useGeminiKeys(userId?: string) {
         .eq('is_active', true);
 
       if (!demoErr && demoData && demoData.length > 0) {
-        sysPool = demoData.map((d: { api_key: string }) => d.api_key).filter(Boolean);
+        const dbDemoKeys = demoData.map((d: { api_key: string }) => d.api_key).filter(Boolean);
+        sysPool.push(...dbDemoKeys);
       }
     } catch (e) {
       console.warn('Could not fetch demo_api_keys:', e);
     }
 
-    if (sysPool.length === 0) {
+    if (sysPool.length <= 1) {
       try {
         const rawDemo = localStorage.getItem('kalandra_system_demo_keys');
         if (rawDemo) {
           const parsed = JSON.parse(rawDemo);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            sysPool = parsed.filter((k: any) => k.is_active && k.api_key).map((k: any) => k.api_key);
+            const localSys = parsed.filter((k: any) => k.is_active && k.api_key).map((k: any) => k.api_key);
+            sysPool.push(...localSys);
           }
         }
       } catch (e) {}
     }
 
-    setSystemKeys(sysPool);
+    const uniqueSysPool = Array.from(new Set(sysPool.filter(Boolean)));
+    setSystemKeys(uniqueSysPool);
     setLoading(false);
   }, [userId]);
 
@@ -113,11 +126,12 @@ export function useGeminiKeys(userId?: string) {
     const cleanKey = apiKey.trim();
     if (!cleanKey) return { success: false, error: 'Kunci API tidak boleh kosong.' };
 
+    const isDattio = cleanKey.startsWith('sk-');
     const newKeyObj: UserApiKey = {
       id: crypto.randomUUID ? crypto.randomUUID() : `key-${Date.now()}`,
-      provider: 'gemini',
+      provider: isDattio ? 'openai' : 'gemini',
       api_key: cleanKey,
-      label: label.trim() || `Kunci Gemini ${keys.length + 1}`,
+      label: label.trim() || (isDattio ? `Kunci Dattio AI ${keys.length + 1}` : `Kunci Gemini ${keys.length + 1}`),
       is_active: true,
       created_at: new Date().toISOString(),
     };
@@ -126,7 +140,7 @@ export function useGeminiKeys(userId?: string) {
       try {
         const { error } = await supabase.from('user_api_keys').insert({
           user_id: userId,
-          provider: 'gemini',
+          provider: newKeyObj.provider,
           api_key: newKeyObj.api_key,
           label: newKeyObj.label,
           is_active: true,

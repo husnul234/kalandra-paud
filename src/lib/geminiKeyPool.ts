@@ -1,7 +1,8 @@
 import { supabase } from './supabaseClient';
+import { getDattioApiKey } from './dattio-client';
 
 /**
- * System Gemini Key Pool & Concurrency Load Balancer
+ * System Gemini & Dattio Key Pool & Concurrency Load Balancer
  * Manages round-robin rotation, 429 cooldowns, and automatic failovers
  * so that end-user teachers never need to enter or see BYOK keys.
  */
@@ -24,26 +25,33 @@ let lastRequestTimestamp = 0;
 let rpcAvailable = true; // Set to false if missing from DB to avoid spamming 404 in console
 
 /**
- * Loads active keys from Supabase (RPC or Admin pool)
+ * Loads active keys from Dattio AI, Supabase (RPC or Admin pool), and local storage
  */
 export async function loadSystemKeyPool(): Promise<string[]> {
+  const discoveredKeys: string[] = [];
+
+  // 1. Primary Enterprise Key: Dattio AI (20,000,000 tokens)
   try {
-    // 1. Try secure RPC only if not previously confirmed missing
+    const dattioKey = getDattioApiKey();
+    if (dattioKey && dattioKey.startsWith('sk-')) {
+      discoveredKeys.push(dattioKey);
+    }
+  } catch (_) {}
+
+  // 2. Try secure RPC only if not previously confirmed missing
+  try {
     if (rpcAvailable) {
       const { data: rpcKeys, error: rpcError } = await supabase.rpc('get_active_system_api_keys');
       if (rpcError) {
-        // If RPC function is not found (404 / PGRST202), disable further attempts
         if (rpcError.code === 'PGRST202' || rpcError.message?.includes('not found') || (rpcError as any)?.status === 404) {
           rpcAvailable = false;
         }
       } else if (Array.isArray(rpcKeys) && rpcKeys.length > 0) {
         const keys = rpcKeys.map((r: any) => typeof r === 'string' ? r : r.api_key).filter(Boolean);
-        updatePool(keys);
-        return getAvailableKeys();
+        discoveredKeys.push(...keys);
       }
     }
 
-    // 2. Try fetching active keys directly from demo_api_keys or user_api_keys
     try {
       const { data: demoKeys } = await supabase
         .from('demo_api_keys')
@@ -52,8 +60,7 @@ export async function loadSystemKeyPool(): Promise<string[]> {
 
       if (demoKeys && demoKeys.length > 0) {
         const keys = demoKeys.map((k: { api_key: string }) => k.api_key).filter(Boolean);
-        updatePool(keys);
-        return getAvailableKeys();
+        discoveredKeys.push(...keys);
       }
     } catch (_) {}
 
@@ -61,15 +68,14 @@ export async function loadSystemKeyPool(): Promise<string[]> {
       .from('user_api_keys')
       .select('api_key')
       .eq('is_active', true)
-      .eq('provider', 'gemini');
+      .in('provider', ['gemini', 'openai']);
 
     if (dbKeys && dbKeys.length > 0) {
       const keys = dbKeys.map((k: { api_key: string }) => k.api_key).filter(Boolean);
-      updatePool(keys);
-      return getAvailableKeys();
+      discoveredKeys.push(...keys);
     }
   } catch (err) {
-    console.warn('[GeminiKeyPool] Could not load dynamic keys from DB, using fallback pool:', err);
+    console.warn('[KeyPool] Could not load dynamic keys from DB, using fallback pool:', err);
   }
 
   // 3. Fallback to localStorage (Admin system pool or user BYOK)
@@ -79,10 +85,7 @@ export async function loadSystemKeyPool(): Promise<string[]> {
       const parsed = JSON.parse(rawDemo);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const active = parsed.filter((k: any) => k.is_active && k.api_key).map((k: any) => k.api_key);
-        if (active.length > 0) {
-          updatePool(active);
-          return getAvailableKeys();
-        }
+        discoveredKeys.push(...active);
       }
     }
   } catch (e) {}
@@ -93,10 +96,7 @@ export async function loadSystemKeyPool(): Promise<string[]> {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const active = parsed.filter((k: any) => k.isActive && k.key).map((k: any) => k.key);
-        if (active.length > 0) {
-          updatePool(active);
-          return getAvailableKeys();
-        }
+        discoveredKeys.push(...active);
       }
     }
   } catch (e) {}
@@ -104,10 +104,11 @@ export async function loadSystemKeyPool(): Promise<string[]> {
   // 4. Fallback to environment variable if configured
   const envKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
   if (envKey && typeof envKey === 'string' && envKey.trim().length > 10) {
-    updatePool([envKey.trim()]);
-    return getAvailableKeys();
+    discoveredKeys.push(envKey.trim());
   }
 
+  const uniqueKeys = Array.from(new Set(discoveredKeys.filter(Boolean)));
+  updatePool(uniqueKeys);
   return getAvailableKeys();
 }
 

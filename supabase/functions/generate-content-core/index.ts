@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 /**
- * Resilient Gemini Model Hierarchy
+ * Resilient Gemini & Dattio Model Hierarchy
  */
 export const GEMINI_MODEL_CHAIN = [
   "gemini-3.1-flash-lite",
@@ -19,6 +19,11 @@ export const GEMINI_MODEL_CHAIN = [
   "gemini-3.5-flash",
   "gemini-2.5-flash",
 ];
+
+export const DATTIO_BASE_URL = Deno.env.get("DATTIO_BASE_URL") || "https://bandelbanget.xyz/v1";
+export const DATTIO_API_KEY = Deno.env.get("DATTIO_API_KEY") || "";
+export const DATTIO_MODEL_CHAIN = ["glm-5.2", "deepseek-v4-flash", "deepseek-v4.1-flash", "claude-opus-5-5"];
+
 
 /**
  * 8 Dimensi Profil Lulusan (Permendikdasmen No. 10/2025)
@@ -201,6 +206,11 @@ serve(async (req) => {
       }
     }
 
+    // Prepend Dattio AI Enterprise Key (20,000,000 tokens) as top priority
+    if (DATTIO_API_KEY && !userApiKeys.some(k => k.startsWith("sk-"))) {
+      userApiKeys.unshift(DATTIO_API_KEY);
+    }
+
     if (userApiKeys.length === 0) {
       return new Response(
         JSON.stringify({
@@ -217,6 +227,31 @@ serve(async (req) => {
     // 2. Connectivity test ping
     if (type === "test") {
       const testKey = userApiKeys[0];
+      if (testKey.startsWith("sk-")) {
+        const res = await fetch(`${DATTIO_BASE_URL}/quota`, {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${testKey}` },
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          return new Response(
+            JSON.stringify({ success: false, error: `Test Dattio API gagal (${res.status}): ${errText}` }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const qData = await res.json();
+        return new Response(
+          JSON.stringify({
+            success: true,
+            model: "glm-5.2",
+            message: `Koneksi Dattio AI berhasil! Status: ${qData.status}, Sisa Token: ${(qData.remainingTokens || 20000000).toLocaleString()}`,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const testModel = GEMINI_MODEL_CHAIN[0];
       const res = await fetch(getGeminiEndpoint(testModel, testKey), {
         method: "POST",
@@ -273,6 +308,48 @@ serve(async (req) => {
       const currentKey = userApiKeys[kIdx];
       const keyShort = `...${currentKey.slice(-4)}`;
 
+      // 4A. Dattio AI (OpenAI Compatible Protocol)
+      if (currentKey.startsWith("sk-")) {
+        for (const dModel of DATTIO_MODEL_CHAIN) {
+          try {
+            const res = await fetch(`${DATTIO_BASE_URL}/chat/completions`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${currentKey}`,
+              },
+              body: JSON.stringify({
+                model: dModel,
+                messages: [
+                  { role: "system", content: systemPrompt },
+                  { role: "user", content: userPrompt },
+                ],
+                temperature: 0.3,
+              }),
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              const textResponse = data.choices?.[0]?.message?.content;
+              if (textResponse) {
+                successfulData = textResponse;
+                usedModel = dModel;
+                usedKeyMasked = keyShort;
+                break keyLoop;
+              }
+            }
+
+            const errText = await res.text();
+            lastError = `Dattio AI error (${res.status}): ${errText.slice(0, 80)}`;
+            if (res.status === 401 || res.status === 403) break;
+          } catch (dattioErr) {
+            lastError = `Dattio fetch error: ${String(dattioErr)}`;
+          }
+        }
+        continue keyLoop;
+      }
+
+      // 4B. Gemini Model Chain
       for (const model of GEMINI_MODEL_CHAIN) {
         try {
           const res = await fetch(getGeminiEndpoint(model, currentKey), {

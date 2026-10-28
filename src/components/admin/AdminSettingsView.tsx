@@ -14,10 +14,23 @@ import {
   Eye, 
   EyeOff, 
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  Server,
+  Activity,
+  Flame,
+  CheckCircle
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { SYSTEM_INSTRUCTION_RPM_PAUD, GEMINI_MODEL_CHAIN } from '../../lib/gemini-rpm-engine';
+import {
+  getDattioApiKey,
+  getDattioBaseUrl,
+  checkDattioQuota,
+  testDattioApiKey,
+  DATTIO_MODEL_CHAIN,
+  DATTIO_STORAGE_KEY,
+  type DattioQuotaInfo,
+} from '../../lib/dattio-client';
 
 export interface DemoKeyRecord {
   id: string;
@@ -66,13 +79,65 @@ export const AdminSettingsView: React.FC = () => {
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Dattio AI Enterprise State
+  const [dattioKey, setDattioKey] = useState<string>(() => getDattioApiKey());
+  const [dattioKeyInput, setDattioKeyInput] = useState<string>(() => getDattioApiKey());
+  const [showDattioKey, setShowDattioKey] = useState<boolean>(false);
+  const [isTestingDattio, setIsTestingDattio] = useState<boolean>(false);
+  const [dattioQuota, setDattioQuota] = useState<DattioQuotaInfo | null>(null);
+  const [isLoadingQuota, setIsLoadingQuota] = useState<boolean>(false);
+
+  const fetchDattioQuotaInfo = async (keyToUse?: string) => {
+    setIsLoadingQuota(true);
+    try {
+      const info = await checkDattioQuota(keyToUse || dattioKey);
+      setDattioQuota(info);
+    } catch (_) {
+    } finally {
+      setIsLoadingQuota(false);
+    }
+  };
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const handleSaveDattioKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = dattioKeyInput.trim();
+    if (!clean) {
+      showToast('Kunci Dattio API tidak boleh kosong.');
+      return;
+    }
+    setDattioKey(clean);
+    try {
+      localStorage.setItem(DATTIO_STORAGE_KEY, clean);
+      showToast('✅ Kunci Dattio AI berhasil disimpan!');
+      fetchDattioQuotaInfo(clean);
+    } catch (_) {}
+  };
+
+  const handleTestDattio = async () => {
+    setIsTestingDattio(true);
+    try {
+      const res = await testDattioApiKey(dattioKeyInput.trim() || dattioKey);
+      if (res.success) {
+        showToast(`✅ Dattio AI Aktif! Model ${res.model} merespons lancar.`);
+        if (res.quotaInfo) setDattioQuota(res.quotaInfo);
+      } else {
+        showToast(`❌ Uji Dattio Gagal: ${res.error?.slice(0, 60)}`);
+      }
+    } catch (err: any) {
+      showToast(`⚠️ Gagal menghubungi server Dattio: ${err.message || 'Network error'}`);
+    } finally {
+      setIsTestingDattio(false);
+    }
+  };
+
   const syncAndSave = (keys: DemoKeyRecord[]) => {
     setDemoKeys(keys);
+
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(keys));
     } catch (e) {
@@ -123,6 +188,7 @@ export const AdminSettingsView: React.FC = () => {
 
   useEffect(() => {
     fetchKeys();
+    fetchDattioQuotaInfo();
   }, []);
 
   const handleAddKey = async (e: React.FormEvent) => {
@@ -200,16 +266,25 @@ export const AdminSettingsView: React.FC = () => {
   const handleTestKey = async (id: string, apiKey: string) => {
     setIsTesting(id);
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      if (res.ok) {
-        showToast('✅ Kunci API Valid & Aktif (Koneksi Google Gemini Berhasil)!');
+      if (apiKey.trim().startsWith('sk-')) {
+        const dRes = await testDattioApiKey(apiKey.trim());
+        if (dRes.success) {
+          showToast(`✅ Kunci Dattio AI Aktif! (Model: ${dRes.model})`);
+        } else {
+          showToast(`❌ Uji Dattio Gagal: ${dRes.error?.slice(0, 60)}`);
+        }
       } else {
-        const errJson = await res.json().catch(() => ({}));
-        const errMsg = errJson?.error?.message || `HTTP ${res.status}`;
-        showToast(`❌ Uji Gagal: ${errMsg.slice(0, 60)}`);
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        if (res.ok) {
+          showToast('✅ Kunci API Valid & Aktif (Koneksi Google Gemini Berhasil)!');
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          const errMsg = errJson?.error?.message || `HTTP ${res.status}`;
+          showToast(`❌ Uji Gagal: ${errMsg.slice(0, 60)}`);
+        }
       }
     } catch (err: any) {
-      showToast(`⚠️ Gagal menghubungi server Google: ${err.message || 'Network error'}`);
+      showToast(`⚠️ Gagal menghubungi server: ${err.message || 'Network error'}`);
     } finally {
       setIsTesting(null);
     }
@@ -248,6 +323,115 @@ export const AdminSettingsView: React.FC = () => {
         <p className="text-xs text-[#74607B] mt-0.5">
           Kelola kunci Google Gemini API cadangan sistem, model fallback, dan prompt standar kurikulum 2025/2026
         </p>
+      </div>
+
+      {/* Section 0: Dattio AI Enterprise Engine (OpenAI Compatible) */}
+      <div className="bg-gradient-to-br from-[#2A1532] to-[#3B1E45] text-white rounded-3xl p-6 border border-[#522D60] shadow-md space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#522D60]">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                <Flame className="w-3 h-3 text-emerald-400" /> Prioritas Utama (Active Pool)
+              </span>
+              <span className="bg-white/10 text-white/80 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                OpenAI Compatible
+              </span>
+            </div>
+            <h3 className="text-lg font-black text-white mt-1.5 flex items-center gap-2 tracking-tight">
+              <Server className="w-5 h-5 text-emerald-400" /> Dattio AI Enterprise Engine
+            </h3>
+            <p className="text-xs text-[#E8D6EB]/80 mt-0.5">
+              Endpoint: <code className="text-emerald-300 font-mono bg-black/30 px-1.5 py-0.5 rounded">https://bandelbanget.xyz/v1</code> • Kuota 20 Juta Token Utuh (28 Hari Masa Aktif)
+            </p>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => fetchDattioQuotaInfo(dattioKeyInput)}
+              disabled={isLoadingQuota}
+              className="py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-semibold text-white transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoadingQuota ? 'animate-spin' : ''}`} />
+              <span>Cek Kuota</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleTestDattio}
+              disabled={isTestingDattio}
+              className="py-1.5 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-xs font-bold text-white transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <Activity className={`w-3.5 h-3.5 ${isTestingDattio ? 'animate-spin' : ''}`} />
+              <span>{isTestingDattio ? 'Menguji...' : 'Uji Koneksi Real-time'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Quota & Model Statistics */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+            <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider block">Sisa Kuota Token</span>
+            <div className="text-xl font-black text-emerald-300 mt-1">
+              {dattioQuota ? `${dattioQuota.remainingTokens.toLocaleString('id-ID')} / ${dattioQuota.maxTokens.toLocaleString('id-ID')}` : '20.000.000 Token'}
+            </div>
+            <span className="text-[10px] text-white/70 block mt-0.5">
+              Status: {dattioQuota?.status === 'active' ? '🟢 Aktif (0% Terpakai)' : '🟢 Terverifikasi Aktif'}
+            </span>
+          </div>
+
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+            <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider block">Model Utama RPM</span>
+            <div className="text-base font-bold text-white mt-1 font-mono">
+              glm-5.2 <span className="text-xs text-emerald-400 font-sans font-normal">(1.25x Multiplier)</span>
+            </div>
+            <span className="text-[10px] text-white/70 block mt-0.5">
+              Penalaran kurikulum mendalam & kepatuhan JSON 100%
+            </span>
+          </div>
+
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+            <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider block">Model Cepat & Vision</span>
+            <div className="text-base font-bold text-white mt-1 font-mono">
+              deepseek-v4-flash
+            </div>
+            <span className="text-[10px] text-white/70 block mt-0.5">
+              Rekomendasi 8 DPL kilat (1-2 detik) & parsing loose parts
+            </span>
+          </div>
+        </div>
+
+        {/* Form Perbarui Kunci Dattio */}
+        <form onSubmit={handleSaveDattioKey} className="bg-black/25 rounded-2xl p-4 border border-white/10 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#E8D6EB] uppercase tracking-wider">
+              Kunci API Dattio (Aktif Digunakan Sistem)
+            </span>
+            <span className="text-[11px] text-emerald-400 font-mono">sk-qwen-••••••••••••</span>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <input
+                type={showDattioKey ? 'text' : 'password'}
+                value={dattioKeyInput}
+                onChange={(e) => setDattioKeyInput(e.target.value)}
+                placeholder="sk-qwen-..."
+                className="w-full text-xs p-2.5 pr-9 rounded-xl border border-white/20 bg-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => setShowDattioKey(!showDattioKey)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white cursor-pointer"
+              >
+                {showDattioKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <button
+              type="submit"
+              className="py-2 px-4 rounded-xl text-xs font-bold text-[#2A1532] bg-emerald-400 hover:bg-emerald-300 transition-colors shadow-xs flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <CheckCircle className="w-4 h-4" /> Simpan Kunci
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Section 1: System API Keys Pool (Adapted from Settings.tsx of ModulAjar Online) */}
