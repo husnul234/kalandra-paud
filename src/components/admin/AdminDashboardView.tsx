@@ -174,13 +174,15 @@ export const AdminDashboardView: React.FC = () => {
         const targetDate = new Date(now);
         targetDate.setDate(targetDate.getDate() - i);
         const dayOfWeek = dayLabels[targetDate.getDay()];
-        const targetYMD = targetDate.toISOString().slice(0, 10);
+        const targetYMD = targetDate.toLocaleDateString('sv-SE');
 
         let countForDay = 0;
         if (periodDocsData) {
-          countForDay = periodDocsData.filter(
-            (d: any) => d.created_at && d.created_at.slice(0, 10) === targetYMD
-          ).length;
+          countForDay = periodDocsData.filter((d: any) => {
+            if (!d.created_at) return false;
+            const docLocalDate = new Date(d.created_at).toLocaleDateString('sv-SE');
+            return docLocalDate === targetYMD;
+          }).length;
         }
 
         last7Days.push({ day: dayOfWeek, count: countForDay });

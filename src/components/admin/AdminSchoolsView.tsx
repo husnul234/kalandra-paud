@@ -97,6 +97,19 @@ export const AdminSchoolsView: React.FC = () => {
         .select('*')
         .order('name', { ascending: true });
 
+      const { data: teacherProfiles } = await supabase
+        .from('profiles')
+        .select('school_id');
+
+      const teacherCountBySchool: Record<string, number> = {};
+      if (teacherProfiles) {
+        teacherProfiles.forEach((p: any) => {
+          if (p.school_id) {
+            teacherCountBySchool[p.school_id] = (teacherCountBySchool[p.school_id] || 0) + 1;
+          }
+        });
+      }
+
       if (!error && data && data.length > 0) {
         setSchools(
           data.map((s) => ({
@@ -109,7 +122,7 @@ export const AdminSchoolsView: React.FC = () => {
             province: s.province || '',
             principal_name: s.principal_name || 'Kepala Satuan PAUD',
             principal_nip: s.principal_nip || '-',
-            teachers_count: 6,
+            teachers_count: teacherCountBySchool[s.id] || 0,
           }))
         );
       }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, isSuperadminEmail } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 import { logSecurityEvent } from '../../lib/securityLogger';
 import { 
   Sparkles, 
@@ -96,10 +97,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBackToApp }) =>
         details: { email: cleanEmail },
       });
 
-      const isSuperadmin = cleanEmail === 'pakhusnulid@gmail.com';
+      let userRole: 'admin' | 'guru' = isSuperadminEmail(cleanEmail) ? 'admin' : 'guru';
+      try {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('email', cleanEmail)
+          .maybeSingle();
+        if (prof?.role === 'admin' || isSuperadminEmail(cleanEmail)) {
+          userRole = 'admin';
+        }
+      } catch (_) {}
+
       setSuccessMessage('Berhasil masuk! Mengalihkan ke aplikasi...');
       setTimeout(() => {
-        onSuccess(isSuperadmin ? 'admin' : 'guru');
+        onSuccess(userRole);
       }, 500);
     } else {
       const newFailed = failedAttempts + 1;

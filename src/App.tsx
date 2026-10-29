@@ -5,11 +5,13 @@ import { LandingPage } from './components/landing/LandingPage';
 import { Topbar } from './components/Topbar';
 import { RpmWizard } from './components/RpmWizard';
 import { LiveTablePreview } from './components/LiveTablePreview';
-import { DocumentHistory } from './components/DocumentHistory';
-import { AdminLayout } from './components/admin/AdminLayout';
 import { AuthPage } from './components/auth/AuthPage';
 import { ApiKeyManagerModal } from './components/ApiKeyManagerModal';
-import { ExportDocxModal, ExportDocType } from './components/ExportDocxModal';
+import type { ExportDocType } from './components/ExportDocxModal';
+
+const DocumentHistory = React.lazy(() => import('./components/DocumentHistory').then(m => ({ default: m.DocumentHistory })));
+const AdminLayout = React.lazy(() => import('./components/admin/AdminLayout').then(m => ({ default: m.AdminLayout })));
+const ExportDocxModal = React.lazy(() => import('./components/ExportDocxModal').then(m => ({ default: m.ExportDocxModal })));
 import { ProfileModal } from './components/ProfileModal';
 import { SubscriptionModal } from './components/subscription/SubscriptionModal';
 import { FirstLoginPasswordModal } from './components/auth/FirstLoginPasswordModal';
@@ -118,7 +120,7 @@ const GeneratorWorkspace: React.FC = () => {
 
       const existing = localStorage.getItem('kalandra_saved_rpm_docs');
       const docs = existing ? JSON.parse(existing) : [];
-      const updated = [newEntry, ...docs.filter((d: any) => d.title !== newEntry.title)];
+      const updated = [newEntry, ...docs.filter((d: any) => d.id !== newEntry.id)];
       const historyLimit = isPro ? 25 : 5;
       localStorage.setItem('kalandra_saved_rpm_docs', JSON.stringify(updated.slice(0, historyLimit)));
 
@@ -200,18 +202,20 @@ const GeneratorWorkspace: React.FC = () => {
         )}
 
         {activeTab === 'history' && (
-          <DocumentHistory
-            onSelectDoc={(selected) => {
-              setCurrentDoc(selected);
-              setActiveTab('preview');
-            }}
-            onOpenExportModalWithData={(docData) => {
-              setCurrentDoc(docData);
-              setExportDocType('full');
-              setIsExportModalOpen(true);
-            }}
-            onNewDocClick={() => setActiveTab('wizard')}
-          />
+          <React.Suspense fallback={<div className="p-12 text-center text-xs text-slate-500">Memuat riwayat...</div>}>
+            <DocumentHistory
+              onSelectDoc={(selected) => {
+                setCurrentDoc(selected);
+                setActiveTab('preview');
+              }}
+              onOpenExportModalWithData={(docData) => {
+                setCurrentDoc(docData);
+                setExportDocType('full');
+                setIsExportModalOpen(true);
+              }}
+              onNewDocClick={() => setActiveTab('wizard')}
+            />
+          </React.Suspense>
         )}
       </main>
 
@@ -235,13 +239,17 @@ const GeneratorWorkspace: React.FC = () => {
       />
 
       {/* Export DOCX Modal */}
-      <ExportDocxModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        documentData={currentDoc}
-        schoolName={profile?.school_name}
-        initialDocType={exportDocType}
-      />
+      {isExportModalOpen && (
+        <React.Suspense fallback={null}>
+          <ExportDocxModal
+            isOpen={isExportModalOpen}
+            onClose={() => setIsExportModalOpen(false)}
+            documentData={currentDoc}
+            schoolName={profile?.school_name}
+            initialDocType={exportDocType}
+          />
+        </React.Suspense>
+      )}
 
       {/* Profile Guru & Satuan PAUD Modal */}
       <ProfileModal
@@ -397,7 +405,9 @@ export const AppRoutes: React.FC = () => {
         path="/admin/*"
         element={
           <ProtectedAdminRoute>
-            <AdminLayout onBackToApp={() => navigate('/app')} />
+            <React.Suspense fallback={<div className="min-h-screen bg-[#FAF7FB] flex items-center justify-center text-xs text-[#74607B]">Memuat panel admin...</div>}>
+              <AdminLayout onBackToApp={() => navigate('/app')} />
+            </React.Suspense>
           </ProtectedAdminRoute>
         }
       />

@@ -15,6 +15,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 import confetti from 'canvas-confetti';
 
 interface Props {
@@ -30,7 +31,7 @@ export const SubscriptionModal: React.FC<Props> = ({
   onClose,
   highlightPro = false,
 }) => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [period, setPeriod] = useState<SubscriptionPeriod>('1_tahun');
   const [licenseCode, setLicenseCode] = useState('');
   const [isActivating, setIsActivating] = useState(false);
@@ -84,26 +85,52 @@ export const SubscriptionModal: React.FC<Props> = ({
     setIsActivating(true);
     setActivationMsg(null);
 
-    // Mock validation / demo activation
-    setTimeout(() => {
-      setIsActivating(false);
-      if (licenseCode.trim().toUpperCase() === 'PROTK2026' || licenseCode.trim().toUpperCase().startsWith('KAL-')) {
-        setActivationMsg({
-          type: 'success',
-          text: 'Selamat! Akun Anda telah berhasil di-upgrade ke Paket PRO Aktif selama 1 Tahun.',
-        });
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      } else {
-        setActivationMsg({
-          type: 'error',
-          text: 'Kode lisensi tidak valid atau telah digunakan. Hubungi admin WhatsApp untuk bantuan.',
-        });
+    const cleanCode = licenseCode.trim().toUpperCase();
+    if (cleanCode === 'PROTK2026' || cleanCode.startsWith('KAL-')) {
+      if (user?.id) {
+        try {
+          await supabase.from('profiles').update({
+            tier: 'pro',
+            updated_at: new Date().toISOString()
+          }).eq('id', user.id);
+
+          if (user.email) {
+            await supabase.from('allowed_customers').upsert({
+              email: user.email.toLowerCase().trim(),
+              full_name: profile?.full_name || user.email.split('@')[0],
+              school_name: profile?.school_name || 'Satuan PAUD',
+              account_type: 'annual',
+              subscription_tier: 'pro',
+              subscription_start: new Date().toISOString(),
+              subscription_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+              is_active: true,
+              claimed_at: new Date().toISOString(),
+              notes: 'Aktivasi Voucher: ' + cleanCode
+            }, { onConflict: 'email' });
+          }
+          await refreshProfile();
+        } catch (dbErr) {
+          console.warn('License persistence notice:', dbErr);
+        }
       }
-    }, 900);
+
+      setIsActivating(false);
+      setActivationMsg({
+        type: 'success',
+        text: 'Selamat! Akun Anda telah berhasil di-upgrade ke Paket PRO Aktif selama 1 Tahun.',
+      });
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+    } else {
+      setIsActivating(false);
+      setActivationMsg({
+        type: 'error',
+        text: 'Kode lisensi tidak valid atau telah digunakan. Hubungi admin WhatsApp untuk bantuan.',
+      });
+    }
   };
 
   return (

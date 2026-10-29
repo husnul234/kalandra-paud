@@ -143,12 +143,47 @@ export function getNextKeyInRotation(): string | null {
   const available = keyPool.filter((k) => k.cooldownUntil <= now);
   if (available.length === 0) {
     if (keyPool.length === 0) return null;
-    // Fallback: pick the key closest to cooldown expiry
-    return keyPool[0].key;
+    const sorted = [...keyPool].sort((a, b) => a.cooldownUntil - b.cooldownUntil);
+    return sorted[0].key;
   }
 
   roundRobinIndex = (roundRobinIndex + 1) % available.length;
   return available[roundRobinIndex].key;
+}
+
+/**
+ * Reorders a candidate key list with round-robin rotation while pushing rate-limited keys to the back
+ */
+export function getOrderedKeys(keys: string[]): string[] {
+  if (!keys || keys.length === 0) return [];
+  const now = Date.now();
+  keys.forEach((key) => {
+    if (!keyPool.some((k) => k.key === key)) {
+      keyPool.push({ key, cooldownUntil: 0, failureCount: 0 });
+    }
+  });
+
+  const available = keys.filter((key) => {
+    const item = keyPool.find((k) => k.key === key);
+    return !item || item.cooldownUntil <= now;
+  });
+
+  const inCooldown = keys.filter((key) => {
+    const item = keyPool.find((k) => k.key === key);
+    return item && item.cooldownUntil > now;
+  }).sort((a, b) => {
+    const itemA = keyPool.find((k) => k.key === a);
+    const itemB = keyPool.find((k) => k.key === b);
+    return (itemA?.cooldownUntil || 0) - (itemB?.cooldownUntil || 0);
+  });
+
+  if (available.length > 1) {
+    roundRobinIndex = (roundRobinIndex + 1) % available.length;
+    const rotated = [...available.slice(roundRobinIndex), ...available.slice(0, roundRobinIndex)];
+    return [...rotated, ...inCooldown];
+  }
+
+  return [...available, ...inCooldown];
 }
 
 /**

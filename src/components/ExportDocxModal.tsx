@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { saveAs } from 'file-saver';
+function downloadBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 import confetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -106,7 +115,7 @@ export const ExportDocxModal: React.FC<Props> = ({
         fileName = `RPM_1_Minggu_${safeTopic}.docx`;
       }
 
-      saveAs(blob, fileName);
+      downloadBlob(blob, fileName);
 
       // Trigger celebratory confetti
       confetti({

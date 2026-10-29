@@ -240,7 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = fullName.trim();
-    const assignedRole = isSuperadminEmail(cleanEmail) ? 'admin' : role;
+    const assignedRole = isSuperadminEmail(cleanEmail) ? 'admin' : 'guru';
 
     try {
       const { data, error } = await supabase.auth.signUp({

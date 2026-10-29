@@ -95,7 +95,7 @@ export async function invokeGenerateWithRetry(
       }
 
       let resultData: any = null;
-      let usedModel = 'gemini-3.1-flash-lite';
+      let usedModel = 'gemini-2.0-flash';
       let usedKeyMasked = '...';
 
       // Attempt 1: Try Edge Function if configured and reachable

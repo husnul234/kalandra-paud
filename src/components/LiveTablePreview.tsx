@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RpmPaudDocData, cleanActivityTitleAndLabel } from '../lib/docx-engine/docx-paud-builder';
+import { RpmPaudDocData, cleanActivityTitleAndLabel, cleanListText } from '../lib/docx-engine/docx-paud-builder';
 import { DATA_8_DPL } from '../data/cp_paud_data';
 import { 
   FileDown, 
@@ -32,13 +32,6 @@ interface Props {
   isSaving?: boolean;
 }
 
-const cleanListText = (text?: string): string => {
-  if (!text) return '';
-  return text
-    .replace(/^[\s•\-\*\u2022\u25E6\u25AA\u25CF\u2013\u2014]+/, '')
-    .replace(/^\d+[\.\)]\s*/, '')
-    .trim();
-};
 
 export const LiveTablePreview: React.FC<Props> = ({
   data,

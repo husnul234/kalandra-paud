@@ -208,7 +208,7 @@ function cellPara(
 /**
  * Clean prefix bullets or numbers so we never get duplicate bullets or numbers
  */
-function cleanListText(text: string): string {
+export function cleanListText(text?: string): string {
   if (!text) return '';
   return text
     .replace(/^[\s•\-\*\u2022\u25E6\u25AA\u25CF\u2013\u2014]+/, '')

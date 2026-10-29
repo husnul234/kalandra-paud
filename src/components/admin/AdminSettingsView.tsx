@@ -216,7 +216,7 @@ export const AdminSettingsView: React.FC = () => {
     setNewLabel('');
     showToast('Kunci API cadangan sistem berhasil ditambahkan.');
 
-    // Asynchronously sync to Supabase demo_api_keys table
+    // Asynchronously sync to Supabase demo_api_keys and user_api_keys tables
     try {
       const { data, error } = await supabase.from('demo_api_keys').insert({
         api_key: newRecord.api_key,
@@ -227,6 +227,18 @@ export const AdminSettingsView: React.FC = () => {
       if (!error && data) {
         const synced = updated.map(k => k.id === tempId ? { ...k, id: data.id } : k);
         syncAndSave(synced);
+      }
+
+      // Also ensure it is present in user_api_keys for the generator Edge Function
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData?.user?.id) {
+        await supabase.from('user_api_keys').insert({
+          user_id: authData.user.id,
+          provider: 'gemini',
+          api_key: newRecord.api_key,
+          label: newRecord.label,
+          is_active: newRecord.is_active,
+        });
       }
     } catch (err) {
       console.warn('demo_api_keys remote insert warning:', err);

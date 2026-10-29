@@ -54,8 +54,7 @@ CREATE POLICY "Admins full access to allowed_customers" ON public.allowed_custom
   );
 
 DROP POLICY IF EXISTS "Public check allowed email" ON public.allowed_customers;
-CREATE POLICY "Public check allowed email" ON public.allowed_customers
-  FOR SELECT TO anon, authenticated USING (true);
+-- Disallow unrestricted public SELECT on customer records
 
 -- 4. TABEL: demo_api_keys
 CREATE TABLE IF NOT EXISTS public.demo_api_keys (
@@ -85,8 +84,7 @@ CREATE POLICY "Admins full access to demo_api_keys" ON public.demo_api_keys
   );
 
 DROP POLICY IF EXISTS "Users can read active demo keys" ON public.demo_api_keys;
-CREATE POLICY "Users can read active demo keys" ON public.demo_api_keys
-  FOR SELECT TO authenticated USING (is_active = true);
+-- Disallow direct user SELECT on system demo keys pool
 
 -- 5. RPC FUNCTION: get_active_system_api_keys (Safe key rotation)
 CREATE OR REPLACE FUNCTION public.get_active_system_api_keys()

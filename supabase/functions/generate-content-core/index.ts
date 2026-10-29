@@ -11,13 +11,10 @@ const corsHeaders = {
  * Resilient Gemini & Dattio Model Hierarchy
  */
 export const GEMINI_MODEL_CHAIN = [
-  "gemini-3.1-flash-lite",
-  "gemini-2.5-flash-lite",
-  "gemini-3-flash-preview",
-  "gemini-3.5-flash-lite",
-  "gemini-3.6-flash",
-  "gemini-3.5-flash",
-  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
 ];
 
 export const DATTIO_BASE_URL = Deno.env.get("DATTIO_BASE_URL") || "https://bandelbanget.xyz/v1";
